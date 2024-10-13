@@ -1,5 +1,5 @@
 import React from 'react'
-import { BaseEdge, EdgeProps, EdgeLabelRenderer, getBezierPath, EdgeText } from '@xyflow/react'
+import { BaseEdge, EdgeProps, getBezierPath, EdgeText } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 
@@ -10,7 +10,7 @@ interface SelfConnectingEdgeProps extends EdgeProps {
 }
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
-  const { sourceX, sourceY, targetX, targetY, id, markerEnd, label, animated, data, source, target } = props
+  const { sourceX, sourceY, targetX, targetY, id, markerEnd, label, animated, source } = props
   const { edgeLabels } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
   console.log('buttonTexts', buttonTexts[id])
@@ -27,7 +27,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         <defs>
           <marker
             id='triangle'
-            markerWidth='18'
+            markerWidth='5'
             markerHeight='18'
             viewBox='-15 -15 30 30'
             markerUnits='strokeWidth'
@@ -71,22 +71,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} />
       {label && (
-        // <EdgeLabelRenderer>
-        //   <div
-        //     style={{
-        //       position: 'absolute',
-        //       transform: `translate(-50%, -50%) translate(${sourceX + 100}px,${(sourceY + targetY - 100) / 2}px)`,
-        //       background: '#ffcc00',
-        //       padding: 8,
-        //       borderRadius: 5,
-        //       fontSize: 8,
-        //       fontWeight: 700,
-        //     }}
-        //     className='nodrag nopan'
-        //   >
-        //     {label}
-        //   </div>
-        // </EdgeLabelRenderer>
         <EdgeText
           x={sourceX + 100}
           y={sourceY - 70}

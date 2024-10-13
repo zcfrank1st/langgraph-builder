@@ -1,7 +1,7 @@
-import { useCallback, useState, useRef, useEffect } from 'react'
+"use client"
+import { useCallback, useState, useEffect, useRef } from 'react'
 import {
   Background,
-  Controls,
   ReactFlow,
   addEdge,
   useNodesState,
@@ -22,14 +22,14 @@ import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
 import { generateLanggraphCode } from '../codeGeneration/generateLanggraph'
 import { generateLanggraphJS } from '../codeGeneration/generateLanggraphJS'
 import { CodeGenerationResult } from '../codeGeneration/types'
-import { saveAs } from 'file-saver'
-import JSZip from 'jszip'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import Modal from './Modal'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import EdgeLabelModal from './EdgeLabelModal'
+import { Button, Modal as MuiModal, ModalDialog, ModalClose, Typography } from "@mui/joy"
 
 export default function App() {
+  const proOptions = { hideAttribution: true }
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomNodeType>(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdgeType>(initialEdges)
   const reactFlowWrapper = useRef<any>(null)
@@ -47,6 +47,21 @@ export default function App() {
 
   const [isEdgeLabelModalOpen, setIsEdgeLabelModalOpen] = useState(false)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
+
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+
+  useEffect(() => {
+    // Retrieve the modal dismissal status from localStorage
+    const isModalDismissed = localStorage.getItem('welcomeModalDismissed')
+    if (isModalDismissed !== 'true') {
+      setShowWelcomeModal(true)
+    }
+  }, [])
+
+  const handleWelcomeModalClose = () => {
+    setShowWelcomeModal(false)
+    localStorage.setItem('welcomeModalDismissed', 'true')
+  }
 
   const handleEdgeLabelClick = useCallback((sourceNodeId: string) => {
     setSelectedEdgeId(sourceNodeId)
@@ -201,29 +216,6 @@ export default function App() {
     [nodes, setNodes, reactFlowInstance, reactFlowWrapper, isConnecting, applyNodeChanges, maxNodeLength],
   )
 
-  const generateCode = useCallback(() => {
-    const workflowCode = generateLanggraphJS(nodes, edges, buttonTexts, edgeLabels)
-    setGeneratedCode({ code: workflowCode, nodes, edges })
-  }, [nodes, edges, buttonTexts, edgeLabels])
-
-  const downloadZip = useCallback(() => {
-    if (!generatedCode) return
-
-    const zip = new JSZip()
-    const myAgent = zip.folder('my_agent')
-
-    myAgent!.file('WorkFlow.py', generatedCode.code)
-    myAgent!.file('LLMManager.py', `# LLMManager.py content`)
-
-    zip.file('.env.example', `OPENAI_API_KEY=your_openai_api_key_here`)
-    zip.file('langgraph.json', `Langgraph JSON content`)
-    zip.file('requirements.txt', `langgraph\nlangchain\nopenai\npython-dotenv`)
-
-    zip.generateAsync({ type: 'blob' }).then((content) => {
-      saveAs(content, 'project.zip')
-    })
-  }, [generatedCode, nodes, edges])
-
   const handleGenerateCode = () => {
     setShowModal(true)
   }
@@ -267,27 +259,42 @@ export default function App() {
         style={{
           backgroundColor: '#1a1c24',
         }}
+        proOptions={proOptions}
       >
         <Background />
       </ReactFlow>
-      <button
+      <Button
         onClick={handleGenerateCode}
         className='absolute bottom-4 right-4 bg-[#246161] hover:bg-[#195656] text-white font-bold py-2 px-4 rounded'
       >
         Generate Code
-      </button>
+      </Button>
+
+      {showWelcomeModal && (
+       <MuiModal open={showWelcomeModal} onClose={() => setShowWelcomeModal(false)}>
+          <ModalDialog>
+            <div className='flex flex-col text-center'>
+              <div className='text-2xl font-medium'>
+                Welcome to the LangGraph builder
+              </div>
+              <div className='text-lg text-gray-500 pt-2'>
+                Use this tool to quickly prototype the architecture of your agent
+              </div>
+              <div>
+              <Button onClick={handleWelcomeModalClose} className='bg-[#246161] hover:bg-[#195656] mt-4'>
+                Get Started
+              </Button>
+              </div>
+            </div>
+          </ModalDialog>
+        </MuiModal>
+      )}
 
       {showModal && <Modal onClose={() => setShowModal(false)} onSelect={handleCodeTypeSelection} />}
 
       {generatedCode && (
         <div className='absolute top-4 right-4 bg-white h-full overflow-y-scroll no-scrollbar p-4 rounded shadow-lg'>
           <div className='absolute top-0 right-0 p-2 flex flex-row gap-2'>
-            {/* <button
-              onClick={downloadZip}
-              className='bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded'
-            >
-              Download
-            </button> */}
             <button
               onClick={() => setGeneratedCode(null)}
               className=' bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded'

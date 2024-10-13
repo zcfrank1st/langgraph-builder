@@ -19,6 +19,9 @@
     "commit": "cz"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/joy": "^5.0.0-beta.48",
     "@tisoap/react-flow-smart-edge": "^3.0.0",
     "@vercel/speed-insights": "^1.0.10",
     "@xyflow/react": "^12.2.0",
@@ -43,7 +46,7 @@
     "@types/file-saver": "^2.0.7",
     "@types/jest": "^29.5.4",
     "@types/node": "^20.5.7",
-    "@types/react": "^18.2.21",
+    "@types/react": "^18.3.11",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",

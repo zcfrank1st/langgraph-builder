@@ -46,3 +46,11 @@
     background: #c0a0b9;
   }
 }
+
+path.react-flow__edge-path {
+  stroke-width: 5;
+}
+
+path.react-flow__edge-path:hover {
+  stroke-width: 5;
+}
