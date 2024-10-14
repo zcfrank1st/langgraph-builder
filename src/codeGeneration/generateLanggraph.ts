@@ -1,6 +1,5 @@
 import { type CustomNodeType } from '@/components/nodes'
 import { type CustomEdgeType } from '@/components/edges'
-import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 
 export function generateLanggraphCode(
   nodes: CustomNodeType[],
