@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Button from '@mui/joy/Button'
 
 interface ModalProps {
   onClose: () => void
@@ -21,18 +22,18 @@ const Modal: React.FC<ModalProps> = ({ onClose, onSelect }) => {
       >
         <h2 className='text-xl text-white font-semibold mb-4'>Choose language</h2>
         <div className='flex space-x-4'>
-          <button
+          <Button
             onClick={() => onSelect('js')}
             className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
           >
             JavaScript
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onSelect('python')}
             className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded'
           >
             Python
-          </button>
+          </Button>
         </div>
         <button onClick={onClose} className='text-white absolute top-2 right-4 font-bold hover:text-gray-500'>
           x
