@@ -26,7 +26,8 @@ import { useButtonText } from '@/contexts/ButtonTextContext'
 import Modal from './Modal'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import EdgeLabelModal from './EdgeLabelModal'
-import { Button, Modal as MuiModal, ModalDialog, ModalClose, Typography } from "@mui/joy"
+import { Button } from "@mui/joy"
+import GenericModal from './GenericModal'
 
 export default function App() {
   const proOptions = { hideAttribution: true }
@@ -49,18 +50,59 @@ export default function App() {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [showCreateNodeModal, setShowCreateNodeModal] = useState(false)
+  const [showCreateEdgeModal, setShowCreateEdgeModal] = useState(false)
+  const [showBasicsModal, setShowBasicsModal] = useState(false)
+
+  const isNodeOneCreated = nodes.length > 2;
+  const isEdgeOneCreated = edges.length > 0;
+
 
   useEffect(() => {
-    // Retrieve the modal dismissal status from localStorage
-    const isModalDismissed = localStorage.getItem('welcomeModalDismissed')
-    if (isModalDismissed !== 'true') {
-      setShowWelcomeModal(true)
+    const isWelcomeModalDismissed = localStorage.getItem('welcomeModalDismissed');
+    if (isWelcomeModalDismissed !== 'true') {
+      setShowWelcomeModal(true);
+    } else {
+      const isNodeModalDismissed = localStorage.getItem('createNodeModalDismissed');
+      if (isNodeModalDismissed !== 'true') {
+        setShowCreateNodeModal(true);
+      }
     }
-  }, [])
+  }, []);
 
   const handleWelcomeModalClose = () => {
-    setShowWelcomeModal(false)
-    localStorage.setItem('welcomeModalDismissed', 'true')
+    setShowWelcomeModal(false);
+    localStorage.setItem('welcomeModalDismissed', 'true');
+
+    const isNodeModalDismissed = localStorage.getItem('createNodeModalDismissed');
+    if (isNodeModalDismissed !== 'true') {
+      setShowCreateNodeModal(true);
+    }
+  };
+
+  const handleCreateNodeModalClose = () => {
+    if (isNodeOneCreated) {
+      setShowCreateNodeModal(false);
+      localStorage.setItem("createNodeModalDismissed", "true");
+      setShowCreateEdgeModal(true);
+    } else {
+      alert("Please create a node before continuing! Click anywhere on the screen to create a node");
+    }
+  };
+
+  const handleCreateEdgeModalClose = () => {
+    if (isEdgeOneCreated) {
+      setShowCreateEdgeModal(false);
+      localStorage.setItem("createEdgeModalDismissed", "true");
+      setShowBasicsModal(true)
+    } else {
+      alert("Please create an edge before continuing! Click and drag from one node to another to create an edge");
+    }
+  };
+
+  const handleBasicsModalClose = () => {
+    setShowBasicsModal(false)
+    localStorage.setItem('basicsModalDismissed', 'true')
   }
 
   const handleEdgeLabelClick = useCallback((sourceNodeId: string) => {
@@ -103,7 +145,7 @@ export default function App() {
 
       setEdges((prevEdges) => {
         const updatedEdges = addEdge(newEdge, prevEdges)
-
+        
         // Check if there are other edges from the same source
         const sourceEdges = updatedEdges.filter((edge) => edge.source === connection.source)
 
@@ -200,17 +242,17 @@ export default function App() {
         }
         setMaxNodeLength(maxNodeLength + 1)
 
-        setNodes((nodes) =>
-          applyNodeChanges(
+        setNodes((prevNodes) => {
+          return applyNodeChanges(
             [
               {
                 type: 'add',
                 item: newNode,
               },
             ],
-            nodes,
-          ),
-        )
+            prevNodes
+          );
+        });
       }
     },
     [nodes, setNodes, reactFlowInstance, reactFlowWrapper, isConnecting, applyNodeChanges, maxNodeLength],
@@ -269,27 +311,41 @@ export default function App() {
       >
         Generate Code
       </Button>
-
-      {showWelcomeModal && (
-       <MuiModal open={showWelcomeModal} onClose={() => setShowWelcomeModal(false)}>
-          <ModalDialog>
-            <div className='flex flex-col text-center'>
-              <div className='text-2xl font-medium'>
-                Welcome to the LangGraph builder
-              </div>
-              <div className='text-lg text-gray-500 pt-2'>
-                Use this tool to quickly prototype the architecture of your agent
-              </div>
-              <div>
-              <Button onClick={handleWelcomeModalClose} className='bg-[#246161] hover:bg-[#195656] mt-4'>
-                Get Started
-              </Button>
-              </div>
-            </div>
-          </ModalDialog>
-        </MuiModal>
-      )}
-
+      <GenericModal
+        noClickThrough={true}
+        imageUrl="/langchain-logo.png"
+        isOpen={showWelcomeModal}
+        onClose={handleWelcomeModalClose}
+        title="Welcome to the graph builder"
+        content="Use this tool to quickly prototype the architecture of your LangGraph app"
+        buttonText="Get Started"
+      />
+      <GenericModal
+        hideBackDrop={true}
+        className='absolute top-1/2 left-10 transform -translate-y-1/2'
+        isOpen={showCreateNodeModal}
+        onClose={handleCreateNodeModalClose}
+        title="Create a node"
+        content="Click anywhere on the screen to create a node"
+        buttonText="Continue"
+      />
+      <GenericModal
+        hideBackDrop={true}
+        className='absolute top-10 left-1/2 transform -translate-x-1/2'
+        isOpen={showCreateEdgeModal}
+        onClose={handleCreateEdgeModalClose}
+        title="Create an edge"
+        content="Click and drag from one node to another to create an edge"
+        buttonText="Continue"
+      />
+      <GenericModal
+        hideBackDrop={true}
+        isOpen={showBasicsModal}
+        onClose={handleBasicsModalClose}
+        title="You've got the basics!"
+        content="Have fun sketching the cognitive architecture of your app"
+        buttonText="Finish"
+      />
       {showModal && <Modal onClose={() => setShowModal(false)} onSelect={handleCodeTypeSelection} />}
 
       {generatedCode && (

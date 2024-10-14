@@ -13,7 +13,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, label, animated, source } = props
   const { edgeLabels } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
-  console.log('buttonTexts', buttonTexts[id])
   if (props.source !== props.target) {
     const [edgePath, labelX, labelY] = getBezierPath({
       sourceX,
