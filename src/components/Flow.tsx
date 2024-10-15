@@ -49,42 +49,46 @@ export default function App() {
   const [isEdgeLabelModalOpen, setIsEdgeLabelModalOpen] = useState(false)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
 
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
-  const [showCreateNodeModal, setShowCreateNodeModal] = useState(false)
-  const [showCreateEdgeModal, setShowCreateEdgeModal] = useState(false)
-  const [showBasicsModal, setShowBasicsModal] = useState(false)
+  const [modals, setModals] = useState({
+    showWelcomeModal: false,
+    showCreateNodeModal: false,
+    showCreateEdgeModal: false,
+    showConditionalEdgeModal: false,
+    showRenameModal: false,
+    showGenerateCodeModal: false,
+  });
 
   const isNodeOneCreated = nodes.length > 2;
   const isEdgeOneCreated = edges.length > 0;
-
+  const isConditionalEdgeCreated = edges.filter((edge) => edge.animated).length > 0;
 
   useEffect(() => {
     const isWelcomeModalDismissed = localStorage.getItem('welcomeModalDismissed');
     if (isWelcomeModalDismissed !== 'true') {
-      setShowWelcomeModal(true);
+      setModals({ ...modals, showWelcomeModal: true });
     } else {
       const isNodeModalDismissed = localStorage.getItem('createNodeModalDismissed');
       if (isNodeModalDismissed !== 'true') {
-        setShowCreateNodeModal(true);
+        setModals({ ...modals, showCreateNodeModal: true });
       }
     }
   }, []);
 
   const handleWelcomeModalClose = () => {
-    setShowWelcomeModal(false);
+    setModals((prevModals) => ({ ...prevModals, showWelcomeModal: false }));
     localStorage.setItem('welcomeModalDismissed', 'true');
 
     const isNodeModalDismissed = localStorage.getItem('createNodeModalDismissed');
     if (isNodeModalDismissed !== 'true') {
-      setShowCreateNodeModal(true);
+      setModals((prevModals) => ({ ...prevModals, showCreateNodeModal: true }));
     }
   };
 
   const handleCreateNodeModalClose = () => {
     if (isNodeOneCreated) {
-      setShowCreateNodeModal(false);
+      setModals((prevModals) => ({ ...prevModals, showCreateNodeModal: false }));
       localStorage.setItem("createNodeModalDismissed", "true");
-      setShowCreateEdgeModal(true);
+      setModals((prevModals) => ({ ...prevModals, showCreateEdgeModal: true }));
     } else {
       alert("Please create a node before continuing! Click anywhere on the screen to create a node");
     }
@@ -92,18 +96,91 @@ export default function App() {
 
   const handleCreateEdgeModalClose = () => {
     if (isEdgeOneCreated) {
-      setShowCreateEdgeModal(false);
+      setModals((prevModals) => ({ ...prevModals, showCreateEdgeModal: false }));
       localStorage.setItem("createEdgeModalDismissed", "true");
-      setShowBasicsModal(true)
+      setModals((prevModals) => ({ ...prevModals, showConditionalEdgeModal: true }));
     } else {
       alert("Please create an edge before continuing! Click and drag from one node to another to create an edge");
     }
   };
 
-  const handleBasicsModalClose = () => {
-    setShowBasicsModal(false)
-    localStorage.setItem('basicsModalDismissed', 'true')
+  const handleConditionalEdgeModalClose = () => {
+    if (isConditionalEdgeCreated) {
+      setModals((prevModals) => ({ ...prevModals, showConditionalEdgeModal: false }));
+      localStorage.setItem('conditionalEdgeModalDismissed', 'true')
+      setModals((prevModals) => ({ ...prevModals, showRenameModal: true }));
+    } else {
+      alert("Please create a conditional edge before continuing!");
+    }
   }
+
+  const handleRenameModalClose = () => {
+    setModals((prevModals) => ({ ...prevModals, showRenameModal: false }));
+    localStorage.setItem('renameModalDismissed', 'true')
+    setModals((prevModals) => ({ ...prevModals, showGenerateCodeModal: true }));
+  }
+
+  const handleGenerateCodeModalClose = () => {
+    setModals((prevModals) => ({ ...prevModals, showGenerateCodeModal: false }));
+    localStorage.setItem('generateCodeModalDismissed', 'true')
+  }
+
+
+  const genericModalArray = [
+    {
+     noClickThrough: true,
+     imageUrl: "/langgraph-logo.png",
+     isOpen: modals.showWelcomeModal,
+     onClose: handleWelcomeModalClose,
+     title: "Graph Builder",
+     content: <span>Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our docs <a style={{textDecoration: 'underline'}} href='https://langchain-ai.github.io/langgraph/tutorials/introduction/' target='_blank' rel='noopener noreferrer'>here</a></span>,
+     buttonText: "Get Started",
+    },
+    {
+      hideBackDrop: true,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      isOpen: modals.showCreateNodeModal,
+      onClose: handleCreateNodeModalClose,
+      title: "Create a node",
+      content: "To create a node, click anywhere on the screen. Move a node by clicking and dragging it",
+      buttonText: "Continue",
+    },
+    {
+      hideBackDrop: true,
+      className: 'absolute top-10 left-1/2 transform -translate-x-1/2',
+      isOpen: modals.showCreateEdgeModal,
+      onClose: handleCreateEdgeModalClose,
+      title: "Create an edge",
+      content: "To create an edge, click and drag from the top/bottom of one node to another node",
+      buttonText: "Continue",
+    },
+    {
+      hideBackDrop: true,
+      isOpen: modals.showConditionalEdgeModal,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: handleConditionalEdgeModalClose, 
+      title: "Create a conditional edge",
+      content: "Edges are non-conditional by default. To create a conditional edge, either click on a non-conditional edge or draw multiple edges leaving from the same node",
+      buttonText: "Continue",
+    },
+    {
+      hideBackDrop: true,
+      className: 'absolute top-10 left-1/2 transform -translate-x-1/2',
+      isOpen: modals.showRenameModal,
+      onClose: handleRenameModalClose,
+      title: "Delete an edge",
+      content: "Double click quickly on an edge to delete it",
+      buttonText: "Continue",
+    },
+    {
+      isOpen: modals.showGenerateCodeModal,
+      onClose: handleGenerateCodeModalClose,
+      title: "You're ready!",
+      content: "Once you're done prototyping, click Generate Code in the bottom right corner to generate LangGraph code based on your nodes and edges",
+      buttonText: "Finish onboarding",
+    },
+  ]
+
 
   const handleEdgeLabelClick = useCallback((sourceNodeId: string) => {
     setSelectedEdgeId(sourceNodeId)
@@ -311,41 +388,13 @@ export default function App() {
       >
         Generate Code
       </Button>
-      <GenericModal
-        noClickThrough={true}
-        imageUrl="/langchain-logo.png"
-        isOpen={showWelcomeModal}
-        onClose={handleWelcomeModalClose}
-        title="Welcome to the graph builder"
-        content="Use this tool to quickly prototype the architecture of your LangGraph app"
-        buttonText="Get Started"
-      />
-      <GenericModal
-        hideBackDrop={true}
-        className='absolute top-1/2 left-10 transform -translate-y-1/2'
-        isOpen={showCreateNodeModal}
-        onClose={handleCreateNodeModalClose}
-        title="Create a node"
-        content="Click anywhere on the screen to create a node"
-        buttonText="Continue"
-      />
-      <GenericModal
-        hideBackDrop={true}
-        className='absolute top-10 left-1/2 transform -translate-x-1/2'
-        isOpen={showCreateEdgeModal}
-        onClose={handleCreateEdgeModalClose}
-        title="Create an edge"
-        content="Click and drag from one node to another to create an edge"
-        buttonText="Continue"
-      />
-      <GenericModal
-        hideBackDrop={true}
-        isOpen={showBasicsModal}
-        onClose={handleBasicsModalClose}
-        title="You've got the basics!"
-        content="Have fun sketching the cognitive architecture of your app"
-        buttonText="Finish"
-      />
+      {
+        genericModalArray.map((modal, index) => {
+          return (
+            <GenericModal key={index} {...modal} />
+          )
+        })
+      }
       {showModal && <Modal onClose={() => setShowModal(false)} onSelect={handleCodeTypeSelection} />}
 
       {generatedCode && (

@@ -39,8 +39,8 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         </defs>
         <BaseEdge {...props} id={id} path={edgePath} markerEnd={'url(#triangle)'} />
         {label && animated && (
-          <EdgeText
-            x={labelX}
+            <EdgeText
+              x={labelX}
             y={labelY}
             label={
               edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string)
@@ -49,16 +49,11 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               e.stopPropagation()
               props.data?.onLabelClick(id)
             }}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              padding: 8,
-              margin: 0,
-              zIndex: 1000,
-              cursor: 'pointer',
-            }}
-          />
+
+            labelBgPadding={[10, 10]}
+            labelBgStyle={{ fill: '#2596be', stroke: '#207fa5', strokeWidth: 2 }}
+            labelStyle={{ fill: '#f5f5dc', fontSize: 10, fontWeight: 'medium', textAlign: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+            />
         )}
       </>
     )

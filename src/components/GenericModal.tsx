@@ -5,7 +5,7 @@ interface GenericModalProps {
     isOpen: boolean;
     onClose: () => void; 
     title: string;
-    content: any;
+    content: string | React.ReactNode;
     buttonText: string;
     onButtonClick?: () => void;
     hideBackDrop?: boolean;
@@ -22,17 +22,19 @@ const GenericModal = ({ isOpen, onClose, title, content, buttonText, onButtonCli
         pointerEvents: 'auto',
         zIndex: 50,
       }} className={`${className}`}>
-      <div className="flex flex-col text-center">
-        <div className="flex justify-center">
+      <div className="flex flex-col justify-center items-center text-center">
+        <div className={`flex justify-center ${imageUrl ? 'mb-6' : ''}`}>
         {imageUrl && (
-          <Image src={imageUrl} alt="Modal Image" width={200} height={200} />
+          <Image src={imageUrl} alt="Modal Image" width={150} height={150} />
         )}
         </div>
-        <div className={`text-2xl font-medium ${imageUrl ? 'mt-3' : ''}`}>{title}</div>
-        <div className="text-lg text-gray-500 pt-2">{content}</div>
-        <Button onClick={onButtonClick || onClose} className="bg-[#246161] hover:bg-[#195656] mt-4">
+        <div className={`text-2xl font-medium`}>{title}</div>
+        <div className={`text-lg text-gray-500 pt-2 text-center ${imageUrl ? 'max-w-lg' : 'max-w-md'}`}>{content}</div>
+  
+        <Button onClick={onButtonClick || onClose} className={`bg-[#076699] hover:bg-[#06578a] ${imageUrl ? 'mt-6' : 'mt-3'}`}>
           {buttonText}
         </Button>
+    
       </div>
     </ModalDialog>
   </MuiModal>
