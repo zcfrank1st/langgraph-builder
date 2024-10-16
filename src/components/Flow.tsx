@@ -26,13 +26,14 @@ import { useButtonText } from '@/contexts/ButtonTextContext'
 import Modal from './Modal'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import EdgeLabelModal from './EdgeLabelModal'
-import { Button } from "@mui/joy"
+import { Button, Modal as MuiModal, ModalDialog } from "@mui/joy"
 import GenericModal from './GenericModal'
 
 export default function App() {
   const proOptions = { hideAttribution: true }
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomNodeType>(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdgeType>(initialEdges)
+  const [generateCodeModalOpen, setGenerateCodeModalOpen] = useState(false)
   const reactFlowWrapper = useRef<any>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
   const [isConnecting, setIsConnecting] = useState(false)
@@ -351,6 +352,19 @@ export default function App() {
     }
 
     setGeneratedCode({ code: generatedCode, nodes, edges })
+    setGenerateCodeModalOpen(true)
+  }
+
+  const copyCodeToClipboard = () => {
+    if (generatedCode) {
+      navigator.clipboard.writeText(generatedCode.code)
+        .then(() => {
+          alert("Code copied to clipboard!");
+        })
+        .catch(err => {
+          console.error("Failed to copy code: ", err);
+        });
+    }
   }
 
   console.log(nodes)
@@ -396,23 +410,28 @@ export default function App() {
         })
       }
       {showModal && <Modal onClose={() => setShowModal(false)} onSelect={handleCodeTypeSelection} />}
-
-      {generatedCode && (
-        <div className='absolute top-4 right-4 bg-white h-full overflow-y-scroll no-scrollbar p-4 rounded shadow-lg'>
-          <div className='absolute top-0 right-0 p-2 flex flex-row gap-2'>
-            <button
-              onClick={() => setGeneratedCode(null)}
-              className=' bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded'
-            >
-              Hide
-            </button>
-          </div>
+      <MuiModal
+      hideBackdrop={false}
+      onClose={() => {
+          setGenerateCodeModalOpen(false);
+      }}
+      open={generateCodeModalOpen}>
+        <ModalDialog className="bg-slate-150">
+        <div className='flex justify-center items-center h-full'>
+        <div className='bg-slate-100 px-5 py-6 rounded-lg flex flex-col justify-center'>
           <h3 className='text-lg font-bold mb-2'>Generated Code:</h3>
-          <pre className='bg-gray-100 p-2 rounded'>
-            <code>{generatedCode.code}</code>
+          <pre className='bg-gray-100 px-3 rounded my-5'>
+            <code>{generatedCode?.code}</code>
           </pre>
+          <div className='flex flex-row justify-center'>
+          <Button className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 rounded w-32' onClick={copyCodeToClipboard}>
+            Copy Code
+          </Button>
+          </div>
         </div>
-      )}
+        </div>
+        </ModalDialog>
+       </MuiModal>
       <EdgeLabelModal
         isOpen={isEdgeLabelModalOpen}
         onClose={() => setIsEdgeLabelModalOpen(false)}
