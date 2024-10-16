@@ -90,7 +90,7 @@ export default function App() {
       localStorage.setItem("createNodeModalDismissed", "true");
       setModals((prevModals) => ({ ...prevModals, showCreateEdgeModal: true }));
     } else {
-      alert("Please create a node before continuing! Click anywhere on the screen to create a node");
+      alert("Please create a node before continuing!");
     }
   };
 
@@ -100,7 +100,7 @@ export default function App() {
       localStorage.setItem("createEdgeModalDismissed", "true");
       setModals((prevModals) => ({ ...prevModals, showConditionalEdgeModal: true }));
     } else {
-      alert("Please create an edge before continuing! Click and drag from one node to another to create an edge");
+      alert("Please create an edge before continuing!");
     }
   };
 
