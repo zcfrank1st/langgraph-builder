@@ -178,7 +178,7 @@ export default function App() {
       onClose: handleGenerateCodeModalClose,
       title: "Happy building!",
       content: "Once you're done prototyping, click Generate Code in the bottom right corner to get LangGraph code based on your nodes and edges",
-      buttonText: "Finish onboarding",
+      buttonText: "Finish",
     },
   ]
 
