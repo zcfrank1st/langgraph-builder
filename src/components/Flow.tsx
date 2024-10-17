@@ -161,7 +161,7 @@ export default function App() {
       className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
       onClose: handleConditionalEdgeModalClose, 
       title: "Create a conditional edge",
-      content: "Edges are non-conditional by default. To create a conditional edge, either click on a non-conditional edge or draw multiple edges leaving from the same node",
+      content: "Edges are non-conditional by default. To create a conditional edge, click on a non-conditional edge or draw multiple edges leaving from the same node",
       buttonText: "Continue",
     },
     {
@@ -176,8 +176,8 @@ export default function App() {
     {
       isOpen: modals.showGenerateCodeModal,
       onClose: handleGenerateCodeModalClose,
-      title: "You're ready!",
-      content: "Once you're done prototyping, click Generate Code in the bottom right corner to generate LangGraph code based on your nodes and edges",
+      title: "Happy building!",
+      content: "Once you're done prototyping, click Generate Code in the bottom right corner to get LangGraph code based on your nodes and edges",
       buttonText: "Finish onboarding",
     },
   ]
