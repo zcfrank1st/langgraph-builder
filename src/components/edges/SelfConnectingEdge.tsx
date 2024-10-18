@@ -1,18 +1,54 @@
-import React from 'react'
-import { BaseEdge, EdgeProps, getBezierPath, EdgeText } from '@xyflow/react'
+import React, { useState } from 'react'
+import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 
 interface SelfConnectingEdgeProps extends EdgeProps {
   data?: {
     onLabelClick: (id: string) => void
+    updateEdgeLabel: (id: string, newLabel: string) => void
   }
 }
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, label, animated, source } = props
-  const { edgeLabels } = useEdgeLabel()
+  const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
+  const [isEditing, setIsEditing] = useState(false)
+  const [currentLabel, setCurrentLabel] = useState(
+    edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string),
+  )
+
+  const handleLabelClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsEditing(true)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+    setCurrentLabel(e.target.value)
+  }
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+    updateEdgeLabel(source, currentLabel)
+    setIsEditing(false)
+  }
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+    if (e.key === 'Enter') {
+      updateEdgeLabel(source, currentLabel)
+      setIsEditing(false)
+    }
+    if (e.key === 'Escape') {
+      setCurrentLabel(
+        edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string),
+      )
+      setIsEditing(false)
+    }
+  }
+
   if (props.source !== props.target) {
     const [edgePath, labelX, labelY] = getBezierPath({
       sourceX,
@@ -38,23 +74,38 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           </marker>
         </defs>
         <BaseEdge {...props} id={id} path={edgePath} markerEnd={'url(#triangle)'} />
-        {label && animated && (
-            <EdgeText
-              x={labelX}
-            y={labelY}
-            label={
-              edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string)
-            }
-            onClick={(e) => {
-              e.stopPropagation()
-              props.data?.onLabelClick(id)
-            }}
-
-            labelBgPadding={[10, 10]}
-            labelBgStyle={{ fill: '#2596be', stroke: '#207fa5', strokeWidth: 2 }}
-            labelStyle={{ fill: '#f5f5dc', fontSize: 10, fontWeight: 'medium', textAlign: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-            />
-        )}
+        {label &&
+          animated &&
+          (isEditing ? (
+            <foreignObject className='pointer-events-none' x={labelX - 70} y={labelY - 10} width={160} height={35}>
+              <input
+                data-stop-propagation='true'
+                type='text'
+                value={currentLabel}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                autoFocus
+                onKeyDown={(e) => {
+                  e.stopPropagation()
+                  handleInputKeyDown(e)
+                }}
+                className='cursor-none bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
+              />
+            </foreignObject>
+          ) : (
+            <foreignObject x={labelX - 70} y={labelY - 10} width={160} height={35}>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleLabelClick(e)
+                }}
+                data-stop-propagation='true'
+                className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
+              >
+                {currentLabel}
+              </div>
+            </foreignObject>
+          ))}
       </>
     )
   }
@@ -64,26 +115,38 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} />
-      {label && (
-        <EdgeText
-          x={sourceX + 100}
-          y={sourceY - 70}
-          label={edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string)}
-          onClick={(e) => {
-            e.stopPropagation()
-            props.data?.onLabelClick(id)
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            padding: 8,
-            margin: 0,
-            zIndex: 1000,
-            cursor: 'pointer',
-          }}
-        />
-      )}
+      {label &&
+        animated &&
+        (isEditing ? (
+          <foreignObject x={sourceX + 30} y={sourceY + 5} width={150} height={35}>
+            <input
+              type='text'
+              value={currentLabel}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={(e) => {
+                e.stopPropagation()
+                handleInputKeyDown(e)
+              }}
+              autoFocus
+              data-stop-propagation='true'
+              className='cursor-none bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
+            />
+          </foreignObject>
+        ) : (
+          <foreignObject x={sourceX + 30} y={sourceY + 5} width={150} height={35}>
+            <div
+              onClick={(e) => {
+                e.stopPropagation()
+                handleLabelClick(e)
+              }}
+              data-stop-propagation='true'
+              className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
+            >
+              <div className='px-2'>{currentLabel}</div>
+            </div>
+          </foreignObject>
+        ))}
     </>
   )
 }
