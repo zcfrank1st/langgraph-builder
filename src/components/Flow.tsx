@@ -35,7 +35,6 @@ export default function App() {
   const reactFlowWrapper = useRef<any>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
   const [isConnecting, setIsConnecting] = useState(false)
-  const [lastClickTime, setLastClickTime] = useState(0)
   const [generatedCode, setGeneratedCode] = useState<CodeGenerationResult | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [codeType, setCodeType] = useState<'js' | 'python' | null>(null)
@@ -45,8 +44,6 @@ export default function App() {
   const { getIntersectingNodes } = useReactFlow()
 
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-
-  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
 
   const [modals, setModals] = useState({
     showWelcomeModal: false,
@@ -193,10 +190,6 @@ export default function App() {
       buttonText: 'Finish',
     },
   ]
-
-  const handleEdgeLabelClick = useCallback((sourceNodeId: string) => {
-    setSelectedEdgeId(sourceNodeId)
-  }, [])
 
   const onConnectStart: OnConnectStart = useCallback(() => {
     setIsConnecting(true)
@@ -358,7 +351,7 @@ export default function App() {
         edges={edges.map((edge) => {
           return {
             ...edge,
-            data: { ...edge.data, onLabelClick: () => handleEdgeLabelClick(edge.source) },
+            data: { ...edge.data },
           }
         })}
         edgeTypes={edgeTypes}
