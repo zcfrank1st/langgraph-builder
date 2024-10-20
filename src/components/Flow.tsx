@@ -8,12 +8,11 @@ import {
   useEdgesState,
   OnConnectStart,
   type OnConnect,
-  useOnSelectionChange,
-  applyEdgeChanges,
   applyNodeChanges,
-  type Node,
+  useReactFlow,
   type Edge,
 } from '@xyflow/react'
+import Image from 'next/image'
 import { MarkerType } from 'reactflow'
 import '@xyflow/react/dist/style.css'
 
@@ -23,9 +22,7 @@ import { generateLanggraphCode } from '../codeGeneration/generateLanggraph'
 import { generateLanggraphJS } from '../codeGeneration/generateLanggraphJS'
 import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
-import Modal from './Modal'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
-import EdgeLabelModal from './EdgeLabelModal'
 import { Button, Modal as MuiModal, ModalDialog } from '@mui/joy'
 
 import GenericModal from './GenericModal'
@@ -45,10 +42,10 @@ export default function App() {
   const { buttonTexts } = useButtonText()
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
+  const { getIntersectingNodes } = useReactFlow()
 
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
 
-  const [isEdgeLabelModalOpen, setIsEdgeLabelModalOpen] = useState(false)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
 
   const [modals, setModals] = useState({
@@ -199,33 +196,17 @@ export default function App() {
 
   const handleEdgeLabelClick = useCallback((sourceNodeId: string) => {
     setSelectedEdgeId(sourceNodeId)
-    setIsEdgeLabelModalOpen(true)
   }, [])
 
-  const handleEdgeLabelSave = useCallback(
-    (newLabel: string) => {
-      if (selectedEdgeId) {
-        updateEdgeLabel(selectedEdgeId, newLabel)
-      }
-      setIsEdgeLabelModalOpen(false)
-    },
-    [selectedEdgeId, updateEdgeLabel],
-  )
-
-  const onConnectStart: OnConnectStart = useCallback(
-    (connection) => {
-      console.log('onConnectStart', connection)
-      setIsConnecting(true)
-    },
-    [nodes, setIsConnecting],
-  )
+  const onConnectStart: OnConnectStart = useCallback(() => {
+    setIsConnecting(true)
+  }, [nodes, setIsConnecting])
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      console.log('onConnect', connection)
       const edgeId = `edge-${maxEdgeLength + 1}`
       setMaxEdgeLength(maxEdgeLength + 1)
-      const defaultLabel = `conditional_${buttonTexts[connection.source] ? buttonTexts[connection.source].replace(/\s+/g, '_') : 'default'}`
+      const defaultLabel = `default_edge_name`
       const newEdge: CustomEdgeType = {
         ...connection,
         id: edgeId,
@@ -234,26 +215,20 @@ export default function App() {
         animated: connection.source === connection.target,
         label: defaultLabel,
       }
-
       setEdges((prevEdges) => {
         const updatedEdges = addEdge(newEdge, prevEdges)
-
-        // Check if there are other edges from the same source
         const sourceEdges = updatedEdges.filter((edge) => edge.source === connection.source)
-
         if (sourceEdges.length > 1) {
-          // If there are multiple edges from the same source, make them all conditional
           return updatedEdges.map((edge) =>
             edge.source === connection.source
               ? {
                   ...edge,
                   animated: true,
-                  label: edgeLabels[edge.id] || defaultLabel || edge.label,
+                  label: defaultLabel || edge.label,
                 }
               : edge,
           )
         }
-
         return updatedEdges
       })
     },
@@ -300,10 +275,6 @@ export default function App() {
     [nodes, setNodes, reactFlowInstance, reactFlowWrapper, isConnecting, applyNodeChanges, maxNodeLength],
   )
 
-  const handleGenerateCode = () => {
-    setShowModal(true)
-  }
-
   const handleCodeTypeSelection = (type: 'js' | 'python') => {
     setCodeType(type)
     setShowModal(false)
@@ -342,15 +313,38 @@ export default function App() {
 
   const onEdgeDoubleClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
-      console.log('onEdgeDoubleClick', edge)
       event.stopPropagation()
       setEdges((eds) => eds.filter((e) => e.id !== edge.id))
     },
     [setEdges],
   )
 
-  console.log(nodes)
-  console.log(edges)
+  const onNodeDrag = useCallback(
+    (evt: any, node: any) => {
+      const intersectingNodes = getIntersectingNodes(node)
+
+      if (intersectingNodes && intersectingNodes.length > 0) {
+        const offsetX = node.measured.width / 2 + 60
+        const offsetY = node.measured.height / 2 + 60
+
+        setNodes((nds) =>
+          nds.map((n) => {
+            if (n.id === node.id) {
+              return {
+                ...n,
+                position: {
+                  x: node.position.x + offsetX,
+                  y: node.position.y + offsetY,
+                },
+              }
+            }
+            return n
+          }),
+        )
+      }
+    },
+    [getIntersectingNodes, setNodes],
+  )
 
   return (
     <div ref={reactFlowWrapper} className='z-10 no-scrollbar' style={{ width: '100vw', height: '100vh' }}>
@@ -358,13 +352,15 @@ export default function App() {
         onEdgeClick={onEdgeClick}
         onEdgeDoubleClick={onEdgeDoubleClick}
         nodes={nodes}
+        onNodeDrag={onNodeDrag}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
-        edges={edges.map((edge) => ({
-          ...edge,
-          label: edgeLabels[edge.source] || edge.label,
-          data: { ...edge.data, onLabelClick: () => handleEdgeLabelClick(edge.source) },
-        }))}
+        edges={edges.map((edge) => {
+          return {
+            ...edge,
+            data: { ...edge.data, onLabelClick: () => handleEdgeLabelClick(edge.source) },
+          }
+        })}
         edgeTypes={edgeTypes}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -380,16 +376,21 @@ export default function App() {
       >
         <Background />
       </ReactFlow>
-      <Button
-        onClick={handleGenerateCode}
-        className='absolute bottom-4 right-4 bg-[#246161] hover:bg-[#195656] text-white font-bold py-2 px-4 rounded'
-      >
-        Generate Code
-      </Button>
+      <div className='flex rounded py-2 px-4 flex-col absolute bottom-4 right-4'>
+        <div className='text-white font-bold text-center'> {'Generate Code'}</div>
+        <div className='flex flex-row gap-2 pt-3'>
+          <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('python')}>
+            <Image src='/python.png' alt='Python' width={35} height={35} />
+          </Button>
+          <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('js')}>
+            <Image src='/javascript.png' alt='JS' width={35} height={35} />
+          </Button>
+        </div>
+      </div>
+
       {genericModalArray.map((modal, index) => {
         return <GenericModal key={index} {...modal} />
       })}
-      {showModal && <Modal onClose={() => setShowModal(false)} onSelect={handleCodeTypeSelection} />}
       <MuiModal
         hideBackdrop={false}
         onClose={() => {
@@ -422,12 +423,6 @@ export default function App() {
           </div>
         </ModalDialog>
       </MuiModal>
-      <EdgeLabelModal
-        isOpen={isEdgeLabelModalOpen}
-        onClose={() => setIsEdgeLabelModalOpen(false)}
-        onSave={handleEdgeLabelSave}
-        initialLabel={selectedEdgeId ? edgeLabels[selectedEdgeId] || '' : ''}
-      />
     </div>
   )
 }

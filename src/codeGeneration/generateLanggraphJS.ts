@@ -44,7 +44,7 @@ export function generateLanggraphJS(
     .forEach((edge) => {
       const sourceLabel = getNodeLabel(edge.source)
       const targetLabel = getNodeLabel(edge.target)
-      const edgeLabel = edgeLabels[edge.source] || `conditional_${sourceLabel}`
+      const edgeLabel = `default_edge_name`
       if (!conditionalFunctions.has(edgeLabel)) {
         conditionalFunctions.set(edgeLabel, { source: sourceLabel, targets: new Set() })
       }

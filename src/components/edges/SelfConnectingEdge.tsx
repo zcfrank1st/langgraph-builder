@@ -12,12 +12,11 @@ interface SelfConnectingEdgeProps extends EdgeProps {
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, label, animated, source } = props
+
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
   const [isEditing, setIsEditing] = useState(false)
-  const [currentLabel, setCurrentLabel] = useState(
-    edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string),
-  )
+  const [currentLabel, setCurrentLabel] = useState(edgeLabels[source] || 'default_edge_name')
 
   const handleLabelClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -77,7 +76,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         {label &&
           animated &&
           (isEditing ? (
-            <foreignObject className='pointer-events-none' x={labelX - 70} y={labelY - 10} width={160} height={35}>
+            <foreignObject className='pointer-events-none' x={labelX - 70} y={labelY - 10} width={130} height={35}>
               <input
                 data-stop-propagation='true'
                 type='text'
@@ -93,7 +92,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               />
             </foreignObject>
           ) : (
-            <foreignObject x={labelX - 70} y={labelY - 10} width={160} height={35}>
+            <foreignObject x={labelX - 70} y={labelY - 10} width={130} height={35}>
               <div
                 onClick={(e) => {
                   e.stopPropagation()
@@ -102,7 +101,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 data-stop-propagation='true'
                 className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
               >
-                {currentLabel}
+                {edgeLabels[source] || label}
               </div>
             </foreignObject>
           ))}
@@ -118,7 +117,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       {label &&
         animated &&
         (isEditing ? (
-          <foreignObject x={sourceX + 30} y={sourceY + 5} width={150} height={35}>
+          <foreignObject x={sourceX + 30} y={sourceY + 5} width={130} height={35}>
             <input
               type='text'
               value={currentLabel}
@@ -134,7 +133,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             />
           </foreignObject>
         ) : (
-          <foreignObject x={sourceX + 30} y={sourceY + 5} width={150} height={35}>
+          <foreignObject x={sourceX + 30} y={sourceY + 5} width={130} height={35}>
             <div
               onClick={(e) => {
                 e.stopPropagation()
@@ -143,7 +142,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               data-stop-propagation='true'
               className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
             >
-              <div className='px-2'>{currentLabel}</div>
+              <div className='px-2'>{edgeLabels[source] || label}</div>
             </div>
           </foreignObject>
         ))}
