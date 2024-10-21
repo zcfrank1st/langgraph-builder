@@ -7,13 +7,21 @@ export function generateLanggraphCode(
   buttonTexts: { [key: string]: string },
   edgeLabels: { [key: string]: string },
 ): string {
+  const sourceEdges = edges.filter(
+    (edge) => !edge.animated && edges.filter((e) => e.source === edge.source && !e.animated).length > 1,
+  )
+
+  const imports = ['from langgraph.graph import StateGraph, START, END', 'from typing import TypedDict, Literal']
+  if (sourceEdges.length > 1) {
+    imports[1] += ', Annotated'
+    imports.push('import operator')
+  }
+  imports.push('\n')
   const getNodeLabel = (nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId)
     const buttonText = buttonTexts[nodeId]
     return (buttonText || (node?.data?.label as string) || nodeId).replace(/\s+/g, '_')
   }
-
-  const imports = ['from langgraph.graph import StateGraph, END', 'from typing import TypedDict, Literal', '\n']
 
   const functions = nodes
     .filter((node) => node.type !== 'source' && node.type !== 'end')
@@ -50,6 +58,11 @@ export function generateLanggraphCode(
   const stateClass = [
     'class State(TypedDict): \n    """State class for the agent"""\n    # Add your state variables here\n',
   ]
+  if (sourceEdges.length > 1) {
+    stateClass.push(`    """Parallel execution detected: Use a reducer to prevent conflicts from writing to the same key"""
+    """Example state variable and reducer is below"""
+    node_return: Annotated[list, operator.add]\n`)
+  }
 
   const workflowFunction = ['workflow = StateGraph(State)', '', '# Add nodes to the graph']
 
@@ -73,27 +86,25 @@ export function generateLanggraphCode(
     const sourceLabel = getNodeLabel(edge.source)
     const targetLabel = getNodeLabel(edge.target)
     if (edge.animated) {
-      const edgeLabel = edgeLabels[edge.source] || `conditional_${sourceLabel}`
+      const edgeLabel = `conditional_${sourceLabel}`
       if (!processedConditionalEdges.has(edgeLabel)) {
-        workflowFunction.push(`workflow.add_conditional_edges("${sourceLabel}", ${edgeLabel})`)
+        if (sourceLabel === 'source') {
+          workflowFunction.push(`workflow.add_conditional_edges(START, ${edgeLabel})`)
+        } else {
+          workflowFunction.push(`workflow.add_conditional_edges("${sourceLabel}", ${edgeLabel})`)
+        }
         processedConditionalEdges.add(edgeLabel)
       }
     } else {
       if (targetLabel === 'end') {
         workflowFunction.push(`workflow.add_edge("${sourceLabel}", END)`)
+      } else if (sourceLabel == 'source') {
+        workflowFunction.push(`workflow.add_edge("START", "${targetLabel}")`)
       } else {
         if (sourceLabel != 'source') workflowFunction.push(`workflow.add_edge("${sourceLabel}", "${targetLabel}")`)
       }
     }
   })
-
-  const startNode = nodes.find((node) => {
-    const sourceNode = nodes.find((n) => n.type === 'source')
-    return edges.some((edge) => edge.source === sourceNode?.id && edge.target === node.id)
-  })
-  if (startNode) {
-    workflowFunction.push(`workflow.set_entry_point("${getNodeLabel(startNode.id)}")`)
-  }
 
   const graph = `\ngraph=workflow.compile()`
 

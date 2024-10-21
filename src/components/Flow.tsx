@@ -317,8 +317,8 @@ export default function App() {
       const intersectingNodes = getIntersectingNodes(node)
 
       if (intersectingNodes && intersectingNodes.length > 0) {
-        const offsetX = node.measured.width / 2 + 60
-        const offsetY = node.measured.height / 2 + 60
+        const offsetX = node.measured.width / 2 + 50
+        const offsetY = node.measured.height / 2 + 50
 
         setNodes((nds) =>
           nds.map((n) => {
@@ -385,13 +385,13 @@ export default function App() {
         return <GenericModal key={index} {...modal} />
       })}
       <MuiModal
-        hideBackdrop={false}
+        hideBackdrop={true}
         onClose={() => {
           setGenerateCodeModalOpen(false)
         }}
         open={generateCodeModalOpen}
       >
-        <ModalDialog className='bg-slate-150'>
+        <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
           <div className='flex justify-between items-center'>
             <h2 className='text-lg font-bold'>Generated Code:</h2>
             <Button

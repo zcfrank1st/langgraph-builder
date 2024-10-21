@@ -11,7 +11,7 @@ interface SelfConnectingEdgeProps extends EdgeProps {
 }
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
-  const { sourceX, sourceY, targetX, targetY, id, markerEnd, label, animated, source } = props
+  const { sourceX, sourceY, targetX, targetY, id, markerEnd, source, label, animated } = props
 
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const { buttonTexts } = useButtonText()

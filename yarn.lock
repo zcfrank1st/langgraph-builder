@@ -2225,7 +2225,7 @@
 
 "@tisoap/react-flow-smart-edge@^3.0.0":
   version "3.0.0"
-  resolved "https://registry.npmjs.org/@tisoap/react-flow-smart-edge/-/react-flow-smart-edge-3.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/@tisoap/react-flow-smart-edge/-/react-flow-smart-edge-3.0.0.tgz#cc28ffe7446d5532e6e4e82b2e5bb0d0cff51b66"
   integrity sha512-XtEQT0IrOqPwJvCzgEoj3Y16/EK4SOcjZO7FmOPU+qJWmgYjeTyv7J35CGm6dFeJYdZ2gHDrvQ1zwaXuo23/8g==
   dependencies:
     pathfinding "0.4.18"
@@ -7782,7 +7782,7 @@ react@^18.2.0:
 
 reactflow@^11.11.4:
   version "11.11.4"
-  resolved "https://registry.npmjs.org/reactflow/-/reactflow-11.11.4.tgz"
+  resolved "https://registry.yarnpkg.com/reactflow/-/reactflow-11.11.4.tgz#e3593e313420542caed81aecbd73fb9bc6576653"
   integrity sha512-70FOtJkUWH3BAOsN+LU9lCrKoKbtOPnz2uq0CV2PLdNSwxTXOhCbsZr50GmZ+Rtw3jx8Uv7/vBFtCGixLfd4Og==
   dependencies:
     "@reactflow/background" "11.3.14"
