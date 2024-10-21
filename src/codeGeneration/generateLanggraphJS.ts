@@ -28,7 +28,7 @@ export function generateLanggraphJS(
     stateArray.push(
       '    // Parallel execution detected: Use a reducer to prevent conflicts from writing to the same key',
     )
-    stateArray.push('    messages: Annotation<BaseMessage[]>({')
+    stateArray.push('    // Example state variable and reducer is below')
     stateArray.push('        reducer: (x, y) => x.concat(y),')
     stateArray.push('        default: () => [],')
     stateArray.push('    })')
@@ -100,7 +100,7 @@ export function generateLanggraphJS(
       if (targetLabel === 'end') {
         workflowFunction.push(`  .addEdge("${sourceLabel}", END)`)
       } else if (sourceLabel === 'source') {
-        workflowFunction.push(`  .addEdge("START", "${targetLabel}")`)
+        workflowFunction.push(`  .addEdge(START, "${targetLabel}")`)
       } else {
         workflowFunction.push(`  .addEdge("${sourceLabel}", "${targetLabel}")`)
       }
