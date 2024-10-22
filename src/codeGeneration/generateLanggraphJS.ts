@@ -17,7 +17,11 @@ export function generateLanggraphJS(
   }
   console.log(sourceEdges, 'SOURCE EDGES')
 
-  const importArray = ['StateGraph', 'END', 'Annotation']
+  const importArray = ['StateGraph', 'START', 'END', 'Annotation']
+
+  if (sourceEdges.length > 1) {
+    importArray.push('Annotated')
+  }
   const imports = [`import { ${importArray.join(', ')} } from '@langchain/langgraph';`]
   if (sourceEdges.length > 1) {
     imports.push('import { BaseMessage } from "@langchain/core/messages";')
@@ -29,6 +33,7 @@ export function generateLanggraphJS(
       '    // Parallel execution detected: Use a reducer to prevent conflicts from writing to the same key',
     )
     stateArray.push('    // Example state variable and reducer is below')
+    stateArray.push('    messages: Annotated<BaseMessage[]>({')
     stateArray.push('        reducer: (x, y) => x.concat(y),')
     stateArray.push('        default: () => [],')
     stateArray.push('    })')
@@ -54,7 +59,7 @@ export function generateLanggraphJS(
     .forEach((edge) => {
       const sourceLabel = getNodeLabel(edge.source)
       const targetLabel = getNodeLabel(edge.target)
-      const edgeLabel = `default_edge_name`
+      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
       if (!conditionalFunctions.has(edgeLabel)) {
         conditionalFunctions.set(edgeLabel, { source: sourceLabel, targets: new Set() })
       }
@@ -87,7 +92,7 @@ export function generateLanggraphJS(
     const sourceLabel = getNodeLabel(edge.source)
     const targetLabel = getNodeLabel(edge.target)
     if (edge.animated) {
-      const edgeLabel = `conditional_${sourceLabel}`
+      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
       if (!processedConditionalEdges.has(edgeLabel)) {
         if (sourceLabel === 'source') {
           workflowFunction.push(`  .addConditionalEdges(START, ${edgeLabel})`)

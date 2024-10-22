@@ -11,7 +11,12 @@ export function generateLanggraphCode(
     (edge) => !edge.animated && edges.filter((e) => e.source === edge.source && !e.animated).length > 1,
   )
 
-  const imports = ['from langgraph.graph import StateGraph, START, END', 'from typing import TypedDict, Literal']
+  const hasConditionalEdges = edges.some((edge) => edge.animated)
+
+  const imports = ['from langgraph.graph import StateGraph, START, END', 'from typing import TypedDict']
+  if (hasConditionalEdges) {
+    imports[0] = 'from langgraph.graph import StateGraph, START, END, Literal'
+  }
   if (sourceEdges.length > 1) {
     imports[1] += ', Annotated'
     imports.push('import operator')
@@ -36,7 +41,7 @@ export function generateLanggraphCode(
     .forEach((edge) => {
       const sourceLabel = getNodeLabel(edge.source)
       const targetLabel = getNodeLabel(edge.target)
-      const edgeLabel = edgeLabels[edge.source] || `conditional_${sourceLabel}`
+      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
       if (!conditionalFunctions.has(edgeLabel)) {
         conditionalFunctions.set(edgeLabel, { source: sourceLabel, targets: new Set() })
       }
@@ -86,7 +91,7 @@ export function generateLanggraphCode(
     const sourceLabel = getNodeLabel(edge.source)
     const targetLabel = getNodeLabel(edge.target)
     if (edge.animated) {
-      const edgeLabel = `conditional_${sourceLabel}`
+      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
       if (!processedConditionalEdges.has(edgeLabel)) {
         if (sourceLabel === 'source') {
           workflowFunction.push(`workflow.add_conditional_edges(START, ${edgeLabel})`)
@@ -99,7 +104,7 @@ export function generateLanggraphCode(
       if (targetLabel === 'end') {
         workflowFunction.push(`workflow.add_edge("${sourceLabel}", END)`)
       } else if (sourceLabel == 'source') {
-        workflowFunction.push(`workflow.add_edge("START", "${targetLabel}")`)
+        workflowFunction.push(`workflow.add_edge(START, "${targetLabel}")`)
       } else {
         if (sourceLabel != 'source') workflowFunction.push(`workflow.add_edge("${sourceLabel}", "${targetLabel}")`)
       }
