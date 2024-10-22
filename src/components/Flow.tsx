@@ -9,7 +9,6 @@ import {
   OnConnectStart,
   type OnConnect,
   applyNodeChanges,
-  useReactFlow,
   type Edge,
 } from '@xyflow/react'
 import Image from 'next/image'
@@ -36,12 +35,9 @@ export default function App() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<CodeGenerationResult | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [codeType, setCodeType] = useState<'js' | 'python' | null>(null)
   const { buttonTexts } = useButtonText()
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
-  const { getIntersectingNodes } = useReactFlow()
 
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
 
@@ -269,9 +265,6 @@ export default function App() {
   )
 
   const handleCodeTypeSelection = (type: 'js' | 'python') => {
-    setCodeType(type)
-    setShowModal(false)
-
     let generatedCode
     if (type === 'js') {
       generatedCode = generateLanggraphJS(nodes, edges, buttonTexts, edgeLabels)
@@ -312,40 +305,12 @@ export default function App() {
     [setEdges],
   )
 
-  const onNodeDrag = useCallback(
-    (evt: any, node: any) => {
-      const intersectingNodes = getIntersectingNodes(node)
-
-      if (intersectingNodes && intersectingNodes.length > 0) {
-        const offsetX = node.measured.width / 2 + 50
-        const offsetY = node.measured.height / 2 + 50
-
-        setNodes((nds) =>
-          nds.map((n) => {
-            if (n.id === node.id) {
-              return {
-                ...n,
-                position: {
-                  x: node.position.x + offsetX,
-                  y: node.position.y + offsetY,
-                },
-              }
-            }
-            return n
-          }),
-        )
-      }
-    },
-    [getIntersectingNodes, setNodes],
-  )
-
   return (
     <div ref={reactFlowWrapper} className='z-10 no-scrollbar' style={{ width: '100vw', height: '100vh' }}>
       <ReactFlow<CustomNodeType, CustomEdgeType>
         onEdgeClick={onEdgeClick}
         onEdgeDoubleClick={onEdgeDoubleClick}
         nodes={nodes}
-        onNodeDrag={onNodeDrag}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         edges={edges.map((edge) => {
