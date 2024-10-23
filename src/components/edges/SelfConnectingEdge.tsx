@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { useButtonText } from '@/contexts/ButtonTextContext'
+import { useActiveIcon } from '@/contexts/ActiveIconContext'
 
 interface SelfConnectingEdgeProps extends EdgeProps {
   data?: {
@@ -12,14 +13,22 @@ interface SelfConnectingEdgeProps extends EdgeProps {
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, source, label, animated } = props
-
+  const { activeIcon } = useActiveIcon()
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
   const [isEditing, setIsEditing] = useState(false)
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source] || 'default_edge_name')
 
+  useEffect(() => {
+    // Sync currentLabel with the context whenever the edgeLabels or source changes
+    setCurrentLabel(edgeLabels[source] || 'default_edge_name')
+  }, [edgeLabels, source])
+
   const handleLabelClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (activeIcon === 1 || activeIcon === 0) {
+      return
+    }
     setIsEditing(true)
   }
 
@@ -78,6 +87,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           (isEditing ? (
             <foreignObject className='pointer-events-none' x={labelX - 70} y={labelY - 10} width={130} height={35}>
               <input
+                disabled={activeIcon === 1 || activeIcon === 0}
                 data-stop-propagation='true'
                 type='text'
                 value={currentLabel}
@@ -119,6 +129,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         (isEditing ? (
           <foreignObject x={sourceX + 30} y={sourceY + 5} width={130} height={35}>
             <input
+              disabled={activeIcon === 1 || activeIcon === 0}
               type='text'
               value={currentLabel}
               onChange={handleInputChange}

@@ -1,5 +1,6 @@
 'use client'
-import { useCallback, useState, useEffect, useRef } from 'react'
+import { useCallback, useState, useEffect, useRef, act } from 'react'
+import Toolbar from './ToolBar'
 import {
   Background,
   ReactFlow,
@@ -14,7 +15,7 @@ import {
 import Image from 'next/image'
 import { MarkerType } from 'reactflow'
 import '@xyflow/react/dist/style.css'
-
+import { ActiveIconProvider } from '@/contexts/ActiveIconContext'
 import { initialNodes, nodeTypes, type CustomNodeType } from './nodes'
 import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
 import { generateLanggraphCode } from '../codeGeneration/generateLanggraph'
@@ -40,7 +41,42 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
 
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
+  const [activeIcon, setActiveIcon] = useState<number>(0)
+  const activeIconRef = useRef(activeIcon)
+  const [isLocked, setIsLocked] = useState(false)
+  const isLockedRef = useRef(isLocked)
 
+  useEffect(() => {
+    activeIconRef.current = activeIcon
+    isLockedRef.current = isLocked
+    isLockedRef.current = isLocked
+  }, [activeIcon, isLocked])
+
+  const handleNodesChange = useCallback(
+    (changes: any) => {
+      if (activeIconRef.current !== 3 && changes[0].type === 'remove') {
+        console.log('onNodesChange prevented because activeIcon is 1')
+        return
+      }
+      onNodesChange(changes)
+    },
+    [onNodesChange],
+  )
+
+  const handleEdgesChange = useCallback(
+    (changes: any) => {
+      console.log('changes')
+      // If the active icon is not 3 (i.e., not in eraser mode), prevent deletion
+      if (activeIconRef.current !== 3 && changes.some((change: any) => change.type === 'remove')) {
+        console.log('Edge deletion prevented because activeIcon is not 3')
+        return
+      }
+
+      onEdgesChange(changes)
+    },
+    [onEdgesChange],
+  )
+  // onboarding logic
   const [modals, setModals] = useState({
     showWelcomeModal: false,
     showCreateNodeModal: false,
@@ -187,12 +223,16 @@ export default function App() {
     },
   ]
 
+  // util functions
   const onConnectStart: OnConnectStart = useCallback(() => {
     setIsConnecting(true)
   }, [nodes, setIsConnecting])
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
+      if (activeIconRef.current === 1 || activeIconRef.current === 0) {
+        return
+      }
       const edgeId = `edge-${maxEdgeLength + 1}`
       setMaxEdgeLength(maxEdgeLength + 1)
       const defaultLabel = `default_edge_name`
@@ -226,11 +266,16 @@ export default function App() {
 
   const addNode = useCallback(
     (event: React.MouseEvent) => {
+      event.preventDefault()
+
+      if (activeIconRef.current === 1 || activeIconRef.current === 2 || activeIconRef.current === 3) {
+        return
+      }
       if (isConnecting) {
         setIsConnecting(false)
         return
       }
-      event.preventDefault()
+
       if (reactFlowWrapper) {
         const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect()
 
@@ -292,6 +337,10 @@ export default function App() {
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation()
+      if (activeIconRef.current === 1 || activeIconRef.current === 0 || isLockedRef.current) {
+        return
+      }
+
       setEdges((eds) => eds.map((e) => (e.id === edge.id ? { ...e, animated: !e.animated } : e)))
     },
     [setEdges],
@@ -300,6 +349,9 @@ export default function App() {
   const onEdgeDoubleClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation()
+      if (activeIconRef.current !== 3 || isLockedRef.current) {
+        return
+      }
       setEdges((eds) => eds.filter((e) => e.id !== edge.id))
     },
     [setEdges],
@@ -307,33 +359,37 @@ export default function App() {
 
   return (
     <div ref={reactFlowWrapper} className='z-10 no-scrollbar' style={{ width: '100vw', height: '100vh' }}>
-      <ReactFlow<CustomNodeType, CustomEdgeType>
-        onEdgeClick={onEdgeClick}
-        onEdgeDoubleClick={onEdgeDoubleClick}
-        nodes={nodes}
-        nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
-        edges={edges.map((edge) => {
-          return {
-            ...edge,
-            data: { ...edge.data },
-          }
-        })}
-        edgeTypes={edgeTypes}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onInit={setReactFlowInstance}
-        fitView
-        onConnectStart={onConnectStart}
-        onPaneClick={addNode}
-        className='z-10 bg-[#1a1c24]'
-        style={{
-          backgroundColor: '#1a1c24',
-        }}
-        proOptions={proOptions}
-      >
-        <Background />
-      </ReactFlow>
+      <ActiveIconProvider activeIcon={activeIcon}>
+        <ReactFlow<CustomNodeType, CustomEdgeType>
+          onEdgeClick={onEdgeClick}
+          onEdgeDoubleClick={onEdgeDoubleClick}
+          nodes={nodes}
+          nodeTypes={nodeTypes}
+          onNodesChange={handleNodesChange}
+          edges={edges.map((edge) => {
+            return {
+              ...edge,
+              data: { ...edge.data },
+            }
+          })}
+          edgeTypes={edgeTypes}
+          onEdgesChange={handleEdgesChange}
+          onConnect={onConnect}
+          onInit={setReactFlowInstance}
+          fitView
+          onConnectStart={onConnectStart}
+          onPaneClick={addNode}
+          className='z-10 bg-[#1a1c24]'
+          style={{
+            backgroundColor: '#1a1c24',
+          }}
+          proOptions={proOptions}
+          connectionLineStyle={{ opacity: activeIcon === 1 || activeIcon === 0 ? 0 : 1 }}
+        >
+          <Background />
+        </ReactFlow>
+      </ActiveIconProvider>
+
       <div className='flex rounded py-2 px-4 flex-col absolute bottom-4 right-4'>
         <div className='text-white font-bold text-center'> {'Generate Code'}</div>
         <div className='flex flex-row gap-2 pt-3'>
@@ -345,6 +401,7 @@ export default function App() {
           </Button>
         </div>
       </div>
+      <Toolbar setActiveIcon={setActiveIcon} activeIcon={activeIcon} setIsLocked={setIsLocked} isLocked={isLocked} />
 
       {genericModalArray.map((modal, index) => {
         return <GenericModal key={index} {...modal} />
