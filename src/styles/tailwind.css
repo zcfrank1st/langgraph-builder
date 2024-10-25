@@ -55,6 +55,11 @@ path.react-flow__edge-path:hover {
   stroke-width: 5;
 }
 
+.react-flow__nodes {
+  width: auto !important;
+  height: auto !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

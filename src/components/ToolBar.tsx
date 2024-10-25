@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Switch } from '@/components/ui/switch'
 import Image from 'next/image'
 import { Button } from '@mui/joy'
@@ -31,7 +31,10 @@ const Toolbar = ({ setActiveIcon, activeIcon, isLocked, setIsLocked }: ToolbarPr
               className={`m-1 p-2 ${
                 activeIcon === icon.id ? 'bg-slate-900' : 'bg-slate-800'
               } rounded hover:bg-slate-900 focus:outline-none`}
-              onClick={() => setActiveIcon(icon.id)}
+              onClick={() => {
+                setActiveIcon(icon.id)
+                setIsLocked(false)
+              }}
             >
               {icon.component}
             </Button>

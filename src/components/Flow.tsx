@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useState, useEffect, useRef, act } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import Toolbar from './ToolBar'
 import {
   Background,
@@ -12,7 +12,6 @@ import {
   applyNodeChanges,
   type Edge,
 } from '@xyflow/react'
-import Image from 'next/image'
 import { MarkerType } from 'reactflow'
 import '@xyflow/react/dist/style.css'
 import { ActiveIconProvider } from '@/contexts/ActiveIconContext'
@@ -51,6 +50,14 @@ export default function App() {
     isLockedRef.current = isLocked
     isLockedRef.current = isLocked
   }, [activeIcon, isLocked])
+
+  useEffect(() => {
+    if (activeIconRef.current === 5) {
+      handleCodeTypeSelection('js')
+    } else if (activeIconRef.current === 4) {
+      handleCodeTypeSelection('python')
+    }
+  }, [activeIcon])
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -230,7 +237,7 @@ export default function App() {
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      if (activeIconRef.current === 1 || activeIconRef.current === 0) {
+      if (activeIconRef.current === 1 || activeIconRef.current === 0 || activeIconRef.current === 3) {
         return
       }
       const edgeId = `edge-${maxEdgeLength + 1}`
@@ -384,23 +391,12 @@ export default function App() {
             backgroundColor: '#1a1c24',
           }}
           proOptions={proOptions}
-          connectionLineStyle={{ opacity: activeIcon === 1 || activeIcon === 0 ? 0 : 1 }}
+          connectionLineStyle={{ opacity: activeIcon === 1 || activeIcon === 0 || activeIcon === 3 ? 0 : 1 }}
         >
           <Background />
         </ReactFlow>
       </ActiveIconProvider>
 
-      <div className='flex rounded py-2 px-4 flex-col absolute bottom-4 right-4'>
-        <div className='text-white font-bold text-center'> {'Generate Code'}</div>
-        <div className='flex flex-row gap-2 pt-3'>
-          <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('python')}>
-            <Image src='/python.png' alt='Python' width={35} height={35} />
-          </Button>
-          <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('js')}>
-            <Image src='/javascript.png' alt='JS' width={35} height={35} />
-          </Button>
-        </div>
-      </div>
       <Toolbar setActiveIcon={setActiveIcon} activeIcon={activeIcon} setIsLocked={setIsLocked} isLocked={isLocked} />
 
       {genericModalArray.map((modal, index) => {
@@ -431,7 +427,10 @@ export default function App() {
           <div className='flex justify-center'>
             <Button
               className='bg-[#FF7F7F] hover:bg-[#FF5C5C] text-white font-bold px-2 rounded w-20'
-              onClick={() => setGenerateCodeModalOpen(false)}
+              onClick={() => {
+                setGenerateCodeModalOpen(false)
+                setActiveIcon(0)
+              }}
             >
               Close
             </Button>

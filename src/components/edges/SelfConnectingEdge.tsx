@@ -85,7 +85,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         {label &&
           animated &&
           (isEditing ? (
-            <foreignObject className='pointer-events-none' x={labelX - 70} y={labelY - 10} width={130} height={35}>
+            <foreignObject x={labelX - 70} y={labelY - 10} width={130} height={35}>
               <input
                 disabled={activeIcon === 1 || activeIcon === 0}
                 data-stop-propagation='true'
