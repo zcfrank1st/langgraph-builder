@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { useCallback, useState, useEffect, useRef } from 'react'
 import Toolbar from './ToolBar'
 import {
@@ -44,12 +45,30 @@ export default function App() {
   const activeIconRef = useRef(activeIcon)
   const [isLocked, setIsLocked] = useState(false)
   const isLockedRef = useRef(isLocked)
-  const [currentModalIndex, setCurrentModalIndex] = useState(0)
+  const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(null)
+
+  const modalActiveIconMap: { [key: string]: number } = {
+    welcomeModal: 0,
+    toolBarModal: 0,
+    createNodeModal: 0,
+    createEdgeModal: 2,
+    conditionalEdgeModal: 2,
+    eraseModal: 3,
+    moveAroundModal: 1,
+    generateCodeModal: 0,
+  }
+
+  useEffect(() => {
+    const storedActiveIcon = Number(localStorage.getItem('activeIcon'))
+    if (!isNaN(storedActiveIcon)) {
+      setActiveIcon(storedActiveIcon)
+    }
+  }, [])
 
   useEffect(() => {
     activeIconRef.current = activeIcon
     isLockedRef.current = isLocked
-    isLockedRef.current = isLocked
+    localStorage.setItem('activeIcon', activeIcon.toString())
   }, [activeIcon, isLocked])
 
   useEffect(() => {
@@ -103,16 +122,22 @@ export default function App() {
 
     const initialIndex = modalsDismissed.findIndex((dismissed) => !dismissed)
     setCurrentModalIndex(initialIndex >= 0 ? initialIndex : genericModalArray.length)
+
+    if (initialIndex >= 0 && initialIndex < genericModalArray.length) {
+      const currentModalKey = genericModalArray[initialIndex].key
+      const newActiveIcon = modalActiveIconMap[currentModalKey] ?? 0
+      setActiveIcon(newActiveIcon)
+    } else {
+      setActiveIcon(0)
+    }
   }, [])
 
   const handleModalClose = () => {
-    const currentModal = genericModalArray[currentModalIndex]
+    const currentModal = genericModalArray[currentModalIndex || 0]
 
-    // Implement logic based on the modal key
     switch (currentModal.key) {
       case 'welcomeModal':
         localStorage.setItem('welcomeModalDismissed', 'true')
-        // No additional checks needed, proceed to next modal
         break
       case 'toolBarModal':
         localStorage.setItem('toolBarModalDismissed', 'true')
@@ -123,7 +148,7 @@ export default function App() {
           return
         }
         localStorage.setItem('createNodeModalDismissed', 'true')
-        setActiveIcon(2)
+        setActiveIcon(modalActiveIconMap['createEdgeModal'])
         break
       case 'createEdgeModal':
         if (!isEdgeOneCreated) {
@@ -138,14 +163,15 @@ export default function App() {
           return
         }
         localStorage.setItem('conditionalEdgeModalDismissed', 'true')
-        setActiveIcon(3)
+        setActiveIcon(modalActiveIconMap['eraseModal'])
         break
       case 'eraseModal':
         localStorage.setItem('eraseModalDismissed', 'true')
-        setActiveIcon(1)
+        setActiveIcon(modalActiveIconMap['moveAroundModal'])
         break
       case 'moveAroundModal':
         localStorage.setItem('moveAroundModalDismissed', 'true')
+        setActiveIcon(modalActiveIconMap['generateCodeModal'])
         break
       case 'generateCodeModal':
         localStorage.setItem('generateCodeModalDismissed', 'true')
@@ -153,7 +179,7 @@ export default function App() {
       default:
         break
     }
-    setCurrentModalIndex((prevIndex) => prevIndex + 1)
+    setCurrentModalIndex((prevIndex) => (prevIndex !== null ? prevIndex + 1 : null))
   }
 
   const genericModalArray = [
@@ -249,7 +275,7 @@ export default function App() {
     },
   ]
 
-  const isOnboarding = currentModalIndex < genericModalArray.length
+  const isOnboarding = currentModalIndex !== null && currentModalIndex < genericModalArray.length
 
   // util functions
   const onConnectStart: OnConnectStart = useCallback(() => {
@@ -386,84 +412,99 @@ export default function App() {
   )
 
   return (
-    <div ref={reactFlowWrapper} className='z-10 no-scrollbar' style={{ width: '100vw', height: '100vh' }}>
-      <ActiveIconProvider activeIcon={activeIcon}>
-        <ReactFlow<CustomNodeType, CustomEdgeType>
-          onEdgeClick={onEdgeClick}
-          onEdgeDoubleClick={onEdgeDoubleClick}
-          nodes={nodes}
-          nodeTypes={nodeTypes}
-          onNodesChange={handleNodesChange}
-          edges={edges.map((edge) => {
-            return {
-              ...edge,
-              data: { ...edge.data },
-            }
-          })}
-          edgeTypes={edgeTypes}
-          onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
-          onInit={setReactFlowInstance}
-          fitView
-          onConnectStart={onConnectStart}
-          onPaneClick={addNode}
-          className='z-10 bg-[#1a1c24]'
-          style={{
-            backgroundColor: '#1a1c24',
-          }}
-          proOptions={proOptions}
-          connectionLineStyle={{ opacity: activeIcon === 1 || activeIcon === 0 || activeIcon === 3 ? 0 : 1 }}
-        >
-          <Background />
-        </ReactFlow>
-      </ActiveIconProvider>
-
-      <Toolbar
-        setActiveIcon={setActiveIcon}
-        activeIcon={activeIcon}
-        setIsLocked={setIsLocked}
-        isLocked={isLocked}
-        disabled={isOnboarding}
-      />
-
-      {currentModalIndex < genericModalArray.length && (
-        <GenericModal isOpen={currentModalIndex < genericModalArray.length} {...genericModalArray[currentModalIndex]} />
-      )}
-      <MuiModal
-        hideBackdrop={true}
-        onClose={() => {
-          setGenerateCodeModalOpen(false)
-        }}
-        open={generateCodeModalOpen}
+    <div>
+      <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 md:hidden flex flex-col justify-center items-center text-lg font-medium text-center'>
+        <div className={`flex justify-center mb-6`}>
+          <Image src={'/langgraph-logo.png'} alt='Modal Image' width={150} height={150} />
+        </div>
+        <h1>Please view the LangGraph Builder on desktop</h1>
+      </div>
+      <div
+        ref={reactFlowWrapper}
+        className='z-10 no-scrollbar hidden md:block'
+        style={{ width: '100vw', height: '100vh' }}
       >
-        <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
-          <div className='flex justify-between items-center'>
-            <h2 className='text-lg font-bold'>Generated Code:</h2>
-            <Button
-              className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 rounded w-28'
-              onClick={copyCodeToClipboard}
-            >
-              Copy Code
-            </Button>
-          </div>
-          <div className='overflow-y-scroll overflow-x-scroll justify-center'>
-            <pre className='py-6 px-3'>
-              <code>{generatedCode?.code}</code>
-            </pre>
-          </div>
-          <div className='flex justify-center'>
-            <Button
-              className='bg-[#FF7F7F] hover:bg-[#FF5C5C] text-white font-bold px-2 rounded w-20'
-              onClick={() => {
-                setGenerateCodeModalOpen(false)
-                setActiveIcon(0)
-              }}
-            >
-              Close
-            </Button>
-          </div>
-        </ModalDialog>
-      </MuiModal>
+        <ActiveIconProvider activeIcon={activeIcon}>
+          <ReactFlow<CustomNodeType, CustomEdgeType>
+            onEdgeClick={onEdgeClick}
+            onEdgeDoubleClick={onEdgeDoubleClick}
+            nodes={nodes}
+            nodeTypes={nodeTypes}
+            onNodesChange={handleNodesChange}
+            edges={edges.map((edge) => {
+              return {
+                ...edge,
+                data: { ...edge.data },
+              }
+            })}
+            edgeTypes={edgeTypes}
+            onEdgesChange={handleEdgesChange}
+            onConnect={onConnect}
+            onInit={setReactFlowInstance}
+            fitView
+            onConnectStart={onConnectStart}
+            onPaneClick={addNode}
+            className='z-10 bg-[#1a1c24]'
+            style={{
+              backgroundColor: '#1a1c24',
+            }}
+            proOptions={proOptions}
+            connectionLineStyle={{ opacity: activeIcon === 1 || activeIcon === 0 || activeIcon === 3 ? 0 : 1 }}
+          >
+            <Background />
+          </ReactFlow>
+        </ActiveIconProvider>
+
+        <Toolbar
+          setActiveIcon={setActiveIcon}
+          activeIcon={activeIcon}
+          setIsLocked={setIsLocked}
+          isLocked={isLocked}
+          disabled={isOnboarding}
+        />
+
+        {currentModalIndex !== null && currentModalIndex < genericModalArray.length && (
+          <GenericModal
+            isOpen={currentModalIndex < genericModalArray.length}
+            {...genericModalArray[currentModalIndex]}
+          />
+        )}
+        <MuiModal
+          hideBackdrop={true}
+          onClose={() => {
+            setGenerateCodeModalOpen(false)
+          }}
+          open={generateCodeModalOpen}
+        >
+          <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
+            <div className='flex justify-between items-center'>
+              <h2 className='text-lg font-bold'>Generated Code:</h2>
+              <Button
+                className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 rounded w-28'
+                onClick={copyCodeToClipboard}
+              >
+                Copy Code
+              </Button>
+            </div>
+            <div className='overflow-y-scroll overflow-x-scroll justify-center'>
+              <pre className='py-6 px-3'>
+                <code>{generatedCode?.code}</code>
+              </pre>
+            </div>
+            <div className='flex justify-center'>
+              <Button
+                className='bg-[#FF7F7F] hover:bg-[#FF5C5C] text-white font-bold px-2 rounded w-20'
+                onClick={() => {
+                  setGenerateCodeModalOpen(false)
+                  setActiveIcon(0)
+                }}
+              >
+                Close
+              </Button>
+            </div>
+          </ModalDialog>
+        </MuiModal>
+      </div>
     </div>
   )
 }

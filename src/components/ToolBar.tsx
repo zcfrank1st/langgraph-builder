@@ -18,8 +18,16 @@ const Toolbar = ({ setActiveIcon, activeIcon, isLocked, setIsLocked, disabled }:
     { id: 1, name: 'Position', component: <Hand size={20} /> },
     { id: 2, name: 'Edge', component: <PenLine size={20} /> },
     { id: 3, name: 'Eraser', component: <Eraser size={20} /> },
-    { id: 4, name: 'Type', component: <Image src='/python.png' alt='Type' width={20} height={20} /> },
-    { id: 5, name: 'Type', component: <Image src='/javascript.png' alt='Type' width={20} height={20} /> },
+    {
+      id: 4,
+      name: 'Type',
+      component: <Image src='/python.png' alt='Type' width={20} height={20} className='icon-image' />,
+    },
+    {
+      id: 5,
+      name: 'Type',
+      component: <Image src='/javascript.png' alt='Type' width={20} height={20} className='icon-image' />,
+    },
   ]
 
   return (

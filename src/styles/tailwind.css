@@ -25,6 +25,14 @@
   }
 }
 
+.icon-image {
+  width: 20px;
+  height: 20px;
+  min-width: 20px; /* Prevents shrinking */
+  min-height: 20px; /* Prevents shrinking */
+  object-fit: contain; /* Ensures the aspect ratio is maintained */
+}
+
 @layer components {
   .scrollbar::-webkit-scrollbar {
     width: 15px;
