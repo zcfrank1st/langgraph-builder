@@ -9,9 +9,10 @@ interface ToolbarProps {
   activeIcon: number
   isLocked: boolean
   setIsLocked: (value: boolean) => void
+  disabled: boolean
 }
 
-const Toolbar = ({ setActiveIcon, activeIcon, isLocked, setIsLocked }: ToolbarProps) => {
+const Toolbar = ({ setActiveIcon, activeIcon, isLocked, setIsLocked, disabled }: ToolbarProps) => {
   const icons = [
     { id: 0, name: 'Node', component: <SquareMousePointer size={20} /> },
     { id: 1, name: 'Position', component: <Hand size={20} /> },
@@ -32,8 +33,10 @@ const Toolbar = ({ setActiveIcon, activeIcon, isLocked, setIsLocked }: ToolbarPr
                 activeIcon === icon.id ? 'bg-slate-900' : 'bg-slate-800'
               } rounded hover:bg-slate-900 focus:outline-none`}
               onClick={() => {
-                setActiveIcon(icon.id)
-                setIsLocked(false)
+                if (!disabled) {
+                  setActiveIcon(icon.id)
+                  setIsLocked(false)
+                }
               }}
             >
               {icon.component}

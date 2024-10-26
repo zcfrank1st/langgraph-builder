@@ -44,6 +44,7 @@ export default function App() {
   const activeIconRef = useRef(activeIcon)
   const [isLocked, setIsLocked] = useState(false)
   const isLockedRef = useRef(isLocked)
+  const [currentModalIndex, setCurrentModalIndex] = useState(0)
 
   useEffect(() => {
     activeIconRef.current = activeIcon
@@ -83,89 +84,84 @@ export default function App() {
     },
     [onEdgesChange],
   )
-  // onboarding logic
-  const [modals, setModals] = useState({
-    showWelcomeModal: false,
-    showCreateNodeModal: false,
-    showCreateEdgeModal: false,
-    showConditionalEdgeModal: false,
-    showRenameModal: false,
-    showGenerateCodeModal: false,
-  })
 
   const isNodeOneCreated = nodes.length > 2
   const isEdgeOneCreated = edges.length > 0
   const isConditionalEdgeCreated = edges.filter((edge) => edge.animated).length > 0
 
   useEffect(() => {
-    const isWelcomeModalDismissed = localStorage.getItem('welcomeModalDismissed')
-    if (isWelcomeModalDismissed !== 'true') {
-      setModals({ ...modals, showWelcomeModal: true })
-    } else {
-      const isNodeModalDismissed = localStorage.getItem('createNodeModalDismissed')
-      if (isNodeModalDismissed !== 'true') {
-        setModals({ ...modals, showCreateNodeModal: true })
-      }
-    }
+    const modalsDismissed = [
+      localStorage.getItem('welcomeModalDismissed') === 'true',
+      localStorage.getItem('toolBarModalDismissed') === 'true',
+      localStorage.getItem('createNodeModalDismissed') === 'true',
+      localStorage.getItem('createEdgeModalDismissed') === 'true',
+      localStorage.getItem('conditionalEdgeModalDismissed') === 'true',
+      localStorage.getItem('eraseModalDismissed') === 'true',
+      localStorage.getItem('moveAroundModalDismissed') === 'true',
+      localStorage.getItem('generateCodeModalDismissed') === 'true',
+    ]
+
+    const initialIndex = modalsDismissed.findIndex((dismissed) => !dismissed)
+    setCurrentModalIndex(initialIndex >= 0 ? initialIndex : genericModalArray.length)
   }, [])
 
-  const handleWelcomeModalClose = () => {
-    setModals((prevModals) => ({ ...prevModals, showWelcomeModal: false }))
-    localStorage.setItem('welcomeModalDismissed', 'true')
+  const handleModalClose = () => {
+    const currentModal = genericModalArray[currentModalIndex]
 
-    const isNodeModalDismissed = localStorage.getItem('createNodeModalDismissed')
-    if (isNodeModalDismissed !== 'true') {
-      setModals((prevModals) => ({ ...prevModals, showCreateNodeModal: true }))
+    // Implement logic based on the modal key
+    switch (currentModal.key) {
+      case 'welcomeModal':
+        localStorage.setItem('welcomeModalDismissed', 'true')
+        // No additional checks needed, proceed to next modal
+        break
+      case 'toolBarModal':
+        localStorage.setItem('toolBarModalDismissed', 'true')
+        break
+      case 'createNodeModal':
+        if (!isNodeOneCreated) {
+          alert('Please create a node before continuing!')
+          return
+        }
+        localStorage.setItem('createNodeModalDismissed', 'true')
+        setActiveIcon(2)
+        break
+      case 'createEdgeModal':
+        if (!isEdgeOneCreated) {
+          alert('Please create an edge before continuing!')
+          return
+        }
+        localStorage.setItem('createEdgeModalDismissed', 'true')
+        break
+      case 'conditionalEdgeModal':
+        if (!isConditionalEdgeCreated) {
+          alert('Please create a conditional edge before continuing!')
+          return
+        }
+        localStorage.setItem('conditionalEdgeModalDismissed', 'true')
+        setActiveIcon(3)
+        break
+      case 'eraseModal':
+        localStorage.setItem('eraseModalDismissed', 'true')
+        setActiveIcon(1)
+        break
+      case 'moveAroundModal':
+        localStorage.setItem('moveAroundModalDismissed', 'true')
+        break
+      case 'generateCodeModal':
+        localStorage.setItem('generateCodeModalDismissed', 'true')
+        break
+      default:
+        break
     }
-  }
-
-  const handleCreateNodeModalClose = () => {
-    if (isNodeOneCreated) {
-      setModals((prevModals) => ({ ...prevModals, showCreateNodeModal: false }))
-      localStorage.setItem('createNodeModalDismissed', 'true')
-      setModals((prevModals) => ({ ...prevModals, showCreateEdgeModal: true }))
-    } else {
-      alert('Please create a node before continuing!')
-    }
-  }
-
-  const handleCreateEdgeModalClose = () => {
-    if (isEdgeOneCreated) {
-      setModals((prevModals) => ({ ...prevModals, showCreateEdgeModal: false }))
-      localStorage.setItem('createEdgeModalDismissed', 'true')
-      setModals((prevModals) => ({ ...prevModals, showConditionalEdgeModal: true }))
-    } else {
-      alert('Please create an edge before continuing!')
-    }
-  }
-
-  const handleConditionalEdgeModalClose = () => {
-    if (isConditionalEdgeCreated) {
-      setModals((prevModals) => ({ ...prevModals, showConditionalEdgeModal: false }))
-      localStorage.setItem('conditionalEdgeModalDismissed', 'true')
-      setModals((prevModals) => ({ ...prevModals, showRenameModal: true }))
-    } else {
-      alert('Please create a conditional edge before continuing!')
-    }
-  }
-
-  const handleRenameModalClose = () => {
-    setModals((prevModals) => ({ ...prevModals, showRenameModal: false }))
-    localStorage.setItem('renameModalDismissed', 'true')
-    setModals((prevModals) => ({ ...prevModals, showGenerateCodeModal: true }))
-  }
-
-  const handleGenerateCodeModalClose = () => {
-    setModals((prevModals) => ({ ...prevModals, showGenerateCodeModal: false }))
-    localStorage.setItem('generateCodeModalDismissed', 'true')
+    setCurrentModalIndex((prevIndex) => prevIndex + 1)
   }
 
   const genericModalArray = [
     {
+      key: 'welcomeModal',
       noClickThrough: true,
       imageUrl: '/langgraph-logo.png',
-      isOpen: modals.showWelcomeModal,
-      onClose: handleWelcomeModalClose,
+      onClose: handleModalClose,
       title: 'Graph Builder',
       content: (
         <span>
@@ -184,51 +180,76 @@ export default function App() {
       buttonText: 'Get Started',
     },
     {
+      key: 'toolBarModal',
+      hideBackDrop: true,
+      onClose: handleModalClose,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      title: 'Tool bar',
+      content:
+        "You'll toggle between the tools at the top of your screen to build the graph. Let's start with the first one",
+      buttonText: 'Continue',
+    },
+    {
+      key: 'createNodeModal',
       hideBackDrop: true,
       className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-      isOpen: modals.showCreateNodeModal,
-      onClose: handleCreateNodeModalClose,
+      onClose: handleModalClose,
       title: 'Create a node',
-      content: 'To create a node, click anywhere on the screen. Move a node by clicking and dragging it',
+      content: 'To create a node, click anywhere on the screen. Click and drag to move it around',
       buttonText: 'Continue',
     },
     {
+      key: 'createEdgeModal',
       hideBackDrop: true,
-      className: 'absolute top-10 left-1/2 transform -translate-x-1/2',
-      isOpen: modals.showCreateEdgeModal,
-      onClose: handleCreateEdgeModalClose,
-      title: 'Create an edge',
-      content: 'To create an edge, click and drag from the top/bottom of one node to another node',
-      buttonText: 'Continue',
-    },
-    {
-      hideBackDrop: true,
-      isOpen: modals.showConditionalEdgeModal,
       className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-      onClose: handleConditionalEdgeModalClose,
-      title: 'Create a conditional edge',
-      content:
-        'Edges are non-conditional by default. To create a conditional edge, click on a non-conditional edge or draw multiple edges leaving from the same node',
+
+      onClose: handleModalClose,
+      title: 'Create a normal edge',
+      content: 'The next tool helps you create edges. To create a normal edge, click and drag from one node to another',
       buttonText: 'Continue',
     },
     {
+      key: 'conditionalEdgeModal',
       hideBackDrop: true,
-      className: 'absolute top-10 left-1/2 transform -translate-x-1/2',
-      isOpen: modals.showRenameModal,
-      onClose: handleRenameModalClose,
-      title: 'Delete an edge',
-      content: 'Double click quickly on an edge to delete it',
+
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: handleModalClose,
+      title: 'Create a conditional edge',
+      content: 'To create a conditional edge, click on a normal edge or draw multiple edges leaving from the same node',
       buttonText: 'Continue',
     },
     {
-      isOpen: modals.showGenerateCodeModal,
-      onClose: handleGenerateCodeModalClose,
-      title: 'Happy building!',
+      key: 'eraseModal',
+      hideBackDrop: true,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: handleModalClose,
+      title: 'Delete a node or edge',
       content:
-        "Once you're done prototyping, click Generate Code in the bottom right corner to get LangGraph code based on your nodes and edges",
+        'Our next tool helps us clean up the graph. Double click on an edge to delete it. Select a node and press delete to remove it',
+      buttonText: 'Continue',
+    },
+    {
+      key: 'moveAroundModal',
+      hideBackDrop: true,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: handleModalClose,
+      title: 'Lock the graph',
+      content:
+        "This tool locks the graph. In this mode, you can move nodes around but you can't create or edit nodes and edges",
+      buttonText: 'Continue',
+    },
+    {
+      key: 'generateCodeModal',
+      hideBackDrop: true,
+
+      onClose: handleModalClose,
+      title: 'Happy building!',
+      content: "Once you're done prototyping, click either the Python or JS logo to get code based on your graph",
       buttonText: 'Finish',
     },
   ]
+
+  const isOnboarding = currentModalIndex < genericModalArray.length
 
   // util functions
   const onConnectStart: OnConnectStart = useCallback(() => {
@@ -397,11 +418,17 @@ export default function App() {
         </ReactFlow>
       </ActiveIconProvider>
 
-      <Toolbar setActiveIcon={setActiveIcon} activeIcon={activeIcon} setIsLocked={setIsLocked} isLocked={isLocked} />
+      <Toolbar
+        setActiveIcon={setActiveIcon}
+        activeIcon={activeIcon}
+        setIsLocked={setIsLocked}
+        isLocked={isLocked}
+        disabled={isOnboarding}
+      />
 
-      {genericModalArray.map((modal, index) => {
-        return <GenericModal key={index} {...modal} />
-      })}
+      {currentModalIndex < genericModalArray.length && (
+        <GenericModal isOpen={currentModalIndex < genericModalArray.length} {...genericModalArray[currentModalIndex]} />
+      )}
       <MuiModal
         hideBackdrop={true}
         onClose={() => {
