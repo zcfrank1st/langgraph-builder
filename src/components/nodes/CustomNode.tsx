@@ -54,7 +54,7 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
           width: `${nodeWidth}px`,
         }}
       >
-        {activeIcon !== 1 && activeIcon !== 2 ? (
+        {activeIcon !== 1 ? (
           <input
             ref={inputRef}
             type='text'
@@ -78,8 +78,12 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
           </div>
         )}
 
-        <Handle type='source' style={{ width: '10px', height: '10px' }} position={Position.Bottom} />
-        <Handle type='target' style={{ width: '10px', height: '10px' }} position={Position.Top} />
+        {activeIcon !== 1 && (
+          <>
+            <Handle type='source' style={{ width: '10px', height: '10px' }} position={Position.Bottom} />
+            <Handle type='target' style={{ width: '10px', height: '10px' }} position={Position.Top} />
+          </>
+        )}
       </div>
     </div>
   )

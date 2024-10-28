@@ -40,13 +40,13 @@ const GenericModal = ({
       }}
       className={`${className}`}
     >
-      <div className='text-center text-lg font-medium md:hidden'>
+      <div className='text-center text-lg font-medium sm:hidden'>
         <div className={`flex justify-center ${imageUrl ? 'mb-6' : ''}`}>
           {imageUrl && <Image src={imageUrl} alt='Modal Image' width={150} height={150} />}
         </div>
         Please view the LangGraph builder on desktop
       </div>
-      <div className='flex hidden md:block flex-col justify-center items-center text-center'>
+      <div className='flex hidden sm:block flex-col justify-center items-center text-center'>
         <div className={`flex justify-center ${imageUrl ? 'mb-6' : ''}`}>
           {imageUrl && <Image src={imageUrl} alt='Modal Image' width={150} height={150} />}
         </div>

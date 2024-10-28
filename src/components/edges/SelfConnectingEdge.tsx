@@ -20,13 +20,12 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source] || 'default_edge_name')
 
   useEffect(() => {
-    // Sync currentLabel with the context whenever the edgeLabels or source changes
     setCurrentLabel(edgeLabels[source] || 'default_edge_name')
   }, [edgeLabels, source])
 
   const handleLabelClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (activeIcon === 1 || activeIcon === 0) {
+    if (activeIcon === 1) {
       return
     }
     setIsEditing(true)
@@ -87,7 +86,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           (isEditing ? (
             <foreignObject x={labelX - 70} y={labelY - 10} width={130} height={35}>
               <input
-                disabled={activeIcon === 1 || activeIcon === 0}
                 data-stop-propagation='true'
                 type='text'
                 value={currentLabel}
@@ -129,7 +127,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         (isEditing ? (
           <foreignObject x={sourceX + 30} y={sourceY + 5} width={130} height={35}>
             <input
-              disabled={activeIcon === 1 || activeIcon === 0}
               type='text'
               value={currentLabel}
               onChange={handleInputChange}
@@ -140,7 +137,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               }}
               autoFocus
               data-stop-propagation='true'
-              className='cursor-none bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
+              className='bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
             />
           </foreignObject>
         ) : (

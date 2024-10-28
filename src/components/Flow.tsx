@@ -43,8 +43,7 @@ export default function App() {
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [activeIcon, setActiveIcon] = useState<number>(0)
   const activeIconRef = useRef(activeIcon)
-  const [isLocked, setIsLocked] = useState(false)
-  const isLockedRef = useRef(isLocked)
+
   const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(null)
 
   const modalActiveIconMap: { [key: string]: number } = {
@@ -67,22 +66,13 @@ export default function App() {
 
   useEffect(() => {
     activeIconRef.current = activeIcon
-    isLockedRef.current = isLocked
-    localStorage.setItem('activeIcon', activeIcon.toString())
-  }, [activeIcon, isLocked])
 
-  useEffect(() => {
-    if (activeIconRef.current === 5) {
-      handleCodeTypeSelection('js')
-    } else if (activeIconRef.current === 4) {
-      handleCodeTypeSelection('python')
-    }
+    localStorage.setItem('activeIcon', activeIcon.toString())
   }, [activeIcon])
 
   const handleNodesChange = useCallback(
     (changes: any) => {
-      if (activeIconRef.current !== 3 && changes[0].type === 'remove') {
-        console.log('onNodesChange prevented because activeIcon is 1')
+      if (activeIconRef.current !== 1 && changes[0].type === 'remove') {
         return
       }
       onNodesChange(changes)
@@ -93,8 +83,7 @@ export default function App() {
   const handleEdgesChange = useCallback(
     (changes: any) => {
       console.log('changes')
-      // If the active icon is not 3 (i.e., not in eraser mode), prevent deletion
-      if (activeIconRef.current !== 3 && changes.some((change: any) => change.type === 'remove')) {
+      if (activeIconRef.current !== 1 && changes.some((change: any) => change.type === 'remove')) {
         console.log('Edge deletion prevented because activeIcon is not 3')
         return
       }
@@ -277,14 +266,13 @@ export default function App() {
 
   const isOnboarding = currentModalIndex !== null && currentModalIndex < genericModalArray.length
 
-  // util functions
   const onConnectStart: OnConnectStart = useCallback(() => {
     setIsConnecting(true)
   }, [nodes, setIsConnecting])
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      if (activeIconRef.current === 1 || activeIconRef.current === 0 || activeIconRef.current === 3) {
+      if (activeIconRef.current === 1) {
         return
       }
       const edgeId = `edge-${maxEdgeLength + 1}`
@@ -320,9 +308,7 @@ export default function App() {
 
   const addNode = useCallback(
     (event: React.MouseEvent) => {
-      event.preventDefault()
-
-      if (activeIconRef.current === 1 || activeIconRef.current === 2 || activeIconRef.current === 3) {
+      if (activeIconRef.current === 1) {
         return
       }
       if (isConnecting) {
@@ -391,10 +377,9 @@ export default function App() {
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation()
-      if (activeIconRef.current === 1 || activeIconRef.current === 0 || isLockedRef.current) {
+      if (activeIconRef.current === 1) {
         return
       }
-
       setEdges((eds) => eds.map((e) => (e.id === edge.id ? { ...e, animated: !e.animated } : e)))
     },
     [setEdges],
@@ -403,7 +388,7 @@ export default function App() {
   const onEdgeDoubleClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation()
-      if (activeIconRef.current !== 3 || isLockedRef.current) {
+      if (activeIconRef.current === 0) {
         return
       }
       setEdges((eds) => eds.filter((e) => e.id !== edge.id))
@@ -413,7 +398,7 @@ export default function App() {
 
   return (
     <div>
-      <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 md:hidden flex flex-col justify-center items-center text-lg font-medium text-center'>
+      <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 sm:hidden flex flex-col justify-center items-center text-lg font-medium text-center'>
         <div className={`flex justify-center mb-6`}>
           <Image src={'/langgraph-logo.png'} alt='Modal Image' width={150} height={150} />
         </div>
@@ -421,7 +406,7 @@ export default function App() {
       </div>
       <div
         ref={reactFlowWrapper}
-        className='z-10 no-scrollbar hidden md:block'
+        className='z-10 no-scrollbar hidden sm:block no-select'
         style={{ width: '100vw', height: '100vh' }}
       >
         <ActiveIconProvider activeIcon={activeIcon}>
@@ -449,26 +434,19 @@ export default function App() {
               backgroundColor: '#1a1c24',
             }}
             proOptions={proOptions}
-            connectionLineStyle={{ opacity: activeIcon === 1 || activeIcon === 0 || activeIcon === 3 ? 0 : 1 }}
+            connectionLineStyle={{ opacity: activeIcon === 1 ? 0 : 1 }}
           >
             <Background />
           </ReactFlow>
         </ActiveIconProvider>
+        <Toolbar setActiveIcon={setActiveIcon} activeIcon={activeIcon} />
 
-        <Toolbar
-          setActiveIcon={setActiveIcon}
-          activeIcon={activeIcon}
-          setIsLocked={setIsLocked}
-          isLocked={isLocked}
-          disabled={isOnboarding}
-        />
-
-        {currentModalIndex !== null && currentModalIndex < genericModalArray.length && (
+        {/* {currentModalIndex !== null && currentModalIndex < genericModalArray.length && (
           <GenericModal
             isOpen={currentModalIndex < genericModalArray.length}
             {...genericModalArray[currentModalIndex]}
           />
-        )}
+        )} */}
         <MuiModal
           hideBackdrop={true}
           onClose={() => {
@@ -496,7 +474,6 @@ export default function App() {
                 className='bg-[#FF7F7F] hover:bg-[#FF5C5C] text-white font-bold px-2 rounded w-20'
                 onClick={() => {
                   setGenerateCodeModalOpen(false)
-                  setActiveIcon(0)
                 }}
               >
                 Close
@@ -504,6 +481,17 @@ export default function App() {
             </div>
           </ModalDialog>
         </MuiModal>
+        <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
+          <div className='text-white font-bold text-center'> {'Generate Code'}</div>
+          <div className='flex flex-row gap-2 pt-3'>
+            <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('python')}>
+              <Image src='/python.png' alt='Python' width={35} height={35} />
+            </Button>
+            <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('js')}>
+              <Image src='/javascript.png' alt='JS' width={35} height={35} />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )
