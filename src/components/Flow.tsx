@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image'
-import { useCallback, useState, useEffect, useRef, useContext } from 'react'
+import { useCallback, useState, useRef, useContext, useEffect } from 'react'
 import {
   Background,
   ReactFlow,
@@ -33,16 +33,157 @@ export default function App() {
   const [generateCodeModalOpen, setGenerateCodeModalOpen] = useState(false)
   const reactFlowWrapper = useRef<any>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
-  const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
+  const { editingEdgeId } = useContext(EditingContext)
   const [isConnecting, setIsConnecting] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<CodeGenerationResult | null>(null)
   const { buttonTexts } = useButtonText()
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
-
+  const [currentModal, setCurrentModal] = useState<(typeof genericModalArray)[0] | null>(null)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-
   const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null)
+
+  const nodesRef = useRef(nodes)
+  const edgesRef = useRef(edges)
+  useEffect(() => {
+    nodesRef.current = nodes
+    edgesRef.current = edges
+  }, [nodes, edges])
+
+  const handleModalClose = (key: string) => {
+    const latestNodes = nodesRef.current
+    const latestEdges = edgesRef.current
+
+    const latestIsNodeOneCreated = latestNodes.length > 2
+    const latestIsEdgeOneCreated = latestEdges.length > 0
+    const latestIsConditionalEdgeCreated = latestEdges.filter((edge) => edge.animated).length > 0
+    let canClose = true
+    let alertMessage = ''
+
+    switch (key) {
+      case 'createNodeModal':
+        if (!latestIsNodeOneCreated) {
+          canClose = false
+          alertMessage = 'Please create at least one node before proceeding'
+        }
+        break
+      case 'createEdgeModal':
+        if (!latestIsEdgeOneCreated) {
+          canClose = false
+          alertMessage = 'Please create at least one edge before proceeding'
+        }
+        break
+      case 'conditionalEdgeModal':
+        if (!latestIsConditionalEdgeCreated) {
+          canClose = false
+          alertMessage = 'Please create at least one conditional edge before proceeding'
+        }
+        break
+      default:
+        break
+    }
+
+    if (canClose) {
+      localStorage.setItem(`${key}Dismissed`, 'true')
+      const currentIndex = genericModalArray.findIndex((modal) => modal.key === key)
+
+      let nextModal: (typeof genericModalArray)[0] | null = null
+      for (let i = currentIndex + 1; i < genericModalArray.length; i++) {
+        const modal = genericModalArray[i]
+        const dismissed = localStorage.getItem(`${modal.key}Dismissed`) === 'true'
+        if (!dismissed) {
+          nextModal = modal
+          break
+        }
+      }
+
+      setCurrentModal(nextModal)
+    } else {
+      alert(alertMessage)
+    }
+  }
+
+  const genericModalArray = [
+    {
+      key: 'welcomeModal',
+      noClickThrough: true,
+      imageUrl: '/langgraph-logo.png',
+      onClose: () => handleModalClose('welcomeModal'),
+      title: 'Graph Builder',
+      content: (
+        <span>
+          Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our
+          docs{' '}
+          <a
+            style={{ textDecoration: 'underline' }}
+            href='https://langchain-ai.github.io/langgraph/tutorials/introduction/'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            here
+          </a>
+        </span>
+      ),
+      buttonText: 'Get Started',
+    },
+
+    {
+      key: 'createNodeModal',
+      hideBackDrop: true,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: () => handleModalClose('createNodeModal'),
+      title: 'Create a Node',
+      content: 'To create a node, double click anywhere on the screen. Click and drag to move it around',
+      buttonText: 'Continue',
+    },
+    {
+      key: 'createEdgeModal',
+      hideBackDrop: true,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: () => handleModalClose('createEdgeModal'),
+      title: 'Create a Normal Edge',
+      content: 'Click and drag from one node to another to create a normal edge',
+      buttonText: 'Continue',
+    },
+    {
+      key: 'conditionalEdgeModal',
+      hideBackDrop: true,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: () => handleModalClose('conditionalEdgeModal'),
+      title: 'Create a Conditional Edge',
+      content:
+        'Double cllick a normal edge or draw multiple edges leaving from the same node to create a conditional edge',
+      buttonText: 'Continue',
+    },
+    {
+      key: 'deleteNodeEdgeModal',
+      hideBackDrop: true,
+      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      onClose: () => handleModalClose('deleteNodeEdgeModal'),
+      title: 'Delete a Node or Edge',
+      content: 'To delete a node or edge, just click and press delete',
+      buttonText: 'Continue',
+    },
+    {
+      key: 'generateCodeModal',
+      noClickThrough: true,
+      onClose: () => handleModalClose('generateCodeModal'),
+      title: 'Happy Building!',
+      content: "Once you're done prototyping, click either the Python or JS logo to get code based on your graph",
+      buttonText: 'Finish',
+    },
+  ]
+
+  useEffect(() => {
+    for (let i = 0; i < genericModalArray.length; i++) {
+      const modal = genericModalArray[i]
+      const dismissed = localStorage.getItem(`${modal.key}Dismissed`) === 'true'
+      if (!dismissed) {
+        setCurrentModal(modal)
+        break
+      }
+    }
+  }, [])
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -57,10 +198,6 @@ export default function App() {
     },
     [onEdgesChange],
   )
-
-  const isNodeOneCreated = nodes.length > 2
-  const isEdgeOneCreated = edges.length > 0
-  const isConditionalEdgeCreated = edges.filter((edge) => edge.animated).length > 0
 
   const onConnectStart: OnConnectStart = useCallback(() => {
     setIsConnecting(true)
@@ -233,12 +370,19 @@ export default function App() {
         >
           <Background />
         </ReactFlow>
-        {/* {currentModalIndex !== null && currentModalIndex < genericModalArray.length && (
+        {currentModal && (
           <GenericModal
-            isOpen={currentModalIndex < genericModalArray.length}
-            {...genericModalArray[currentModalIndex]}
+            isOpen={true}
+            onClose={currentModal.onClose}
+            title={currentModal.title}
+            content={currentModal.content}
+            buttonText={currentModal.buttonText}
+            hideBackDrop={currentModal.hideBackDrop}
+            className={currentModal.className}
+            imageUrl={currentModal.imageUrl}
+            noClickThrough={currentModal.noClickThrough}
           />
-        )} */}
+        )}
         <MuiModal
           hideBackdrop={true}
           onClose={() => {
