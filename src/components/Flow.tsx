@@ -130,7 +130,7 @@ export default function App() {
     {
       key: 'createNodeModal',
       hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('createNodeModal'),
       title: 'Create a Node',
       content: 'To create a node, double click anywhere on the screen. Click and drag to move it around',
@@ -139,7 +139,7 @@ export default function App() {
     {
       key: 'createEdgeModal',
       hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('createEdgeModal'),
       title: 'Create a Normal Edge',
       content: 'Click and drag from one node to another to create a normal edge',
@@ -148,7 +148,7 @@ export default function App() {
     {
       key: 'conditionalEdgeModal',
       hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('conditionalEdgeModal'),
       title: 'Create a Conditional Edge',
       content:
@@ -158,7 +158,7 @@ export default function App() {
     {
       key: 'deleteNodeEdgeModal',
       hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
+      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('deleteNodeEdgeModal'),
       title: 'Delete a Node or Edge',
       content: 'To delete a node or edge, just click and press delete',
@@ -330,17 +330,7 @@ export default function App() {
 
   return (
     <div>
-      <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 sm:hidden flex flex-col justify-center items-center text-lg font-medium text-center'>
-        <div className={`flex justify-center mb-6`}>
-          <Image src={'/langgraph-logo.png'} alt='Modal Image' width={150} height={150} />
-        </div>
-        <h1>Please view the LangGraph Builder on desktop</h1>
-      </div>
-      <div
-        ref={reactFlowWrapper}
-        className='z-10 no-scrollbar hidden sm:block no-select'
-        style={{ width: '100vw', height: '100vh' }}
-      >
+      <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
         <ReactFlow<CustomNodeType, CustomEdgeType>
           nodes={nodes}
           nodeTypes={nodeTypes}
