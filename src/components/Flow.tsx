@@ -1,7 +1,6 @@
 'use client'
 import Image from 'next/image'
-import { useCallback, useState, useEffect, useRef } from 'react'
-import Toolbar from './ToolBar'
+import { useCallback, useState, useEffect, useRef, useContext } from 'react'
 import {
   Background,
   ReactFlow,
@@ -15,7 +14,7 @@ import {
 } from '@xyflow/react'
 import { MarkerType } from 'reactflow'
 import '@xyflow/react/dist/style.css'
-import { ActiveIconProvider } from '@/contexts/ActiveIconContext'
+import { EditingContext } from '@/contexts/EditingContext'
 import { initialNodes, nodeTypes, type CustomNodeType } from './nodes'
 import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
 import { generateLanggraphCode } from '../codeGeneration/generateLanggraph'
@@ -34,6 +33,7 @@ export default function App() {
   const [generateCodeModalOpen, setGenerateCodeModalOpen] = useState(false)
   const reactFlowWrapper = useRef<any>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
+  const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
   const [isConnecting, setIsConnecting] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<CodeGenerationResult | null>(null)
   const { buttonTexts } = useButtonText()
@@ -41,40 +41,11 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
 
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const [activeIcon, setActiveIcon] = useState<number>(0)
-  const activeIconRef = useRef(activeIcon)
 
-  const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(null)
-
-  const modalActiveIconMap: { [key: string]: number } = {
-    welcomeModal: 0,
-    toolBarModal: 0,
-    createNodeModal: 0,
-    createEdgeModal: 2,
-    conditionalEdgeModal: 2,
-    eraseModal: 3,
-    moveAroundModal: 1,
-    generateCodeModal: 0,
-  }
-
-  useEffect(() => {
-    const storedActiveIcon = Number(localStorage.getItem('activeIcon'))
-    if (!isNaN(storedActiveIcon)) {
-      setActiveIcon(storedActiveIcon)
-    }
-  }, [])
-
-  useEffect(() => {
-    activeIconRef.current = activeIcon
-
-    localStorage.setItem('activeIcon', activeIcon.toString())
-  }, [activeIcon])
+  const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null)
 
   const handleNodesChange = useCallback(
     (changes: any) => {
-      if (activeIconRef.current !== 1 && changes[0].type === 'remove') {
-        return
-      }
       onNodesChange(changes)
     },
     [onNodesChange],
@@ -82,12 +53,6 @@ export default function App() {
 
   const handleEdgesChange = useCallback(
     (changes: any) => {
-      console.log('changes')
-      if (activeIconRef.current !== 1 && changes.some((change: any) => change.type === 'remove')) {
-        console.log('Edge deletion prevented because activeIcon is not 3')
-        return
-      }
-
       onEdgesChange(changes)
     },
     [onEdgesChange],
@@ -97,184 +62,12 @@ export default function App() {
   const isEdgeOneCreated = edges.length > 0
   const isConditionalEdgeCreated = edges.filter((edge) => edge.animated).length > 0
 
-  useEffect(() => {
-    const modalsDismissed = [
-      localStorage.getItem('welcomeModalDismissed') === 'true',
-      localStorage.getItem('toolBarModalDismissed') === 'true',
-      localStorage.getItem('createNodeModalDismissed') === 'true',
-      localStorage.getItem('createEdgeModalDismissed') === 'true',
-      localStorage.getItem('conditionalEdgeModalDismissed') === 'true',
-      localStorage.getItem('eraseModalDismissed') === 'true',
-      localStorage.getItem('moveAroundModalDismissed') === 'true',
-      localStorage.getItem('generateCodeModalDismissed') === 'true',
-    ]
-
-    const initialIndex = modalsDismissed.findIndex((dismissed) => !dismissed)
-    setCurrentModalIndex(initialIndex >= 0 ? initialIndex : genericModalArray.length)
-
-    if (initialIndex >= 0 && initialIndex < genericModalArray.length) {
-      const currentModalKey = genericModalArray[initialIndex].key
-      const newActiveIcon = modalActiveIconMap[currentModalKey] ?? 0
-      setActiveIcon(newActiveIcon)
-    } else {
-      setActiveIcon(0)
-    }
-  }, [])
-
-  const handleModalClose = () => {
-    const currentModal = genericModalArray[currentModalIndex || 0]
-
-    switch (currentModal.key) {
-      case 'welcomeModal':
-        localStorage.setItem('welcomeModalDismissed', 'true')
-        break
-      case 'toolBarModal':
-        localStorage.setItem('toolBarModalDismissed', 'true')
-        break
-      case 'createNodeModal':
-        if (!isNodeOneCreated) {
-          alert('Please create a node before continuing!')
-          return
-        }
-        localStorage.setItem('createNodeModalDismissed', 'true')
-        setActiveIcon(modalActiveIconMap['createEdgeModal'])
-        break
-      case 'createEdgeModal':
-        if (!isEdgeOneCreated) {
-          alert('Please create an edge before continuing!')
-          return
-        }
-        localStorage.setItem('createEdgeModalDismissed', 'true')
-        break
-      case 'conditionalEdgeModal':
-        if (!isConditionalEdgeCreated) {
-          alert('Please create a conditional edge before continuing!')
-          return
-        }
-        localStorage.setItem('conditionalEdgeModalDismissed', 'true')
-        setActiveIcon(modalActiveIconMap['eraseModal'])
-        break
-      case 'eraseModal':
-        localStorage.setItem('eraseModalDismissed', 'true')
-        setActiveIcon(modalActiveIconMap['moveAroundModal'])
-        break
-      case 'moveAroundModal':
-        localStorage.setItem('moveAroundModalDismissed', 'true')
-        setActiveIcon(modalActiveIconMap['generateCodeModal'])
-        break
-      case 'generateCodeModal':
-        localStorage.setItem('generateCodeModalDismissed', 'true')
-        break
-      default:
-        break
-    }
-    setCurrentModalIndex((prevIndex) => (prevIndex !== null ? prevIndex + 1 : null))
-  }
-
-  const genericModalArray = [
-    {
-      key: 'welcomeModal',
-      noClickThrough: true,
-      imageUrl: '/langgraph-logo.png',
-      onClose: handleModalClose,
-      title: 'Graph Builder',
-      content: (
-        <span>
-          Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our
-          docs{' '}
-          <a
-            style={{ textDecoration: 'underline' }}
-            href='https://langchain-ai.github.io/langgraph/tutorials/introduction/'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            here
-          </a>
-        </span>
-      ),
-      buttonText: 'Get Started',
-    },
-    {
-      key: 'toolBarModal',
-      hideBackDrop: true,
-      onClose: handleModalClose,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-      title: 'Tool bar',
-      content:
-        "You'll toggle between the tools at the top of your screen to build the graph. Let's start with the first one",
-      buttonText: 'Continue',
-    },
-    {
-      key: 'createNodeModal',
-      hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-      onClose: handleModalClose,
-      title: 'Create a node',
-      content: 'To create a node, click anywhere on the screen. Click and drag to move it around',
-      buttonText: 'Continue',
-    },
-    {
-      key: 'createEdgeModal',
-      hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-
-      onClose: handleModalClose,
-      title: 'Create a normal edge',
-      content: 'The next tool helps you create edges. To create a normal edge, click and drag from one node to another',
-      buttonText: 'Continue',
-    },
-    {
-      key: 'conditionalEdgeModal',
-      hideBackDrop: true,
-
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-      onClose: handleModalClose,
-      title: 'Create a conditional edge',
-      content: 'To create a conditional edge, click on a normal edge or draw multiple edges leaving from the same node',
-      buttonText: 'Continue',
-    },
-    {
-      key: 'eraseModal',
-      hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-      onClose: handleModalClose,
-      title: 'Delete a node or edge',
-      content:
-        'Our next tool helps us clean up the graph. Double click on an edge to delete it. Select a node and press delete to remove it',
-      buttonText: 'Continue',
-    },
-    {
-      key: 'moveAroundModal',
-      hideBackDrop: true,
-      className: 'absolute top-1/2 left-10 transform -translate-y-1/2',
-      onClose: handleModalClose,
-      title: 'Lock the graph',
-      content:
-        "This tool locks the graph. In this mode, you can move nodes around but you can't create or edit nodes and edges",
-      buttonText: 'Continue',
-    },
-    {
-      key: 'generateCodeModal',
-      hideBackDrop: true,
-
-      onClose: handleModalClose,
-      title: 'Happy building!',
-      content: "Once you're done prototyping, click either the Python or JS logo to get code based on your graph",
-      buttonText: 'Finish',
-    },
-  ]
-
-  const isOnboarding = currentModalIndex !== null && currentModalIndex < genericModalArray.length
-
   const onConnectStart: OnConnectStart = useCallback(() => {
     setIsConnecting(true)
   }, [nodes, setIsConnecting])
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      if (activeIconRef.current === 1) {
-        return
-      }
       const edgeId = `edge-${maxEdgeLength + 1}`
       setMaxEdgeLength(maxEdgeLength + 1)
       const defaultLabel = `default_edge_name`
@@ -308,9 +101,6 @@ export default function App() {
 
   const addNode = useCallback(
     (event: React.MouseEvent) => {
-      if (activeIconRef.current === 1) {
-        return
-      }
       if (isConnecting) {
         setIsConnecting(false)
         return
@@ -349,6 +139,22 @@ export default function App() {
     [nodes, setNodes, reactFlowInstance, reactFlowWrapper, isConnecting, applyNodeChanges, maxNodeLength],
   )
 
+  const handlePaneClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (clickTimeout) {
+        clearTimeout(clickTimeout)
+        setClickTimeout(null)
+        addNode(event)
+      } else {
+        const timeout = setTimeout(() => {
+          setClickTimeout(null)
+        }, 300)
+        setClickTimeout(timeout)
+      }
+    },
+    [clickTimeout, addNode],
+  )
+
   const handleCodeTypeSelection = (type: 'js' | 'python') => {
     let generatedCode
     if (type === 'js') {
@@ -374,24 +180,13 @@ export default function App() {
     }
   }
 
-  const onEdgeClick = useCallback(
-    (event: React.MouseEvent, edge: Edge) => {
-      event.stopPropagation()
-      if (activeIconRef.current === 1) {
-        return
-      }
-      setEdges((eds) => eds.map((e) => (e.id === edge.id ? { ...e, animated: !e.animated } : e)))
-    },
-    [setEdges],
-  )
-
   const onEdgeDoubleClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation()
-      if (activeIconRef.current === 0) {
+      if (editingEdgeId !== null) {
         return
       }
-      setEdges((eds) => eds.filter((e) => e.id !== edge.id))
+      setEdges((eds) => eds.map((e) => (e.id === edge.id ? { ...e, animated: !e.animated } : e)))
     },
     [setEdges],
   )
@@ -409,38 +204,35 @@ export default function App() {
         className='z-10 no-scrollbar hidden sm:block no-select'
         style={{ width: '100vw', height: '100vh' }}
       >
-        <ActiveIconProvider activeIcon={activeIcon}>
-          <ReactFlow<CustomNodeType, CustomEdgeType>
-            onEdgeClick={onEdgeClick}
-            onEdgeDoubleClick={onEdgeDoubleClick}
-            nodes={nodes}
-            nodeTypes={nodeTypes}
-            onNodesChange={handleNodesChange}
-            edges={edges.map((edge) => {
-              return {
-                ...edge,
-                data: { ...edge.data },
-              }
-            })}
-            edgeTypes={edgeTypes}
-            onEdgesChange={handleEdgesChange}
-            onConnect={onConnect}
-            onInit={setReactFlowInstance}
-            fitView
-            onConnectStart={onConnectStart}
-            onPaneClick={addNode}
-            className='z-10 bg-[#1a1c24]'
-            style={{
-              backgroundColor: '#1a1c24',
-            }}
-            proOptions={proOptions}
-            connectionLineStyle={{ opacity: activeIcon === 1 ? 0 : 1 }}
-          >
-            <Background />
-          </ReactFlow>
-        </ActiveIconProvider>
-        <Toolbar setActiveIcon={setActiveIcon} activeIcon={activeIcon} />
-
+        <ReactFlow<CustomNodeType, CustomEdgeType>
+          nodes={nodes}
+          nodeTypes={nodeTypes}
+          onEdgeDoubleClick={onEdgeDoubleClick}
+          onNodesChange={handleNodesChange}
+          edges={edges.map((edge) => {
+            return {
+              ...edge,
+              data: {
+                ...edge.data,
+              },
+            }
+          })}
+          edgeTypes={edgeTypes}
+          onEdgesChange={handleEdgesChange}
+          onConnect={onConnect}
+          onInit={setReactFlowInstance}
+          fitView
+          onConnectStart={onConnectStart}
+          className='z-10 bg-[#1a1c24]'
+          style={{
+            backgroundColor: '#1a1c24',
+          }}
+          proOptions={proOptions}
+          zoomOnDoubleClick={false}
+          onPaneClick={handlePaneClick}
+        >
+          <Background />
+        </ReactFlow>
         {/* {currentModalIndex !== null && currentModalIndex < genericModalArray.length && (
           <GenericModal
             isOpen={currentModalIndex < genericModalArray.length}

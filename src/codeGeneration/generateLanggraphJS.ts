@@ -15,7 +15,6 @@ export function generateLanggraphJS(
     const buttonText = buttonTexts[nodeId]
     return (buttonText || (node?.data?.label as string) || nodeId).replace(/\s+/g, '_')
   }
-  console.log(sourceEdges, 'SOURCE EDGES')
 
   const importArray = ['StateGraph', 'START', 'END', 'Annotation']
 

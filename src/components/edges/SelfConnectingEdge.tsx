@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { useButtonText } from '@/contexts/ButtonTextContext'
-import { useActiveIcon } from '@/contexts/ActiveIconContext'
+import { EditingContext } from '@/contexts/EditingContext'
 
 interface SelfConnectingEdgeProps extends EdgeProps {
   data?: {
@@ -13,11 +13,10 @@ interface SelfConnectingEdgeProps extends EdgeProps {
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, source, label, animated } = props
-  const { activeIcon } = useActiveIcon()
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
-  const [isEditing, setIsEditing] = useState(false)
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source] || 'default_edge_name')
+  const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
 
   useEffect(() => {
     setCurrentLabel(edgeLabels[source] || 'default_edge_name')
@@ -25,10 +24,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
 
   const handleLabelClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (activeIcon === 1) {
-      return
-    }
-    setIsEditing(true)
+    setEditingEdgeId(id)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,20 +35,21 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.stopPropagation()
     updateEdgeLabel(source, currentLabel)
-    setIsEditing(false)
+    setEditingEdgeId(null)
   }
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation()
+
     if (e.key === 'Enter') {
       updateEdgeLabel(source, currentLabel)
-      setIsEditing(false)
+      setEditingEdgeId(null)
     }
     if (e.key === 'Escape') {
       setCurrentLabel(
         edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string),
       )
-      setIsEditing(false)
+      setEditingEdgeId(null)
     }
   }
 
@@ -83,10 +80,9 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         <BaseEdge {...props} id={id} path={edgePath} markerEnd={'url(#triangle)'} />
         {label &&
           animated &&
-          (isEditing ? (
+          (editingEdgeId === id ? (
             <foreignObject x={labelX - 70} y={labelY - 10} width={130} height={35}>
               <input
-                data-stop-propagation='true'
                 type='text'
                 value={currentLabel}
                 onChange={handleInputChange}
@@ -95,6 +91,12 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 onKeyDown={(e) => {
                   e.stopPropagation()
                   handleInputKeyDown(e)
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation()
                 }}
                 className='cursor-none bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
               />
@@ -106,7 +108,9 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   e.stopPropagation()
                   handleLabelClick(e)
                 }}
-                data-stop-propagation='true'
+                onDoubleClick={(e) => {
+                  e.stopPropagation()
+                }}
                 className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
               >
                 {edgeLabels[source] || label}
@@ -124,7 +128,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       <BaseEdge path={edgePath} markerEnd={markerEnd} />
       {label &&
         animated &&
-        (isEditing ? (
+        (editingEdgeId === id ? (
           <foreignObject x={sourceX + 30} y={sourceY + 5} width={130} height={35}>
             <input
               type='text'
@@ -135,8 +139,13 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 e.stopPropagation()
                 handleInputKeyDown(e)
               }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+              onDoubleClick={(e) => {
+                e.stopPropagation()
+              }}
               autoFocus
-              data-stop-propagation='true'
               className='bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
             />
           </foreignObject>
@@ -147,7 +156,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 e.stopPropagation()
                 handleLabelClick(e)
               }}
-              data-stop-propagation='true'
               className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
             >
               <div className='px-2'>{edgeLabels[source] || label}</div>

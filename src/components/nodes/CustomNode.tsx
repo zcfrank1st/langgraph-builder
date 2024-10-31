@@ -2,7 +2,6 @@ import { Handle, Position } from '@xyflow/react'
 import type { Node as NodeType, NodeProps } from '@xyflow/react'
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react'
 import { useButtonText } from '@/contexts/ButtonTextContext'
-import { useActiveIcon } from '@/contexts/ActiveIconContext'
 
 export type CustomNodeData = {
   label: string
@@ -12,7 +11,6 @@ export type CustomNode = NodeType<CustomNodeData>
 
 export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
   const { buttonTexts, updateButtonText } = useButtonText()
-  const { activeIcon } = useActiveIcon()
   const [nodeWidth, setNodeWidth] = useState(150)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -54,36 +52,20 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
           width: `${nodeWidth}px`,
         }}
       >
-        {activeIcon !== 1 ? (
-          <input
-            ref={inputRef}
-            type='text'
-            className='w-full outline-none rounded-md text-center p-0 text-white'
-            value={buttonTexts[id]}
-            onChange={handleInputChange}
-            style={{
-              backgroundColor: 'transparent',
-              color: randomBorderColor,
-              width: '100%',
-            }}
-          />
-        ) : (
-          <div
-            className='w-full outline-none rounded-md text-center p-0'
-            style={{
-              color: randomBorderColor, // Set the color of the text to match the border color
-            }}
-          >
-            {buttonTexts[id]}
-          </div>
-        )}
-
-        {activeIcon !== 1 && (
-          <>
-            <Handle type='source' style={{ width: '10px', height: '10px' }} position={Position.Bottom} />
-            <Handle type='target' style={{ width: '10px', height: '10px' }} position={Position.Top} />
-          </>
-        )}
+        <input
+          ref={inputRef}
+          type='text'
+          className='w-full outline-none rounded-md text-center p-0 text-white'
+          value={buttonTexts[id]}
+          onChange={handleInputChange}
+          style={{
+            backgroundColor: 'transparent',
+            color: randomBorderColor,
+            width: '100%',
+          }}
+        />
+        <Handle type='source' style={{ width: '10px', height: '10px' }} position={Position.Bottom} />
+        <Handle type='target' style={{ width: '10px', height: '10px' }} position={Position.Top} />
       </div>
     </div>
   )
