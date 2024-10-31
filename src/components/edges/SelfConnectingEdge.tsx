@@ -53,6 +53,12 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
     }
   }
 
+  const handleForeignObjectDoubleClick = (e: React.MouseEvent) => {
+    console.log('double clicked')
+    e.stopPropagation()
+    e.preventDefault()
+  }
+
   if (props.source !== props.target) {
     const [edgePath, labelX, labelY] = getBezierPath({
       sourceX,
@@ -81,7 +87,13 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         {label &&
           animated &&
           (editingEdgeId === id ? (
-            <foreignObject x={labelX - 70} y={labelY - 10} width={130} height={35}>
+            <foreignObject
+              x={labelX - 70}
+              y={labelY - 10}
+              width={130}
+              height={35}
+              onDoubleClick={handleForeignObjectDoubleClick}
+            >
               <input
                 type='text'
                 value={currentLabel}
@@ -95,22 +107,24 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 onClick={(e) => {
                   e.stopPropagation()
                 }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation()
-                }}
-                className='cursor-none bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
+                onDoubleClick={handleForeignObjectDoubleClick}
+                className='bg-[#2596be] outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
               />
             </foreignObject>
           ) : (
-            <foreignObject x={labelX - 70} y={labelY - 10} width={130} height={35}>
+            <foreignObject
+              x={labelX - 70}
+              y={labelY - 10}
+              width={130}
+              height={35}
+              onDoubleClick={handleForeignObjectDoubleClick}
+            >
               <div
                 onClick={(e) => {
                   e.stopPropagation()
                   handleLabelClick(e)
                 }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation()
-                }}
+                onDoubleClick={handleForeignObjectDoubleClick}
                 className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
               >
                 {edgeLabels[source] || label}
@@ -129,7 +143,13 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       {label &&
         animated &&
         (editingEdgeId === id ? (
-          <foreignObject x={sourceX + 30} y={sourceY + 5} width={130} height={35}>
+          <foreignObject
+            x={sourceX + 30}
+            y={sourceY + 5}
+            width={130}
+            height={35}
+            onDoubleClick={handleForeignObjectDoubleClick}
+          >
             <input
               type='text'
               value={currentLabel}
@@ -142,20 +162,25 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               onClick={(e) => {
                 e.stopPropagation()
               }}
-              onDoubleClick={(e) => {
-                e.stopPropagation()
-              }}
+              onDoubleClick={handleForeignObjectDoubleClick}
               autoFocus
-              className='bg-[#2596be] pointer-events-none outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
+              className='bg-[#2596be] outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
             />
           </foreignObject>
         ) : (
-          <foreignObject x={sourceX + 30} y={sourceY + 5} width={130} height={35}>
+          <foreignObject
+            x={sourceX + 30}
+            y={sourceY + 5}
+            width={130}
+            height={35}
+            onDoubleClick={handleForeignObjectDoubleClick}
+          >
             <div
               onClick={(e) => {
                 e.stopPropagation()
                 handleLabelClick(e)
               }}
+              onDoubleClick={handleForeignObjectDoubleClick}
               className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
             >
               <div className='px-2'>{edgeLabels[source] || label}</div>
