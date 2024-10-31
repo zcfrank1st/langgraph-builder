@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image'
-import { useCallback, useState, useRef, useContext, useEffect } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import {
   Background,
   ReactFlow,
@@ -14,7 +14,6 @@ import {
 } from '@xyflow/react'
 import { MarkerType } from 'reactflow'
 import '@xyflow/react/dist/style.css'
-import { EditingContext } from '@/contexts/EditingContext'
 import { initialNodes, nodeTypes, type CustomNodeType } from './nodes'
 import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
 import { generateLanggraphCode } from '../codeGeneration/generateLanggraph'
@@ -23,6 +22,7 @@ import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Button, Modal as MuiModal, ModalDialog } from '@mui/joy'
+import { X } from 'lucide-react'
 
 import GenericModal from './GenericModal'
 
@@ -33,7 +33,6 @@ export default function App() {
   const [generateCodeModalOpen, setGenerateCodeModalOpen] = useState(false)
   const reactFlowWrapper = useRef<any>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
-  const { editingEdgeId } = useContext(EditingContext)
   const [isConnecting, setIsConnecting] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<CodeGenerationResult | null>(null)
   const { buttonTexts } = useButtonText()
@@ -41,7 +40,6 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const [currentModal, setCurrentModal] = useState<(typeof genericModalArray)[0] | null>(null)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -278,18 +276,12 @@ export default function App() {
 
   const handlePaneClick = useCallback(
     (event: React.MouseEvent) => {
-      if (clickTimeout) {
-        clearTimeout(clickTimeout)
-        setClickTimeout(null)
+      const isCmdOrCtrlPressed = event.metaKey || event.ctrlKey
+      if (isCmdOrCtrlPressed) {
         addNode(event)
-      } else {
-        const timeout = setTimeout(() => {
-          setClickTimeout(null)
-        }, 300)
-        setClickTimeout(timeout)
       }
     },
-    [clickTimeout, addNode],
+    [addNode],
   )
 
   const handleCodeTypeSelection = (type: 'js' | 'python') => {
@@ -317,13 +309,12 @@ export default function App() {
     }
   }
 
-  const onEdgeDoubleClick = useCallback(
+  const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
-      event.stopPropagation()
-      if (editingEdgeId !== null) {
-        return
+      const isCmdOrCtrlPressed = event.metaKey || event.ctrlKey
+      if (isCmdOrCtrlPressed) {
+        setEdges((eds) => eds.map((e) => (e.id === edge.id ? { ...e, animated: !e.animated } : e)))
       }
-      setEdges((eds) => eds.map((e) => (e.id === edge.id ? { ...e, animated: !e.animated } : e)))
     },
     [setEdges],
   )
@@ -334,7 +325,7 @@ export default function App() {
         <ReactFlow<CustomNodeType, CustomEdgeType>
           nodes={nodes}
           nodeTypes={nodeTypes}
-          onEdgeDoubleClick={onEdgeDoubleClick}
+          onEdgeClick={onEdgeClick}
           onNodesChange={handleNodesChange}
           edges={edges.map((edge) => {
             return {
@@ -388,28 +379,29 @@ export default function App() {
           <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
             <div className='flex justify-between items-center'>
               <h2 className='text-lg font-bold'>Generated Code:</h2>
-              <Button
-                className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 rounded w-28'
-                onClick={copyCodeToClipboard}
-              >
-                Copy Code
-              </Button>
+              <div className='flex flex-row gap-2'>
+                <Button
+                  className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 rounded w-28'
+                  onClick={copyCodeToClipboard}
+                >
+                  Copy Code
+                </Button>
+                <Button
+                  className='bg-[#FF5C5C] hover:bg-[#E25252] text-white font-bold px-2 rounded'
+                  onClick={() => {
+                    setGenerateCodeModalOpen(false)
+                  }}
+                >
+                  <X />
+                </Button>
+              </div>
             </div>
             <div className='overflow-y-scroll overflow-x-scroll justify-center'>
               <pre className='py-6 px-3'>
                 <code>{generatedCode?.code}</code>
               </pre>
             </div>
-            <div className='flex justify-center'>
-              <Button
-                className='bg-[#FF7F7F] hover:bg-[#FF5C5C] text-white font-bold px-2 rounded w-20'
-                onClick={() => {
-                  setGenerateCodeModalOpen(false)
-                }}
-              >
-                Close
-              </Button>
-            </div>
+            <div className='flex justify-center'></div>
           </ModalDialog>
         </MuiModal>
         <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
