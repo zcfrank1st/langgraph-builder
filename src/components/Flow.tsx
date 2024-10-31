@@ -378,6 +378,11 @@ export default function App() {
           onClose={() => {
             setGenerateCodeModalOpen(false)
           }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setGenerateCodeModalOpen(false)
+            }
+          }}
           open={generateCodeModalOpen}
         >
           <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
