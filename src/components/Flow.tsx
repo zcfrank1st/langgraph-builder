@@ -134,7 +134,7 @@ export default function App() {
       className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('createNodeModal'),
       title: 'Create a Node',
-      content: 'To create a node, command click anywhere on the screen. Click and drag to move it around',
+      content: 'To create a node, command click anywhere on the screen. Click and drag to move the node around',
       buttonText: 'Continue',
     },
     {
