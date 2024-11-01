@@ -21,7 +21,7 @@ import { generateLanggraphJS } from '../codeGeneration/generateLanggraphJS'
 import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
-import { Button, Modal as MuiModal, ModalDialog } from '@mui/joy'
+import { Button, Modal as MuiModal, ModalDialog, Snackbar } from '@mui/joy'
 import { X } from 'lucide-react'
 
 import GenericModal from './GenericModal'
@@ -40,6 +40,8 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const [currentModal, setCurrentModal] = useState<(typeof genericModalArray)[0] | null>(null)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState('')
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -97,7 +99,8 @@ export default function App() {
 
       setCurrentModal(nextModal)
     } else {
-      alert(alertMessage)
+      setSnackbarMessage(alertMessage)
+      setSnackbarOpen(true)
     }
   }
 
@@ -131,7 +134,7 @@ export default function App() {
       className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('createNodeModal'),
       title: 'Create a Node',
-      content: 'To create a node, double click anywhere on the screen. Click and drag to move it around',
+      content: 'To create a node, command click anywhere on the screen. Click and drag to move it around',
       buttonText: 'Continue',
     },
     {
@@ -150,7 +153,7 @@ export default function App() {
       onClose: () => handleModalClose('conditionalEdgeModal'),
       title: 'Create a Conditional Edge',
       content:
-        'Double cllick a normal edge or draw multiple edges leaving from the same node to create a conditional edge',
+        'Command click a normal edge or draw multiple edges leaving from the same node to create a conditional edge',
       buttonText: 'Continue',
     },
     {
@@ -204,7 +207,7 @@ export default function App() {
   const onConnect: OnConnect = useCallback(
     (connection) => {
       const edgeId = `edge-${maxEdgeLength + 1}`
-      setMaxEdgeLength(maxEdgeLength + 1)
+      setMaxEdgeLength((prev) => prev + 1)
       const defaultLabel = `default_edge_name`
       const newEdge: CustomEdgeType = {
         ...connection,
@@ -230,6 +233,7 @@ export default function App() {
         }
         return updatedEdges
       })
+      setIsConnecting(false)
     },
     [setEdges, edges, buttonTexts, updateEdgeLabel, edgeLabels, maxEdgeLength],
   )
@@ -321,6 +325,31 @@ export default function App() {
 
   return (
     <div>
+      <Snackbar
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        open={snackbarOpen}
+        onClose={(_, reason) => {
+          if (reason === 'clickaway') {
+            return
+          }
+          setSnackbarOpen(false)
+        }}
+        key='bottom-right'
+        className='max-w-sm shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-3 border-slate-600'
+        autoHideDuration={6000}
+      >
+        <div>{snackbarMessage}</div>
+        <div className='flex border-gray-200'>
+          <button
+            type='button'
+            className='border border-transparent rounded-none rounded-r-lg p-3 flex items-center justify-center text-gray-400 hover:text-gray-500 focus:outline-none'
+            onClick={() => setSnackbarOpen(false)}
+          >
+            <X className='h-5 w-5' aria-hidden='true' />
+          </button>
+        </div>
+      </Snackbar>
+
       <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
         <ReactFlow<CustomNodeType, CustomEdgeType>
           nodes={nodes}

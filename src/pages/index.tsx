@@ -11,7 +11,6 @@ const Home: NextPage = () => {
         <meta name='description' content='LangGraph Builder' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
-
       <Page />
     </div>
   )
