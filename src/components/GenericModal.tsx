@@ -49,12 +49,12 @@ const GenericModal = ({
           {content}
         </div>
 
-        <Button
+        <button
           onClick={onButtonClick || onClose}
-          className={`bg-[#076699] hover:bg-[#06578a] ${imageUrl ? 'mt-6' : 'mt-3'}`}
+          className={`bg-[#076699] rounded-md text-white px-4 py-2 font-medium hover:bg-[#06578a] ${imageUrl ? 'mt-6' : 'mt-3'}`}
         >
           {buttonText}
-        </Button>
+        </button>
       </div>
     </ModalDialog>
   </MuiModal>
