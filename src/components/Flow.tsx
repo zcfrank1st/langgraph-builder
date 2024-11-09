@@ -409,20 +409,20 @@ export default function App() {
             <div className='flex justify-between items-center'>
               <h2 className='text-lg font-bold'>Generated Code:</h2>
               <div className='flex flex-row gap-2'>
-                <Button
-                  className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 rounded w-28'
+                <button
+                  className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 py-2 rounded w-28'
                   onClick={copyCodeToClipboard}
                 >
                   Copy Code
-                </Button>
-                <Button
+                </button>
+                <button
                   className='bg-[#FF5C5C] hover:bg-[#E25252] text-white font-bold px-2 rounded'
                   onClick={() => {
                     setGenerateCodeModalOpen(false)
                   }}
                 >
                   <X />
-                </Button>
+                </button>
               </div>
             </div>
             <div className='overflow-y-scroll overflow-x-scroll justify-center'>
@@ -436,12 +436,18 @@ export default function App() {
         <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
           <div className='text-white font-bold text-center'> {'Generate Code'}</div>
           <div className='flex flex-row gap-2 pt-3'>
-            <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('python')}>
+            <button
+              className='bg-[#246161] hover:bg-[#195656] py-2 px-2 rounded-md'
+              onClick={() => handleCodeTypeSelection('python')}
+            >
               <Image src='/python.png' alt='Python' width={35} height={35} />
-            </Button>
-            <Button className='bg-[#246161] hover:bg-[#195656]' onClick={() => handleCodeTypeSelection('js')}>
+            </button>
+            <button
+              className='bg-[#246161] hover:bg-[#195656] py-2 px-2 rounded-md'
+              onClick={() => handleCodeTypeSelection('js')}
+            >
               <Image src='/javascript.png' alt='JS' width={35} height={35} />
-            </Button>
+            </button>
           </div>
         </div>
       </div>
