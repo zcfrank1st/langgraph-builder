@@ -80,10 +80,16 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             refX='0'
             refY='0'
           >
-            <path d='M -22.5 -18 L 0 0 L -22.5 18 Z' style={{ fill: 'var(--primary)' }} />
+            <path d='M -22.5 -18 L 0 0 L -22.5 18 Z' style={{ fill: 'black' }} />
           </marker>
         </defs>
-        <BaseEdge {...props} id={id} path={edgePath} markerEnd={'url(#triangle)'} />
+        <BaseEdge
+          {...props}
+          id={id}
+          path={edgePath}
+          markerEnd={'url(#triangle)'}
+          style={{ backgroundColor: 'black', color: 'black' }}
+        />
         {label &&
           animated &&
           (editingEdgeId === id ? (
@@ -108,7 +114,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   e.stopPropagation()
                 }}
                 onDoubleClick={handleForeignObjectDoubleClick}
-                className='bg-[#2596be] outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
+                className='bg-[#D4EDF6] outline-none border border-2 border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded'
               />
             </foreignObject>
           ) : (
@@ -125,7 +131,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   handleLabelClick(e)
                 }}
                 onDoubleClick={handleForeignObjectDoubleClick}
-                className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
+                className='bg-[#D4EDF6] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-[#333333] w-full h-full text-xs text-[#333333] rounded'
               >
                 {edgeLabels[source] || label}
               </div>
@@ -164,7 +170,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               }}
               onDoubleClick={handleForeignObjectDoubleClick}
               autoFocus
-              className='bg-[#2596be] outline-none border border-2 border-[#207fa5] text-center text-white w-full h-full text-xs text-white rounded'
+              className='bg-[#D4EDF6] outline-none border border-2 border-[#207fa5] text-center w-full h-full text-xs text-[#333333] rounded'
             />
           </foreignObject>
         ) : (
@@ -181,7 +187,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 handleLabelClick(e)
               }}
               onDoubleClick={handleForeignObjectDoubleClick}
-              className='bg-[#2596be] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-white w-full h-full text-xs text-white rounded'
+              className='bg-[#D4EDF6] border border-2 border-[#207fa5] flex justify-center items-center flex text-center w-full h-full text-xs text-[#333333] rounded'
             >
               <div className='px-2'>{edgeLabels[source] || label}</div>
             </div>

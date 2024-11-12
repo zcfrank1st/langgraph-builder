@@ -21,8 +21,8 @@ import { generateLanggraphJS } from '../codeGeneration/generateLanggraphJS'
 import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
-import { Button, Modal as MuiModal, ModalDialog, Snackbar } from '@mui/joy'
-import { X } from 'lucide-react'
+import { Modal as MuiModal, ModalDialog, Snackbar } from '@mui/joy'
+import { X, Info } from 'lucide-react'
 
 import GenericModal from './GenericModal'
 
@@ -42,6 +42,8 @@ export default function App() {
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('')
+  const [isInfoPanelVisible, setIsInfoPanelVisible] = useState(false)
+  const [onboardingComplete, setOnboardingComplete] = useState(false)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -79,6 +81,7 @@ export default function App() {
           alertMessage = 'Please create at least one conditional edge before proceeding'
         }
         break
+
       default:
         break
     }
@@ -95,6 +98,14 @@ export default function App() {
           nextModal = modal
           break
         }
+      }
+
+      if (
+        nextModal &&
+        genericModalArray.findIndex((modal) => modal.key === nextModal.key) === genericModalArray.length - 1
+      ) {
+        setOnboardingComplete(true)
+        localStorage.setItem('onboardingComplete', 'true')
       }
 
       setCurrentModal(nextModal)
@@ -134,7 +145,7 @@ export default function App() {
       className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('createNodeModal'),
       title: 'Create a Node',
-      content: 'To create a node, command click anywhere on the screen. Click and drag to move the node around',
+      content: 'To create a node, ⌘ + Click anywhere on the screen. Click and drag to move the node around',
       buttonText: 'Continue',
     },
     {
@@ -152,8 +163,7 @@ export default function App() {
       className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('conditionalEdgeModal'),
       title: 'Create a Conditional Edge',
-      content:
-        'Command click a normal edge or draw multiple edges leaving from the same node to create a conditional edge',
+      content: '⌘ + Click a normal edge or draw multiple edges leaving from the same node to create a conditional edge',
       buttonText: 'Continue',
     },
     {
@@ -162,7 +172,7 @@ export default function App() {
       className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
       onClose: () => handleModalClose('deleteNodeEdgeModal'),
       title: 'Delete a Node or Edge',
-      content: 'To delete a node or edge, just click and press delete',
+      content: 'To delete a node or edge, just click + ⌫',
       buttonText: 'Continue',
     },
     {
@@ -176,6 +186,8 @@ export default function App() {
   ]
 
   useEffect(() => {
+    const onboardingStatus = localStorage.getItem('onboardingComplete') === 'true'
+    setOnboardingComplete(onboardingStatus)
     for (let i = 0; i < genericModalArray.length; i++) {
       const modal = genericModalArray[i]
       const dismissed = localStorage.getItem(`${modal.key}Dismissed`) === 'true'
@@ -323,6 +335,10 @@ export default function App() {
     [setEdges],
   )
 
+  const toggleInfoPanel = () => {
+    setIsInfoPanelVisible((prev) => !prev)
+  }
+
   return (
     <div>
       <Snackbar
@@ -370,9 +386,9 @@ export default function App() {
           onInit={setReactFlowInstance}
           fitView
           onConnectStart={onConnectStart}
-          className='z-10 bg-[#1a1c24]'
+          className='z-10 bg-[#EAEAEA]'
           style={{
-            backgroundColor: '#1a1c24',
+            backgroundColor: '#EAEAEA',
           }}
           proOptions={proOptions}
           zoomOnDoubleClick={false}
@@ -433,23 +449,59 @@ export default function App() {
             <div className='flex justify-center'></div>
           </ModalDialog>
         </MuiModal>
-        <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
-          <div className='text-white font-bold text-center'> {'Generate Code'}</div>
-          <div className='flex flex-row gap-2 pt-3'>
+        {isInfoPanelVisible && (
+          <div className='flex bg-white ring-1 ring-black ring-opacity-5 border-3 border-slate-600 rounded-md py-2 absolute bottom-16 left-1/2 transform -translate-x-1/2 group'>
             <button
-              className='bg-[#246161] hover:bg-[#195656] py-2 px-2 rounded-md'
-              onClick={() => handleCodeTypeSelection('python')}
+              className='absolute top-0 right-0 text-white bg-[#FF5C5C] hover:bg-[#E25252] opacity-0 group-hover:opacity-100 transition-opacity duration-300'
+              onClick={() => setIsInfoPanelVisible(false)}
+              aria-label='Close Information Panel'
             >
-              <Image src='/python.png' alt='Python' width={35} height={35} />
+              <X className='h-6 w-6' />
             </button>
-            <button
-              className='bg-[#246161] hover:bg-[#195656] py-2 px-2 rounded-md'
-              onClick={() => handleCodeTypeSelection('js')}
-            >
-              <Image src='/javascript.png' alt='JS' width={35} height={35} />
-            </button>
+            <div className='flex flex-col md:flex-row font-medium py-2 px-5 gap-y-6 md:gap-x-10 rounded-md'>
+              <div className='flex flex-col justify-center items-center whitespace-nowrap'>
+                <span className='text-xl'>⌘ + Click</span>
+                <span className='text-slate-500 pt-2'>Create Node</span>
+              </div>
+              <div className='flex flex-col justify-center items-center whitespace-nowrap'>
+                <span className='text-xl'>⌘ + Click</span>
+                <span className='text-slate-500 pt-2'>Edit Edge Conditionality</span>
+              </div>
+              <div className='flex flex-col justify-center items-center whitespace-nowrap'>
+                <span className='text-xl'>Click + ⌫</span>
+                <span className='text-slate-500 pt-2'>Delete</span>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+        {onboardingComplete && (
+          <button
+            className='fixed bottom-20 left-5  text-white p-3 rounded-full shadow-lg bg-[#2F6868] hover:bg-[#245757] focus:outline-none'
+            onClick={toggleInfoPanel}
+            aria-label='Toggle Information Panel'
+          >
+            <Info className='h-6 w-6' />
+          </button>
+        )}
+        {onboardingComplete && (
+          <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
+            <div className='text-[#333333] font-medium text-center'> {'Generate Code'}</div>
+            <div className='flex flex-row gap-2 pt-3'>
+              <button
+                className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
+                onClick={() => handleCodeTypeSelection('python')}
+              >
+                <Image src='/python.png' alt='Python' width={35} height={35} />
+              </button>
+              <button
+                className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
+                onClick={() => handleCodeTypeSelection('js')}
+              >
+                <Image src='/javascript.png' alt='JS' width={35} height={35} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

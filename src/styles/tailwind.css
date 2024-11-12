@@ -63,11 +63,8 @@
 }
 
 path.react-flow__edge-path {
-  stroke-width: 5;
-}
-
-path.react-flow__edge-path:hover {
-  stroke-width: 5;
+  stroke-width: 3;
+  background-color: black;
 }
 
 .react-flow__nodes {

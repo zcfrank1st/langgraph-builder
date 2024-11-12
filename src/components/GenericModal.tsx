@@ -55,7 +55,7 @@ const GenericModal: React.FC<GenericModalProps> = ({
     >
       <div
         ref={modalRef}
-        className={`bg-white rounded-lg p-6 max-w-md mx-auto ${className}`}
+        className={`bg-white ring-1 ring-black ring-opacity-5 border-3 border-slate-600 rounded-lg p-6 max-w-md mx-auto ${className}`}
         style={{ pointerEvents: 'auto' }}
       >
         <div className='flex flex-col justify-center items-center text-center'>

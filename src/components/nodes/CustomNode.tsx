@@ -14,11 +14,17 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
   const [nodeWidth, setNodeWidth] = useState(150)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const randomBorderColor = useMemo(() => {
+  const { borderColor: randomBorderColor, backgroundColor: randomBackgroundColor } = useMemo(() => {
     const hue = Math.floor(Math.random() * 360)
     const saturation = 70 + Math.random() * 30
     const lightness = 60 + Math.random() * 20
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`
+    const borderColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+
+    const lightnessIncrement = 90
+    const backgroundLightness = Math.min(lightness + lightnessIncrement, 95)
+    const backgroundColor = `hsl(${hue}, ${saturation}%, ${backgroundLightness}%)`
+
+    return { borderColor, backgroundColor }
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,19 +42,19 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
 
   useEffect(() => {
     updateButtonText(id, data.label)
-  }, [])
+  }, [data.label, id, updateButtonText])
 
   useEffect(() => {
     adjustNodeSize()
   }, [buttonTexts[id], adjustNodeSize])
 
   return (
-    <div className='rounded-md p-0 ' style={{ backgroundColor: randomBorderColor, border: 'none' }}>
+    <div className='rounded-md p-0' style={{ border: 'none', backgroundColor: 'transparent' }}>
       <div
         className='rounded-md p-2'
         style={{
           border: `2px solid ${randomBorderColor}`,
-          backgroundColor: 'rgba(26,26,36,0.8)',
+          backgroundColor: randomBackgroundColor,
           width: `${nodeWidth}px`,
         }}
       >
@@ -60,12 +66,30 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
           onChange={handleInputChange}
           style={{
             backgroundColor: 'transparent',
-            color: randomBorderColor,
+            color: '#333333',
             width: '100%',
           }}
         />
-        <Handle type='source' style={{ width: '10px', height: '10px' }} position={Position.Bottom} />
-        <Handle type='target' style={{ width: '10px', height: '10px' }} position={Position.Top} />
+        <Handle
+          type='source'
+          style={{
+            width: '10px',
+            height: '10px',
+            backgroundColor: '#FFFFFF',
+            border: `2px solid ${randomBorderColor}`,
+          }}
+          position={Position.Bottom}
+        />
+        <Handle
+          type='target'
+          style={{
+            width: '10px',
+            height: '10px',
+            backgroundColor: '#FFFFFF',
+            border: `2px solid ${randomBorderColor}`,
+          }}
+          position={Position.Top}
+        />
       </div>
     </div>
   )
