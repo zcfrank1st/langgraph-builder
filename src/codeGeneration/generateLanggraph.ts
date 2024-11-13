@@ -15,11 +15,14 @@ export function generateLanggraphCode(
 
   const imports = ['from langgraph.graph import StateGraph, START, END', 'from typing import TypedDict']
   if (hasConditionalEdges) {
-    imports[0] = 'from langgraph.graph import StateGraph, START, END, Literal'
+    imports[1] = 'from typing import TypedDict, Literal'
   }
   if (sourceEdges.length > 1) {
     imports[1] += ', Annotated'
     imports.push('import operator')
+  }
+  if (nodes.length > 1) {
+    imports.push('from langchain_core.runnables.config import RunnableConfig')
   }
   imports.push('\n')
   const getNodeLabel = (nodeId: string) => {
@@ -32,7 +35,7 @@ export function generateLanggraphCode(
     .filter((node) => node.type !== 'source' && node.type !== 'end')
     .map(
       (node) =>
-        `def ${(buttonTexts[node.id] || (node?.data?.label as string) || node.id).replace(/\s+/g, '_')}(state: State, config: dict) -> State:\n    return {} \n`,
+        `def ${(buttonTexts[node.id] || (node?.data?.label as string) || node.id).replace(/\s+/g, '_')}(state: State, config: RunnableConfig) -> State:\n    return {} \n`,
     )
 
   const conditionalFunctions = new Map()
@@ -56,7 +59,7 @@ export function generateLanggraphCode(
       const literalTypes = Array.from(targets)
         .map((target) => (target === 'end' ? 'END' : `'${target}'`))
         .join(', ')
-      return `def ${edgeLabel}(state: State, config: dict) -> Literal[${literalTypes}]:\n    """Function to handle conditional edges for ${source}"""\n${targetStrings}\n`
+      return `def ${edgeLabel}(state: State, config: RunnableConfig) -> Literal[${literalTypes}]:\n    """Function to handle conditional edges for ${source}"""\n${targetStrings}\n`
     },
   )
 
