@@ -42,7 +42,7 @@ export default function App() {
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('')
-  const [isInfoPanelVisible, setIsInfoPanelVisible] = useState(false)
+  const [isInfoPanelVisible, setIsInfoPanelVisible] = useState(true)
   const [onboardingComplete, setOnboardingComplete] = useState(false)
 
   const nodesRef = useRef(nodes)
@@ -449,7 +449,7 @@ export default function App() {
             <div className='flex justify-center'></div>
           </ModalDialog>
         </MuiModal>
-        {isInfoPanelVisible && (
+        {isInfoPanelVisible && onboardingComplete && (
           <div className='flex bg-white ring-1 ring-black ring-opacity-5 border-3 border-slate-600 rounded-md py-2 absolute md:bottom-16 md:left-1/2 md:transform md:-translate-x-1/2 bottom-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group'>
             <button
               className='absolute top-0 right-0 text-white bg-[#FF5C5C] hover:bg-[#E25252] opacity-0 group-hover:opacity-100 transition-opacity duration-300'
