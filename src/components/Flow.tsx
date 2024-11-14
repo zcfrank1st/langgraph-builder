@@ -22,7 +22,7 @@ import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Snackbar } from '@mui/joy'
-import { X, Info } from 'lucide-react'
+import { X, Info, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import GenericModal from './GenericModal'
 
@@ -38,165 +38,139 @@ export default function App() {
   const { buttonTexts } = useButtonText()
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
-  const [currentModal, setCurrentModal] = useState<(typeof genericModalArray)[0] | null>(null)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
-  const [snackbarMessage, setSnackbarMessage] = useState('')
-  const [isInfoPanelVisible, setIsInfoPanelVisible] = useState(true)
-  const [onboardingComplete, setOnboardingComplete] = useState(false)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
+  const [initialOnboardingComplete, setInitialOnboardingComplete] = useState(false)
+  const [isAdditionalOnboarding, setIsAdditionalOnboarding] = useState(false)
+  const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
+  console.log(isAdditionalOnboarding)
   useEffect(() => {
     nodesRef.current = nodes
     edgesRef.current = edges
   }, [nodes, edges])
 
-  const handleModalClose = (key: string) => {
-    const latestNodes = nodesRef.current
-    const latestEdges = edgesRef.current
+  const handlePreviousStep = () => {
+    setCurrentOnboardingStep((prevStep) => Math.max(prevStep - 1, 0))
+  }
 
-    const latestIsNodeOneCreated = latestNodes.length > 2
-    const latestIsEdgeOneCreated = latestEdges.length > 0
-    const latestIsConditionalEdgeCreated = latestEdges.filter((edge) => edge.animated).length > 0
-    let canClose = true
-    let alertMessage = ''
-
-    switch (key) {
-      case 'createNodeModal':
-        if (!latestIsNodeOneCreated) {
-          canClose = false
-          alertMessage = 'Please create at least one node before proceeding'
-        }
-        break
-      case 'createEdgeModal':
-        if (!latestIsEdgeOneCreated) {
-          canClose = false
-          alertMessage = 'Please create at least one edge before proceeding'
-        }
-        break
-      case 'conditionalEdgeModal':
-        if (!latestIsConditionalEdgeCreated) {
-          canClose = false
-          alertMessage = 'Please create at least one conditional edge before proceeding'
-        }
-        break
-
-      default:
-        break
-    }
-
-    if (canClose) {
-      localStorage.setItem(`${key}Dismissed`, 'true')
-      const currentIndex = genericModalArray.findIndex((modal) => modal.key === key)
-
-      let nextModal: (typeof genericModalArray)[0] | null = null
-      for (let i = currentIndex + 1; i < genericModalArray.length; i++) {
-        const modal = genericModalArray[i]
-        const dismissed = localStorage.getItem(`${modal.key}Dismissed`) === 'true'
-        if (!dismissed) {
-          nextModal = modal
-          break
-        }
-      }
-
-      if (
-        nextModal &&
-        genericModalArray.findIndex((modal) => modal.key === nextModal.key) === genericModalArray.length - 1
-      ) {
-        setOnboardingComplete(true)
-        localStorage.setItem('onboardingComplete', 'true')
-      }
-
-      setCurrentModal(nextModal)
+  const handleFinishOnboarding = () => {
+    setIsAdditionalOnboarding(false)
+    setCurrentOnboardingStep(0)
+  }
+  const startOnboarding = () => {
+    if (isAdditionalOnboarding) {
+      setIsAdditionalOnboarding(false)
     } else {
-      setSnackbarMessage(alertMessage)
-      setSnackbarOpen(true)
+      setCurrentOnboardingStep(0)
+      setIsAdditionalOnboarding(true)
     }
   }
 
-  const genericModalArray = [
+  useEffect(() => {
+    const initialComplete = localStorage.getItem('initialOnboardingComplete') === 'true'
+    setInitialOnboardingComplete(initialComplete)
+
+    if (!initialComplete) {
+      setCurrentOnboardingStep(0)
+    }
+  }, [])
+
+  const handleInitialModalClose = () => {
+    setInitialOnboardingComplete(true)
+    localStorage.setItem('initialOnboardingComplete', 'true')
+    setCurrentOnboardingStep(0)
+  }
+
+  const handleNextStep = () => {
+    setCurrentOnboardingStep((prevStep) => {
+      const nextStep = prevStep + 1
+      if (nextStep < additionalModalArray.length) {
+        return nextStep
+      } else {
+        setIsAdditionalOnboarding(false)
+        localStorage.setItem('additionalOnboardingComplete', 'true')
+        return prevStep
+      }
+    })
+  }
+
+  const initialModalArray = [
     {
       key: 'welcomeModal',
       noClickThrough: true,
       imageUrl: '/langgraph-logo.png',
-      onClose: () => handleModalClose('welcomeModal'),
+      onClose: () => handleInitialModalClose(),
       title: 'Graph Builder',
       content: (
         <span>
-          Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our
-          docs{' '}
+          Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our{' '}
           <a
             style={{ textDecoration: 'underline' }}
             href='https://langchain-ai.github.io/langgraph/tutorials/introduction/'
             target='_blank'
             rel='noopener noreferrer'
           >
-            here
+            docs
           </a>
         </span>
       ),
       buttonText: 'Get Started',
     },
+  ]
 
+  const additionalModalArray = [
     {
-      key: 'createNodeModal',
+      key: 'step1',
       hideBackDrop: true,
-      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
-      onClose: () => handleModalClose('createNodeModal'),
+      onClose: () => handleNextStep(),
       title: 'Create a Node',
-      content: 'To create a node, ⌘ + Click anywhere on the screen. Click and drag to move the node around',
-      buttonText: 'Continue',
+      content: 'To create a node, ⌘ + Click anywhere on the screen. Click and drag to move the node around.',
+      buttonText: 'Next',
+      showBack: false,
     },
     {
-      key: 'createEdgeModal',
+      key: 'step2',
       hideBackDrop: true,
-      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
-      onClose: () => handleModalClose('createEdgeModal'),
+      onClose: () => handleNextStep(),
       title: 'Create a Normal Edge',
-      content: 'Click and drag from one node to another to create a normal edge',
-      buttonText: 'Continue',
+      content: 'Click and drag from one node to another to create a normal edge.',
+      buttonText: 'Next',
+      showBack: true,
     },
     {
-      key: 'conditionalEdgeModal',
+      key: 'step3',
       hideBackDrop: true,
-      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
-      onClose: () => handleModalClose('conditionalEdgeModal'),
+      onClose: () => handleNextStep(),
       title: 'Create a Conditional Edge',
-      content: '⌘ + Click a normal edge or draw multiple edges leaving from the same node to create a conditional edge',
-      buttonText: 'Continue',
+      content:
+        '⌘ + Click a normal edge or draw multiple edges leaving from the same node to create a conditional edge.',
+      buttonText: 'Next',
+      showBack: true,
     },
     {
-      key: 'deleteNodeEdgeModal',
+      key: 'step4',
       hideBackDrop: true,
-      className: 'md:absolute md:top-1/2 md:left-10 md:transform md:-translate-y-1/2',
-      onClose: () => handleModalClose('deleteNodeEdgeModal'),
+      onClose: () => handleNextStep(),
       title: 'Delete a Node or Edge',
-      content: 'To delete a node or edge, just click + ⌫',
-      buttonText: 'Continue',
+      content: 'To delete a node or edge, just click + ⌫.',
+      buttonText: 'Next',
+      showBack: true,
     },
     {
-      key: 'generateCodeModal',
-      noClickThrough: true,
-      onClose: () => handleModalClose('generateCodeModal'),
+      key: 'step5',
+      hideBackDrop: true,
+      onClose: () => handleFinishOnboarding(),
       title: 'Happy Building!',
-      content: "Once you're done prototyping, click either the Python or JS logo to get code based on your graph",
+      content: "Once you're done prototyping, click either the Python or JS logo to get code based on your graph.",
       buttonText: 'Finish',
+      showBack: true,
     },
   ]
 
-  useEffect(() => {
-    const onboardingStatus = localStorage.getItem('onboardingComplete') === 'true'
-    setOnboardingComplete(onboardingStatus)
-    for (let i = 0; i < genericModalArray.length; i++) {
-      const modal = genericModalArray[i]
-      const dismissed = localStorage.getItem(`${modal.key}Dismissed`) === 'true'
-      if (!dismissed) {
-        setCurrentModal(modal)
-        break
-      }
-    }
-  }, [])
+  const isLastStep = currentOnboardingStep === additionalModalArray.length - 1
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -335,10 +309,6 @@ export default function App() {
     [setEdges],
   )
 
-  const toggleInfoPanel = () => {
-    setIsInfoPanelVisible((prev) => !prev)
-  }
-
   return (
     <div>
       <Snackbar
@@ -354,7 +324,6 @@ export default function App() {
         className='max-w-sm shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-3 border-slate-600'
         autoHideDuration={6000}
       >
-        <div>{snackbarMessage}</div>
         <div className='flex border-gray-200'>
           <button
             type='button'
@@ -396,19 +365,49 @@ export default function App() {
         >
           <Background />
         </ReactFlow>
-        {currentModal && (
-          <GenericModal
-            isOpen={true}
-            onClose={currentModal.onClose}
-            title={currentModal.title}
-            content={currentModal.content}
-            buttonText={currentModal.buttonText}
-            hideBackDrop={currentModal.hideBackDrop}
-            className={currentModal.className}
-            imageUrl={currentModal.imageUrl}
-            noClickThrough={currentModal.noClickThrough}
-          />
+
+        <GenericModal
+          isOpen={!initialOnboardingComplete}
+          onClose={initialModalArray[0].onClose}
+          title={initialModalArray[0].title}
+          content={<div>{initialModalArray[0].content}</div>}
+          buttonText={initialModalArray[0].buttonText}
+          imageUrl={initialModalArray[0].imageUrl}
+        />
+
+        {isAdditionalOnboarding && (
+          <div
+            className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'
+            onClick={() => setIsAdditionalOnboarding(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className='fixed w-full md:max-w-lg text-center bg-white rounded-lg z-50 flex items-center justify-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+            >
+              <div className='flex flex-row gap-5 py-8 px-5'>
+                <button
+                  disabled={currentOnboardingStep === 0}
+                  className='disabled:text-gray-300 z-50'
+                  onClick={handlePreviousStep}
+                >
+                  <ChevronLeft className='h-10 w-10' />
+                </button>
+                <div className='flex flex-col gap-2'>
+                  <div className='text-xl md:text-2xl font-medium'>
+                    {additionalModalArray[currentOnboardingStep].title}
+                  </div>
+                  <div className='text-sm md:text-lg text-gray-500 pt-2 text-center'>
+                    {additionalModalArray[currentOnboardingStep].content}
+                  </div>
+                </div>
+                <button className='disabled:text-gray-300' disabled={isLastStep} onClick={handleNextStep}>
+                  <ChevronRight className='h-10 w-10' />
+                </button>
+              </div>
+            </div>
+          </div>
         )}
+
         <MuiModal
           hideBackdrop={true}
           onClose={() => {
@@ -449,59 +448,34 @@ export default function App() {
             <div className='flex justify-center'></div>
           </ModalDialog>
         </MuiModal>
-        {isInfoPanelVisible && onboardingComplete && (
-          <div className='flex bg-white ring-1 ring-black ring-opacity-5 border-3 border-slate-600 rounded-md py-2 absolute md:bottom-16 md:left-1/2 md:transform md:-translate-x-1/2 bottom-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group'>
-            <button
-              className='absolute top-0 right-0 text-white bg-[#FF5C5C] hover:bg-[#E25252] opacity-0 group-hover:opacity-100 transition-opacity duration-300'
-              onClick={() => setIsInfoPanelVisible(false)}
-              aria-label='Close Information Panel'
-            >
-              <X className='h-6 w-6' />
-            </button>
-            <div className='flex flex-col md:flex-row font-medium py-2 px-5 gap-y-6 md:gap-x-10 rounded-md'>
-              <div className='flex flex-col justify-center items-center whitespace-nowrap'>
-                <span className='text-xl'>⌘ + Click</span>
-                <span className='text-slate-500 pt-2'>Create Node</span>
-              </div>
-              <div className='flex flex-col justify-center items-center whitespace-nowrap'>
-                <span className='text-xl'>⌘ + Click</span>
-                <span className='text-slate-500 pt-2'>Edit Edge Conditionality</span>
-              </div>
-              <div className='flex flex-col justify-center items-center whitespace-nowrap'>
-                <span className='text-xl'>Click + ⌫</span>
-                <span className='text-slate-500 pt-2'>Delete</span>
-              </div>
-            </div>
-          </div>
-        )}
-        {onboardingComplete && (
+
+        <div className='fixed bottom-20 left-5 flex flex-row gap-2'>
           <button
-            className='fixed bottom-20 left-5  text-white p-3 rounded-full shadow-lg bg-[#2F6868] hover:bg-[#245757] focus:outline-none'
-            onClick={toggleInfoPanel}
+            className='text-white p-3 rounded-md shadow-lg bg-[#2F6868] hover:bg-[#245757] focus:outline-none'
+            onClick={startOnboarding}
             aria-label='Toggle Information Panel'
           >
             <Info className='h-6 w-6' />
           </button>
-        )}
-        {onboardingComplete && (
-          <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
-            <div className='text-[#333333] font-medium text-center'> {'Generate Code'}</div>
-            <div className='flex flex-row gap-2 pt-3'>
-              <button
-                className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
-                onClick={() => handleCodeTypeSelection('python')}
-              >
-                <Image src='/python.png' alt='Python' width={35} height={35} />
-              </button>
-              <button
-                className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
-                onClick={() => handleCodeTypeSelection('js')}
-              >
-                <Image src='/javascript.png' alt='JS' width={35} height={35} />
-              </button>
-            </div>
+        </div>
+
+        <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
+          <div className='text-[#333333] font-medium text-center'> {'Generate Code'}</div>
+          <div className='flex flex-row gap-2 pt-3'>
+            <button
+              className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
+              onClick={() => handleCodeTypeSelection('python')}
+            >
+              <Image src='/python.png' alt='Python' width={35} height={35} />
+            </button>
+            <button
+              className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
+              onClick={() => handleCodeTypeSelection('js')}
+            >
+              <Image src='/javascript.png' alt='JS' width={35} height={35} />
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
