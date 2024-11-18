@@ -104,21 +104,15 @@ export function generateLanggraphCode(
     if (edge.animated) {
       if (!processedConditionalEdges.has(edgeLabel)) {
         const functionName = `${edgeLabel}`
-        if (sourceLabel === 'START') {
-          workflowFunction.push(`workflow.add_conditional_edges(START, ${functionName})`)
-        } else {
-          workflowFunction.push(`workflow.add_conditional_edges("${sourceLabel}", ${functionName})`)
-        }
+        const formattedSourceLabel = sourceLabel === 'START' ? 'START' : `"${sourceLabel}"`
+        workflowFunction.push(`workflow.add_conditional_edges(${formattedSourceLabel}, ${functionName})`)
         processedConditionalEdges.add(edgeLabel)
       }
     } else {
-      if (targetLabel === 'END') {
-        workflowFunction.push(`workflow.add_edge("${sourceLabel}", END)`)
-      } else if (sourceLabel == 'START') {
-        workflowFunction.push(`workflow.add_edge(START, "${targetLabel}")`)
-      } else {
-        if (sourceLabel != 'START') workflowFunction.push(`workflow.add_edge("${sourceLabel}", "${targetLabel}")`)
-      }
+      const formattedSourceLabel = sourceLabel === 'START' ? 'START' : `"${sourceLabel}"`
+      const formattedTargetLabel = targetLabel === 'END' ? 'END' : `"${targetLabel}"`
+
+      workflowFunction.push(`workflow.add_edge(${formattedSourceLabel}, ${formattedTargetLabel})`)
     }
   })
 
