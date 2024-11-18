@@ -28,7 +28,8 @@ export function generateLanggraphCode(
   const getNodeLabel = (nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId)
     const buttonText = buttonTexts[nodeId]
-    return (buttonText || (node?.data?.label as string) || nodeId).replace(/\s+/g, '_')
+    const label = buttonText || (node?.data?.label as string) || nodeId
+    return (label === 'source' ? 'START' : label).replace(/\s+/g, '_')
   }
 
   const functions = nodes
@@ -37,29 +38,34 @@ export function generateLanggraphCode(
       (node) =>
         `def ${(buttonTexts[node.id] || (node?.data?.label as string) || node.id).replace(/\s+/g, '_')}(state: State, config: RunnableConfig) -> State:\n    return {} \n`,
     )
+  const conditionalFunctionsMap = new Map<string, { source: string; targets: Set<string> }>()
 
-  const conditionalFunctions = new Map()
   edges
     .filter((edge) => edge.animated)
     .forEach((edge) => {
+      const edgeLabel = edge.label as string
+      console.log(edgeLabel, 'edgeLabel')
       const sourceLabel = getNodeLabel(edge.source)
       const targetLabel = getNodeLabel(edge.target)
-      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
-      if (!conditionalFunctions.has(edgeLabel)) {
-        conditionalFunctions.set(edgeLabel, { source: sourceLabel, targets: new Set() })
+
+      if (!conditionalFunctionsMap.has(edgeLabel)) {
+        conditionalFunctionsMap.set(edgeLabel, { source: sourceLabel, targets: new Set() })
       }
-      conditionalFunctions.get(edgeLabel).targets.add(targetLabel)
+      conditionalFunctionsMap.get(edgeLabel)!.targets.add(targetLabel)
     })
 
-  const conditionalFunctionStrings = Array.from(conditionalFunctions.entries()).map(
+  console.log(conditionalFunctionsMap, 'conditionalFunctionsMap')
+
+  const conditionalFunctionStrings = Array.from(conditionalFunctionsMap.entries()).map(
     ([edgeLabel, { source, targets }]) => {
+      const functionName = `${edgeLabel}`
       const targetStrings = Array.from(targets)
-        .map((target) => (target === 'end' ? '    # return END' : `    # return "${target}"`))
+        .map((target) => (target === 'END' ? '    # return END' : `    # return "${target}"`))
         .join('\n')
       const literalTypes = Array.from(targets)
-        .map((target) => (target === 'end' ? 'END' : `'${target}'`))
+        .map((target) => (target === 'END' ? 'END' : `'${target}'`))
         .join(', ')
-      return `def ${edgeLabel}(state: State, config: RunnableConfig) -> Literal[${literalTypes}]:\n    """Function to handle conditional edges for ${source}"""\n${targetStrings}\n`
+      return `def ${functionName}(state: State, config: RunnableConfig) -> Literal[${literalTypes}]:\n    """Function to handle conditional edge '${edgeLabel}' from ${source}"""\n${targetStrings}\n`
     },
   )
 
@@ -91,25 +97,27 @@ export function generateLanggraphCode(
   const processedConditionalEdges = new Set()
 
   edges.forEach((edge) => {
+    const edgeLabel = edge.label as string
     const sourceLabel = getNodeLabel(edge.source)
     const targetLabel = getNodeLabel(edge.target)
+
     if (edge.animated) {
-      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
       if (!processedConditionalEdges.has(edgeLabel)) {
-        if (sourceLabel === 'source') {
-          workflowFunction.push(`workflow.add_conditional_edges(START, ${edgeLabel})`)
+        const functionName = `${edgeLabel}`
+        if (sourceLabel === 'START') {
+          workflowFunction.push(`workflow.add_conditional_edges(START, ${functionName})`)
         } else {
-          workflowFunction.push(`workflow.add_conditional_edges("${sourceLabel}", ${edgeLabel})`)
+          workflowFunction.push(`workflow.add_conditional_edges("${sourceLabel}", ${functionName})`)
         }
         processedConditionalEdges.add(edgeLabel)
       }
     } else {
-      if (targetLabel === 'end') {
+      if (targetLabel === 'END') {
         workflowFunction.push(`workflow.add_edge("${sourceLabel}", END)`)
-      } else if (sourceLabel == 'source') {
+      } else if (sourceLabel == 'START') {
         workflowFunction.push(`workflow.add_edge(START, "${targetLabel}")`)
       } else {
-        if (sourceLabel != 'source') workflowFunction.push(`workflow.add_edge("${sourceLabel}", "${targetLabel}")`)
+        if (sourceLabel != 'START') workflowFunction.push(`workflow.add_edge("${sourceLabel}", "${targetLabel}")`)
       }
     }
   })

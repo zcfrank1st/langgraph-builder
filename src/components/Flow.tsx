@@ -46,7 +46,6 @@ export default function App() {
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState(false)
   const [isAdditionalOnboarding, setIsAdditionalOnboarding] = useState(false)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
-  console.log(isAdditionalOnboarding)
   useEffect(() => {
     nodesRef.current = nodes
     edgesRef.current = edges
@@ -194,7 +193,7 @@ export default function App() {
     (connection) => {
       const edgeId = `edge-${maxEdgeLength + 1}`
       setMaxEdgeLength((prev) => prev + 1)
-      const defaultLabel = `default_edge_name`
+      const defaultLabel = `edge-${maxEdgeLength + 1}`
       const newEdge: CustomEdgeType = {
         ...connection,
         id: edgeId,

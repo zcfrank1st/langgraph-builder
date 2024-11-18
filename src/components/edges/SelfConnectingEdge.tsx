@@ -15,11 +15,11 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, source, label, animated } = props
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
-  const [currentLabel, setCurrentLabel] = useState(edgeLabels[source] || 'default_edge_name')
+  const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
 
   useEffect(() => {
-    setCurrentLabel(edgeLabels[source] || 'default_edge_name')
+    setCurrentLabel(edgeLabels[source])
   }, [edgeLabels, source])
 
   const handleLabelClick = (e: React.MouseEvent) => {
@@ -54,7 +54,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   }
 
   const handleForeignObjectDoubleClick = (e: React.MouseEvent) => {
-    console.log('double clicked')
     e.stopPropagation()
     e.preventDefault()
   }
@@ -96,7 +95,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             <foreignObject
               x={labelX - 70}
               y={labelY - 10}
-              width={130}
+              width={100}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -114,14 +113,14 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   e.stopPropagation()
                 }}
                 onDoubleClick={handleForeignObjectDoubleClick}
-                className='bg-[#D4EDF6] outline-none border border-2 border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded'
+                className='bg-[#D4EDF6] outline-none border border-2 border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded-full'
               />
             </foreignObject>
           ) : (
             <foreignObject
               x={labelX - 70}
               y={labelY - 10}
-              width={130}
+              width={100}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -131,7 +130,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   handleLabelClick(e)
                 }}
                 onDoubleClick={handleForeignObjectDoubleClick}
-                className='bg-[#D4EDF6] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-[#333333] w-full h-full text-xs text-[#333333] rounded'
+                className='bg-[#D4EDF6] border border-2 border-[#207fa5] flex justify-center items-center flex text-center text-[#333333] w-full h-full text-xs text-[#333333] rounded-full'
               >
                 {edgeLabels[source] || label}
               </div>
@@ -152,7 +151,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           <foreignObject
             x={sourceX + 30}
             y={sourceY + 5}
-            width={130}
+            width={100}
             height={35}
             onDoubleClick={handleForeignObjectDoubleClick}
           >
@@ -177,7 +176,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           <foreignObject
             x={sourceX + 30}
             y={sourceY + 5}
-            width={130}
+            width={100}
             height={35}
             onDoubleClick={handleForeignObjectDoubleClick}
           >
@@ -187,7 +186,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 handleLabelClick(e)
               }}
               onDoubleClick={handleForeignObjectDoubleClick}
-              className='bg-[#D4EDF6] border border-2 border-[#207fa5] flex justify-center items-center flex text-center w-full h-full text-xs text-[#333333] rounded'
+              className='bg-[#D4EDF6] border border-2 border-[#207fa5] flex justify-center items-center flex text-center w-full h-full text-xs text-[#333333] rounded-full'
             >
               <div className='px-2'>{edgeLabels[source] || label}</div>
             </div>

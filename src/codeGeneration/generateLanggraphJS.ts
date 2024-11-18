@@ -58,7 +58,7 @@ export function generateLanggraphJS(
     .forEach((edge) => {
       const sourceLabel = getNodeLabel(edge.source)
       const targetLabel = getNodeLabel(edge.target)
-      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
+      const edgeLabel = edgeLabels[edge.source]
       if (!conditionalFunctions.has(edgeLabel)) {
         conditionalFunctions.set(edgeLabel, { source: sourceLabel, targets: new Set() })
       }
@@ -91,7 +91,7 @@ export function generateLanggraphJS(
     const sourceLabel = getNodeLabel(edge.source)
     const targetLabel = getNodeLabel(edge.target)
     if (edge.animated) {
-      const edgeLabel = edgeLabels[edge.source] || `default_edge_name`
+      const edgeLabel = edgeLabels[edge.source]
       if (!processedConditionalEdges.has(edgeLabel)) {
         if (sourceLabel === 'source') {
           workflowFunction.push(`  .addConditionalEdges(START, ${edgeLabel})`)
