@@ -42,7 +42,7 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
 
   useEffect(() => {
     updateButtonText(id, data.label)
-  }, [data.label, id, updateButtonText])
+  }, [])
 
   useEffect(() => {
     adjustNodeSize()

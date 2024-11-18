@@ -7,13 +7,22 @@ export function generateLanggraphJS(
   buttonTexts: { [key: string]: string },
   edgeLabels: { [key: string]: string },
 ): string {
+  console.log(edgeLabels, 'edgeLabels')
   const sourceEdges = edges.filter(
     (edge) => !edge.animated && edges.filter((e) => e.source === edge.source && !e.animated).length > 1,
   )
   const getNodeLabel = (nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId)
     const buttonText = buttonTexts[nodeId]
-    return (buttonText || (node?.data?.label as string) || nodeId).replace(/\s+/g, '_')
+    const label = buttonText || (node?.data?.label as string) || nodeId
+
+    if (label === 'source') {
+      return 'START'
+    } else if (label === 'end') {
+      return 'END'
+    } else {
+      return label.replace(/\s+/g, '_')
+    }
   }
 
   const importArray = ['StateGraph', 'START', 'END', 'Annotation']
@@ -52,27 +61,29 @@ export function generateLanggraphJS(
       return `function ${functionName}(state) {\n    return {};\n  }\n`
     })
 
-  const conditionalFunctions = new Map()
+  const conditionalFunctionsMap = new Map<string, { source: string; targets: Set<string> }>()
+
   edges
     .filter((edge) => edge.animated)
     .forEach((edge) => {
+      const edgeLabel = edge.label as string
       const sourceLabel = getNodeLabel(edge.source)
       const targetLabel = getNodeLabel(edge.target)
-      const edgeLabel = edgeLabels[edge.source]
-      if (!conditionalFunctions.has(edgeLabel)) {
-        conditionalFunctions.set(edgeLabel, { source: sourceLabel, targets: new Set() })
+
+      if (!conditionalFunctionsMap.has(edgeLabel)) {
+        conditionalFunctionsMap.set(edgeLabel, { source: sourceLabel, targets: new Set() })
       }
-      conditionalFunctions.get(edgeLabel).targets.add(targetLabel)
+      conditionalFunctionsMap.get(edgeLabel)!.targets.add(targetLabel)
     })
 
-  const conditionalFunctionStrings = Array.from(conditionalFunctions.entries()).map(
-    ([edgeLabel, { source, targets }]) => {
-      const targetStrings = Array.from(targets)
-        .map((target) => `    // return "${target}";`)
-        .join('\n')
-      return `function ${edgeLabel}(state) {\n${targetStrings}\n  }\n`
-    },
-  )
+  // Generate one function per edgeLabel
+  const conditionalFunctionStrings = Array.from(conditionalFunctionsMap.entries()).map(([edgeLabel, { targets }]) => {
+    const sanitizedEdgeLabel = edgeLabel.replace(/\W+/g, '_')
+    const targetStrings = Array.from(targets)
+      .map((target) => (target === 'END' ? '    // return END;' : `    // return "${target}";`))
+      .join('\n')
+    return `function ${edgeLabel}(state) {\n${targetStrings}\n  }\n`
+  })
 
   const workflowFunction = ['const workflow = new StateGraph(StateAnnotation)']
 
@@ -88,10 +99,11 @@ export function generateLanggraphJS(
   const processedConditionalEdges = new Set()
 
   edges.forEach((edge) => {
+    console.log(edge, 'edge inside map')
     const sourceLabel = getNodeLabel(edge.source)
     const targetLabel = getNodeLabel(edge.target)
     if (edge.animated) {
-      const edgeLabel = edgeLabels[edge.source]
+      const edgeLabel = edge.label as string
       if (!processedConditionalEdges.has(edgeLabel)) {
         if (sourceLabel === 'source') {
           workflowFunction.push(`  .addConditionalEdges(START, ${edgeLabel})`)
