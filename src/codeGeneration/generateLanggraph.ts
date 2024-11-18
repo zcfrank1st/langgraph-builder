@@ -113,9 +113,9 @@ export function generateLanggraphCode(
       }
     } else {
       if (targetLabel === 'END') {
-        workflowFunction.push(`workflow.add_edge("${sourceLabel}", "END")`)
+        workflowFunction.push(`workflow.add_edge("${sourceLabel}", END)`)
       } else if (sourceLabel == 'START') {
-        workflowFunction.push(`workflow.add_edge("START", "${targetLabel}")`)
+        workflowFunction.push(`workflow.add_edge(START, "${targetLabel}")`)
       } else {
         if (sourceLabel != 'START') workflowFunction.push(`workflow.add_edge("${sourceLabel}", "${targetLabel}")`)
       }
