@@ -105,7 +105,7 @@ export function generateLanggraphCode(
       if (!processedConditionalEdges.has(edgeLabel)) {
         const functionName = `${edgeLabel}`
         if (sourceLabel === 'START') {
-          workflowFunction.push(`workflow.add_conditional_edges(START, ${functionName})`)
+          workflowFunction.push(`workflow.add_conditional_edges("START", ${functionName})`)
         } else {
           workflowFunction.push(`workflow.add_conditional_edges("${sourceLabel}", ${functionName})`)
         }
