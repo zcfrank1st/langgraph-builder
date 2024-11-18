@@ -29,7 +29,7 @@ export function generateLanggraphCode(
     const node = nodes.find((n) => n.id === nodeId)
     const buttonText = buttonTexts[nodeId]
     const label = buttonText || (node?.data?.label as string) || nodeId
-    return (label === 'source' ? 'START' : label).replace(/\s+/g, '_')
+    return (label === 'source' ? 'START' : label === 'end' ? 'END' : label).replace(/\s+/g, '_')
   }
 
   const functions = nodes
@@ -113,9 +113,9 @@ export function generateLanggraphCode(
       }
     } else {
       if (targetLabel === 'END') {
-        workflowFunction.push(`workflow.add_edge("${sourceLabel}", END)`)
+        workflowFunction.push(`workflow.add_edge("${sourceLabel}", "END")`)
       } else if (sourceLabel == 'START') {
-        workflowFunction.push(`workflow.add_edge(START, "${targetLabel}")`)
+        workflowFunction.push(`workflow.add_edge("START", "${targetLabel}")`)
       } else {
         if (sourceLabel != 'START') workflowFunction.push(`workflow.add_edge("${sourceLabel}", "${targetLabel}")`)
       }
