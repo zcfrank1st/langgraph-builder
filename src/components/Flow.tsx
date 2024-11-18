@@ -193,7 +193,7 @@ export default function App() {
     (connection) => {
       const edgeId = `edge-${maxEdgeLength + 1}`
       setMaxEdgeLength((prev) => prev + 1)
-      const defaultLabel = `edge-${maxEdgeLength + 1}`
+      const defaultLabel = `edge_${maxEdgeLength + 1}`
       const newEdge: CustomEdgeType = {
         ...connection,
         id: edgeId,
