@@ -44,7 +44,7 @@ export default function App() {
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
-  const [isAdditionalOnboarding, setIsAdditionalOnboarding] = useState(true)
+  const [isAdditionalOnboarding, setIsAdditionalOnboarding] = useState<boolean | null>(null)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
   useEffect(() => {
     nodesRef.current = nodes
@@ -66,12 +66,17 @@ export default function App() {
 
   useEffect(() => {
     const initialComplete = localStorage.getItem('initialOnboardingComplete') === 'true'
+    const additionalComplete = localStorage.getItem('additionalOnboardingComplete') === 'true'
+
     setInitialOnboardingComplete(initialComplete)
+
     if (!initialComplete) {
       setCurrentOnboardingStep(0)
       setIsAdditionalOnboarding(false)
-    } else {
+    } else if (!additionalComplete) {
       setIsAdditionalOnboarding(true)
+    } else {
+      setIsAdditionalOnboarding(false)
     }
   }, [])
 
