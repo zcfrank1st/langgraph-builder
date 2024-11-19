@@ -43,8 +43,8 @@ export default function App() {
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
-  const [initialOnboardingComplete, setInitialOnboardingComplete] = useState(false)
-  const [isAdditionalOnboarding, setIsAdditionalOnboarding] = useState(false)
+  const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
+  const [isAdditionalOnboarding, setIsAdditionalOnboarding] = useState(true)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
   useEffect(() => {
     nodesRef.current = nodes
@@ -55,10 +55,6 @@ export default function App() {
     setCurrentOnboardingStep((prevStep) => Math.max(prevStep - 1, 0))
   }
 
-  const handleFinishOnboarding = () => {
-    setIsAdditionalOnboarding(false)
-    setCurrentOnboardingStep(0)
-  }
   const startOnboarding = () => {
     if (isAdditionalOnboarding) {
       setIsAdditionalOnboarding(false)
@@ -71,14 +67,17 @@ export default function App() {
   useEffect(() => {
     const initialComplete = localStorage.getItem('initialOnboardingComplete') === 'true'
     setInitialOnboardingComplete(initialComplete)
-
     if (!initialComplete) {
       setCurrentOnboardingStep(0)
+      setIsAdditionalOnboarding(false)
+    } else {
+      setIsAdditionalOnboarding(true)
     }
   }, [])
 
   const handleInitialModalClose = () => {
     setInitialOnboardingComplete(true)
+    setIsAdditionalOnboarding(true)
     localStorage.setItem('initialOnboardingComplete', 'true')
     setCurrentOnboardingStep(0)
   }
@@ -122,50 +121,28 @@ export default function App() {
 
   const additionalModalArray = [
     {
-      key: 'step1',
-      hideBackDrop: true,
-      onClose: () => handleNextStep(),
       title: 'Create a Node',
       content: 'To create a node, ⌘ + Click anywhere on the screen. Click and drag to move the node around.',
-      buttonText: 'Next',
-      showBack: false,
     },
     {
-      key: 'step2',
-      hideBackDrop: true,
-      onClose: () => handleNextStep(),
       title: 'Create a Normal Edge',
       content: 'Click and drag from one node to another to create a normal edge.',
-      buttonText: 'Next',
-      showBack: true,
     },
     {
-      key: 'step3',
       hideBackDrop: true,
-      onClose: () => handleNextStep(),
       title: 'Create a Conditional Edge',
       content:
         '⌘ + Click a normal edge or draw multiple edges leaving from the same node to create a conditional edge.',
-      buttonText: 'Next',
-      showBack: true,
     },
     {
-      key: 'step4',
       hideBackDrop: true,
-      onClose: () => handleNextStep(),
       title: 'Delete a Node or Edge',
       content: 'To delete a node or edge, just click + ⌫.',
-      buttonText: 'Next',
-      showBack: true,
     },
     {
-      key: 'step5',
       hideBackDrop: true,
-      onClose: () => handleFinishOnboarding(),
       title: 'Happy Building!',
       content: "Once you're done prototyping, click either the Python or JS logo to get code based on your graph.",
-      buttonText: 'Finish',
-      showBack: true,
     },
   ]
 
@@ -397,6 +374,14 @@ export default function App() {
                   </div>
                   <div className='text-sm md:text-lg text-gray-500 pt-2 text-center'>
                     {additionalModalArray[currentOnboardingStep].content}
+                  </div>
+                  <div className='flex justify-center items-center pt-3'>
+                    <button
+                      className='bg-[#2F6868] hover:bg-[#245757] text-white font-bold px-3 py-2 rounded w-auto'
+                      onClick={() => setIsAdditionalOnboarding(false)}
+                    >
+                      Close
+                    </button>
                   </div>
                 </div>
                 <button className='disabled:text-gray-300' disabled={isLastStep} onClick={handleNextStep}>
