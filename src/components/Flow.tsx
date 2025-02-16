@@ -21,7 +21,7 @@ import { generateLanggraphJS } from '../codeGeneration/generateLanggraphJS'
 import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
-import { Modal as MuiModal, ModalDialog, Snackbar } from '@mui/joy'
+import { Modal as MuiModal, ModalDialog, Snackbar, Button, Tooltip } from '@mui/joy'
 import { X, Info, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import GenericModal from './GenericModal'
@@ -43,115 +43,96 @@ export default function App() {
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
-  const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
-  const [isAdditionalOnboarding, setIsAdditionalOnboarding] = useState<boolean | null>(null)
+  const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean>(false)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
+
   useEffect(() => {
     nodesRef.current = nodes
     edgesRef.current = edges
   }, [nodes, edges])
 
-  const handlePreviousStep = () => {
-    setCurrentOnboardingStep((prevStep) => Math.max(prevStep - 1, 0))
-  }
-
-  const startOnboarding = () => {
-    if (isAdditionalOnboarding) {
-      setIsAdditionalOnboarding(false)
-    } else {
-      setCurrentOnboardingStep(0)
-      setIsAdditionalOnboarding(true)
-    }
-  }
-
   useEffect(() => {
     const initialComplete = localStorage.getItem('initialOnboardingComplete') === 'true'
-    const additionalComplete = localStorage.getItem('additionalOnboardingComplete') === 'true'
-
     setInitialOnboardingComplete(initialComplete)
-
-    if (!initialComplete) {
-      setCurrentOnboardingStep(0)
-      setIsAdditionalOnboarding(false)
-    } else if (!additionalComplete) {
-      setIsAdditionalOnboarding(true)
-    } else {
-      setIsAdditionalOnboarding(false)
-    }
   }, [])
 
-  const handleInitialModalClose = () => {
-    setInitialOnboardingComplete(true)
-    setIsAdditionalOnboarding(true)
-    localStorage.setItem('initialOnboardingComplete', 'true')
-    setCurrentOnboardingStep(0)
-  }
-
-  const handleNextStep = () => {
-    setCurrentOnboardingStep((prevStep) => {
-      const nextStep = prevStep + 1
-      if (nextStep < additionalModalArray.length) {
-        return nextStep
-      } else {
-        setIsAdditionalOnboarding(false)
-        localStorage.setItem('additionalOnboardingComplete', 'true')
-        return prevStep
-      }
-    })
-  }
-
-  const initialModalArray = [
+  console.log(currentOnboardingStep, 'currentOnboardingStep')
+  const onboardingSteps = [
     {
       key: 'welcomeModal',
-      noClickThrough: true,
-      imageUrl: '/langgraph-logo.png',
-      onClose: () => handleInitialModalClose(),
+      type: 'modal',
       title: 'Graph Builder',
       content: (
         <span>
-          Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our{' '}
+          Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our
+          docs{' '}
           <a
             style={{ textDecoration: 'underline' }}
             href='https://langchain-ai.github.io/langgraph/tutorials/introduction/'
             target='_blank'
             rel='noopener noreferrer'
           >
-            docs
+            here
           </a>
         </span>
       ),
       buttonText: 'Get Started',
+      imageUrl: '/langgraph-logo.png',
+    },
+    {
+      key: 'tooltip1',
+      type: 'tooltip',
+      content: 'This is your canvas. You can see nodes and edges here.',
+      position: { top: '20%', left: '40%' },
+    },
+    {
+      key: 'tooltip2',
+      type: 'tooltip',
+      content: 'Add new nodes by holding Cmd/Ctrl and clicking on the background.',
+      position: { top: '60%', left: '10%' },
+    },
+    {
+      key: 'tooltip3',
+      type: 'tooltip',
+      content: 'Connect nodes by dragging from one node to another.',
+      position: { top: '50%', left: '70%' },
+    },
+    {
+      key: 'tooltip4',
+      type: 'tooltip',
+      content: 'Generate code using the buttons on the bottom right.',
+      position: { top: '80%', left: '50%' },
     },
   ]
 
-  const additionalModalArray = [
-    {
-      title: 'Create a Node',
-      content: 'To create a node, ⌘ + Click anywhere on the screen. Click and drag to move the node around.',
-    },
-    {
-      title: 'Create a Normal Edge',
-      content: 'Click and drag from one node to another to create a normal edge.',
-    },
-    {
-      hideBackDrop: true,
-      title: 'Create a Conditional Edge',
-      content:
-        '⌘ + Click a normal edge or draw multiple edges leaving from the same node to create a conditional edge.',
-    },
-    {
-      hideBackDrop: true,
-      title: 'Delete a Node or Edge',
-      content: 'To delete a node or edge, just click + ⌫.',
-    },
-    {
-      hideBackDrop: true,
-      title: 'Happy Building!',
-      content: "Once you're done prototyping, click either the Python or JS logo to get code based on your graph.",
-    },
-  ]
+  const tooltip = (
+    <div className='m-6 flex max-w-[250px] flex-col items-start gap-2'>
+      <div className='text-bold text-base text-white dark:text-black'>title</div>
+      <span className='text-sm leading-tight text-[#CBD5E1] dark:text-[#334155]'>content</span>
+      <Button
+        size='md'
+        color='primary'
+        // onClick={() => setHasDismissedTooltip(true)}
+        sx={{ alignSelf: 'stretch', marginTop: 1 }}
+      >
+        Got it 👍
+      </Button>
+    </div>
+  )
 
-  const isLastStep = currentOnboardingStep === additionalModalArray.length - 1
+  const handleOnboardingNext = () => {
+    if (currentOnboardingStep === onboardingSteps.length - 1) {
+      localStorage.setItem('initialOnboardingComplete', 'true')
+      setInitialOnboardingComplete(true)
+      setCurrentOnboardingStep(onboardingSteps.length)
+    } else {
+      setCurrentOnboardingStep((prev) => prev + 1)
+    }
+  }
+
+  const handlePreviousStep = () => {
+    setCurrentOnboardingStep((prevStep) => Math.max(prevStep - 1, 0))
+  }
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -347,53 +328,48 @@ export default function App() {
           <Background />
         </ReactFlow>
 
-        <GenericModal
-          isOpen={!initialOnboardingComplete}
-          onClose={initialModalArray[0].onClose}
-          title={initialModalArray[0].title}
-          content={<div>{initialModalArray[0].content}</div>}
-          buttonText={initialModalArray[0].buttonText}
-          imageUrl={initialModalArray[0].imageUrl}
-        />
-
-        {isAdditionalOnboarding && (
-          <div
-            className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'
-            onClick={() => setIsAdditionalOnboarding(false)}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className='fixed w-full md:max-w-lg text-center bg-white rounded-lg z-50 flex items-center justify-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
-            >
-              <div className='flex flex-row gap-5 py-8 px-5'>
-                <button
-                  disabled={currentOnboardingStep === 0}
-                  className='disabled:text-gray-300 z-50'
-                  onClick={handlePreviousStep}
+        {!initialOnboardingComplete && currentOnboardingStep < onboardingSteps.length && (
+          <div className='onboarding-overlay'>
+            {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
+              <GenericModal
+                isOpen={true}
+                onClose={handleOnboardingNext}
+                title={onboardingSteps[currentOnboardingStep].title || ''}
+                content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
+                buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
+                imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
+              />
+            ) : (
+              <Tooltip
+                arrow
+                modifiers={[
+                  {
+                    name: 'offset',
+                    options: {
+                      offset: [0, 20],
+                    },
+                  },
+                ]}
+                placement='bottom-start'
+                title={tooltip}
+                open={true}
+                sx={{
+                  // backgroundColor: isDarkMode ? '#F8F7FF' : 'black',
+                  borderRadius: 5,
+                  '& > span:first-of-type::before': {
+                    // borderColor: isDarkMode ? '#F8F7FF' : 'black',
+                  },
+                }}
+              >
+                <div
+                  onClick={() => {
+                    // setHasDismissedTooltip(true)
+                  }}
                 >
-                  <ChevronLeft className='h-10 w-10' />
-                </button>
-                <div className='flex flex-col gap-2'>
-                  <div className='text-xl md:text-2xl font-medium'>
-                    {additionalModalArray[currentOnboardingStep].title}
-                  </div>
-                  <div className='text-sm md:text-lg text-gray-500 pt-2 text-center'>
-                    {additionalModalArray[currentOnboardingStep].content}
-                  </div>
-                  <div className='flex justify-center items-center pt-3'>
-                    <button
-                      className='bg-[#2F6868] hover:bg-[#245757] text-white font-bold px-3 py-2 rounded w-auto'
-                      onClick={() => setIsAdditionalOnboarding(false)}
-                    >
-                      Close
-                    </button>
-                  </div>
+                  children
                 </div>
-                <button className='disabled:text-gray-300' disabled={isLastStep} onClick={handleNextStep}>
-                  <ChevronRight className='h-10 w-10' />
-                </button>
-              </div>
-            </div>
+              </Tooltip>
+            )}
           </div>
         )}
 
@@ -437,16 +413,6 @@ export default function App() {
             <div className='flex justify-center'></div>
           </ModalDialog>
         </MuiModal>
-
-        <div className='fixed bottom-20 left-5 flex flex-row gap-2'>
-          <button
-            className='text-white p-3 rounded-md shadow-lg bg-[#2F6868] hover:bg-[#245757] focus:outline-none'
-            onClick={startOnboarding}
-            aria-label='Toggle Information Panel'
-          >
-            <Info className='h-6 w-6' />
-          </button>
-        </div>
 
         <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
           <div className='text-[#333333] font-medium text-center'> {'Generate Code'}</div>
