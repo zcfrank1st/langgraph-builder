@@ -1,5 +1,6 @@
 'use client'
 import Image from 'next/image'
+import type { Node } from '@xyflow/react'
 import { useCallback, useState, useRef, useEffect } from 'react'
 import {
   Background,
@@ -21,10 +22,40 @@ import { generateLanggraphJS } from '../codeGeneration/generateLanggraphJS'
 import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
-import { Modal as MuiModal, ModalDialog, Snackbar, Button, Tooltip } from '@mui/joy'
-import { X, Info, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
+import { X } from 'lucide-react'
 
 import GenericModal from './GenericModal'
+
+type OnboardingStep = {
+  key: string
+  type: 'modal' | 'tooltip'
+  title?: string
+  content: string | JSX.Element
+  buttonText?: string
+  imageUrl?: string
+  placement?: TooltipPlacement
+  tooltipWrapperStyle?: {
+    className?: string
+    style?: React.CSSProperties
+  }
+  nodes?: Node[]
+  edges?: Edge[]
+}
+
+type TooltipPlacement =
+  | 'top'
+  | 'left'
+  | 'bottom'
+  | 'right'
+  | 'bottom-end'
+  | 'bottom-start'
+  | 'left-end'
+  | 'left-start'
+  | 'right-end'
+  | 'right-start'
+  | 'top-end'
+  | 'top-start'
 
 export default function App() {
   const proOptions = { hideAttribution: true }
@@ -56,39 +87,115 @@ export default function App() {
     setInitialOnboardingComplete(initialComplete)
   }, [])
 
-  console.log(currentOnboardingStep, 'currentOnboardingStep')
-  const onboardingSteps = [
+  const onboardingNodesOne = [
     {
-      key: 'welcomeModal',
+      id: 'source',
+      type: 'source',
+      position: { x: 0, y: 0 },
+      data: { label: 'source' },
+    },
+    {
+      id: 'end',
+      type: 'end',
+      position: { x: 0, y: 600 },
+      data: { label: 'end' },
+    },
+    {
+      id: 'custom1',
+      type: 'custom',
+      position: { x: 0, y: 200 },
+      data: { label: 'First node' },
+    },
+  ] satisfies Node[]
+
+  const onboardingSteps: OnboardingStep[] = [
+    {
+      key: 'tooltip1',
       type: 'modal',
+      placement: 'top' as TooltipPlacement,
       title: 'Graph Builder',
       content: <span>Use this tool to quickly prototype the architecture of your agentic application</span>,
       buttonText: 'Get Started',
       imageUrl: '/langgraph-logo.png',
     },
     {
-      key: 'tooltip1',
-      type: 'tooltip',
-      title: '1 of 4: Create a Node',
-      content: '⌘ + click to create a node on the canvas',
-    },
-    {
       key: 'tooltip2',
       type: 'tooltip',
-      content: 'Add new nodes by holding Cmd/Ctrl and clicking on the background.',
-      position: { top: '60%', left: '10%' },
+      placement: 'top' as TooltipPlacement,
+      title: '1 of 4: Create a node',
+      content: '⌘ + click anywhere on the canvas to create a node',
+      nodes: [
+        { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
+        { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
+      ],
     },
     {
       key: 'tooltip3',
       type: 'tooltip',
-      content: 'Connect nodes by dragging from one node to another.',
-      position: { top: '50%', left: '70%' },
+      placement: 'left' as TooltipPlacement,
+      title: '2 of 4: Create an edge',
+      content: 'Connect two nodes by dragging from one to another',
+      nodes: [
+        { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
+        { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
+      ],
+      edges: [{ id: 'source->custom1', source: 'source', target: 'custom1' }],
+      tooltipWrapperStyle: {
+        className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
+        style: { paddingRight: '200px', paddingTop: '200px' },
+      },
     },
     {
       key: 'tooltip4',
       type: 'tooltip',
-      content: 'Generate code using the buttons on the bottom right.',
-      position: { top: '80%', left: '50%' },
+      placement: 'right' as TooltipPlacement,
+      title: '3 of 4: Create a conditional edge',
+      content: 'Connect one node to multiple in order to create a conditional edge',
+      nodes: [
+        { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
+        { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
+        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'Destination 1' } },
+        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Destination 2' } },
+      ],
+      edges: [
+        { id: 'source->custom1', source: 'source', target: 'custom1' },
+        { id: 'custom1->custom2', source: 'custom1', target: 'custom2', animated: true },
+        { id: 'custom1->custom3', source: 'custom1', target: 'custom3', animated: true },
+        { id: 'custom2->end', source: 'custom2', target: 'end' },
+        { id: 'custom3->end', source: 'custom3', target: 'end' },
+      ],
+      tooltipWrapperStyle: {
+        className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
+        style: { paddingTop: '350px', paddingLeft: '300px' },
+      },
+    },
+    {
+      key: 'tooltip5',
+      type: 'tooltip',
+      placement: 'left' as TooltipPlacement,
+      title: '4 of 4: Generate Code',
+      content: 'Generate code using the buttons on the bottom right',
+      nodes: [
+        { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
+        { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
+        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'Destination 1' } },
+        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Destination 2' } },
+      ],
+      edges: [
+        { id: 'source->custom1', source: 'source', target: 'custom1' },
+        { id: 'custom1->custom2', source: 'custom1', target: 'custom2', animated: true },
+        { id: 'custom1->custom3', source: 'custom1', target: 'custom3', animated: true },
+        { id: 'custom2->end', source: 'custom2', target: 'end' },
+        { id: 'custom3->end', source: 'custom3', target: 'end' },
+      ],
+      tooltipWrapperStyle: {
+        className: 'fixed flex items-end justify-end pointer-events-none',
+        style: { right: '170px', bottom: '100px', left: 'auto', top: 'auto' },
+      },
     },
   ]
 
@@ -96,16 +203,23 @@ export default function App() {
     if (currentOnboardingStep === onboardingSteps.length - 1) {
       localStorage.setItem('initialOnboardingComplete', 'true')
       setInitialOnboardingComplete(true)
-      setCurrentOnboardingStep(onboardingSteps.length)
     } else {
       setCurrentOnboardingStep((prev) => prev + 1)
     }
   }
 
   const tooltip = (
-    <div className='py-3 px-3 flex flex-col'>
-      <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
-      <div className='text-sm pt-2'>{onboardingSteps[currentOnboardingStep].content}</div>
+    <div className='py-3 px-3 flex flex-col min-w-[300px]'>
+      <div className='flex flex-row items-center justify-between'>
+        <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
+        <button
+          onClick={handleOnboardingNext}
+          className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
+        >
+          Next
+        </button>
+      </div>
+      <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
     </div>
   )
 
@@ -246,22 +360,34 @@ export default function App() {
     [setEdges],
   )
 
+  const flowNodes =
+    !initialOnboardingComplete &&
+    currentOnboardingStep < onboardingSteps.length &&
+    onboardingSteps[currentOnboardingStep].nodes
+      ? onboardingSteps[currentOnboardingStep].nodes
+      : nodes
+
+  const flowEdges =
+    !initialOnboardingComplete &&
+    currentOnboardingStep < onboardingSteps.length &&
+    onboardingSteps[currentOnboardingStep].edges
+      ? onboardingSteps[currentOnboardingStep].edges
+      : edges
+
   return (
     <div>
       <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
         <ReactFlow<CustomNodeType, CustomEdgeType>
-          nodes={nodes}
+          nodes={flowNodes}
           nodeTypes={nodeTypes}
           onEdgeClick={onEdgeClick}
           onNodesChange={handleNodesChange}
-          edges={edges.map((edge) => {
-            return {
-              ...edge,
-              data: {
-                ...edge.data,
-              },
-            }
-          })}
+          edges={flowEdges?.map((edge) => ({
+            ...edge,
+            data: {
+              ...edge.data,
+            },
+          }))}
           edgeTypes={edgeTypes}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
@@ -269,9 +395,7 @@ export default function App() {
           fitView
           onConnectStart={onConnectStart}
           className='z-10 bg-[#EAEAEA]'
-          style={{
-            backgroundColor: '#EAEAEA',
-          }}
+          style={{ backgroundColor: '#EAEAEA' }}
           proOptions={proOptions}
           zoomOnDoubleClick={false}
           onPaneClick={handlePaneClick}
@@ -292,8 +416,11 @@ export default function App() {
               />
             ) : (
               <div
-                className='fixed inset-0 flex items-start justify-center pointer-events-none'
-                style={{ paddingTop: '28vh' }}
+                className={
+                  onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.className ||
+                  'fixed inset-0 flex items-start justify-center pointer-events-none'
+                }
+                style={onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.style || { paddingTop: '30vh' }}
               >
                 <Tooltip
                   className='pointer-events-auto'
@@ -308,11 +435,11 @@ export default function App() {
                   ]}
                   color='neutral'
                   variant='outlined'
-                  placement='left'
+                  placement={onboardingSteps[currentOnboardingStep].placement || 'top'}
                   title={tooltip}
                   open={true}
                 >
-                  <div>node or edge</div>
+                  <div></div>
                 </Tooltip>
               </div>
             )}

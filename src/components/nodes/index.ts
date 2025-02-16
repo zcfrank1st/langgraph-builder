@@ -13,12 +13,6 @@ export const initialNodes = [
   //   data: { label: 'drag me!' },
   // },
   // { id: 'c', position: { x: 100, y: 100 }, data: { label: 'your ideas' } },
-  // {
-  //   id: 'd',
-  //   type: 'output',
-  //   position: { x: 0, y: 200 },
-  //   data: { label: 'with React Flow' },
-  // },
   {
     id: 'source',
     type: 'source',
