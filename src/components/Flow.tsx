@@ -70,11 +70,10 @@ export default function App() {
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const [snackbarOpen, setSnackbarOpen] = useState(false)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
-  const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean>(false)
+  const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
 
   useEffect(() => {
@@ -83,30 +82,9 @@ export default function App() {
   }, [nodes, edges])
 
   useEffect(() => {
-    const initialComplete = localStorage.getItem('initialOnboardingComplete') === 'true'
-    setInitialOnboardingComplete(initialComplete)
+    const initialComplete = localStorage.getItem('initialOnboardingComplete')
+    setInitialOnboardingComplete(initialComplete === 'true' ? true : false)
   }, [])
-
-  const onboardingNodesOne = [
-    {
-      id: 'source',
-      type: 'source',
-      position: { x: 0, y: 0 },
-      data: { label: 'source' },
-    },
-    {
-      id: 'end',
-      type: 'end',
-      position: { x: 0, y: 600 },
-      data: { label: 'end' },
-    },
-    {
-      id: 'custom1',
-      type: 'custom',
-      position: { x: 0, y: 200 },
-      data: { label: 'First node' },
-    },
-  ] satisfies Node[]
 
   const onboardingSteps: OnboardingStep[] = [
     {
@@ -403,7 +381,7 @@ export default function App() {
           <Background />
         </ReactFlow>
 
-        {!initialOnboardingComplete && currentOnboardingStep < onboardingSteps.length && (
+        {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
           <div className='onboarding-overlay'>
             {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
               <GenericModal
