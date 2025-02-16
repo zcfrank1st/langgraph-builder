@@ -62,28 +62,15 @@ export default function App() {
       key: 'welcomeModal',
       type: 'modal',
       title: 'Graph Builder',
-      content: (
-        <span>
-          Use this tool to quickly prototype the architecture of your agent. If you're new to LangGraph, check out our
-          docs{' '}
-          <a
-            style={{ textDecoration: 'underline' }}
-            href='https://langchain-ai.github.io/langgraph/tutorials/introduction/'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            here
-          </a>
-        </span>
-      ),
+      content: <span>Use this tool to quickly prototype the architecture of your agentic application</span>,
       buttonText: 'Get Started',
       imageUrl: '/langgraph-logo.png',
     },
     {
       key: 'tooltip1',
       type: 'tooltip',
-      content: 'This is your canvas. You can see nodes and edges here.',
-      position: { top: '20%', left: '40%' },
+      title: '1 of 4: Create a Node',
+      content: '⌘ + click to create a node on the canvas',
     },
     {
       key: 'tooltip2',
@@ -105,21 +92,6 @@ export default function App() {
     },
   ]
 
-  const tooltip = (
-    <div className='m-6 flex max-w-[250px] flex-col items-start gap-2'>
-      <div className='text-bold text-base text-white dark:text-black'>title</div>
-      <span className='text-sm leading-tight text-[#CBD5E1] dark:text-[#334155]'>content</span>
-      <Button
-        size='md'
-        color='primary'
-        // onClick={() => setHasDismissedTooltip(true)}
-        sx={{ alignSelf: 'stretch', marginTop: 1 }}
-      >
-        Got it 👍
-      </Button>
-    </div>
-  )
-
   const handleOnboardingNext = () => {
     if (currentOnboardingStep === onboardingSteps.length - 1) {
       localStorage.setItem('initialOnboardingComplete', 'true')
@@ -130,9 +102,12 @@ export default function App() {
     }
   }
 
-  const handlePreviousStep = () => {
-    setCurrentOnboardingStep((prevStep) => Math.max(prevStep - 1, 0))
-  }
+  const tooltip = (
+    <div className='py-3 px-3 flex flex-col'>
+      <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
+      <div className='text-sm pt-2'>{onboardingSteps[currentOnboardingStep].content}</div>
+    </div>
+  )
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -273,30 +248,6 @@ export default function App() {
 
   return (
     <div>
-      <Snackbar
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        open={snackbarOpen}
-        onClose={(_, reason) => {
-          if (reason === 'clickaway') {
-            return
-          }
-          setSnackbarOpen(false)
-        }}
-        key='bottom-right'
-        className='max-w-sm shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-3 border-slate-600'
-        autoHideDuration={6000}
-      >
-        <div className='flex border-gray-200'>
-          <button
-            type='button'
-            className='border border-transparent rounded-none rounded-r-lg p-3 flex items-center justify-center text-gray-400 hover:text-gray-500 focus:outline-none'
-            onClick={() => setSnackbarOpen(false)}
-          >
-            <X className='h-5 w-5' aria-hidden='true' />
-          </button>
-        </div>
-      </Snackbar>
-
       <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
         <ReactFlow<CustomNodeType, CustomEdgeType>
           nodes={nodes}
@@ -340,35 +291,30 @@ export default function App() {
                 imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
               />
             ) : (
-              <Tooltip
-                arrow
-                modifiers={[
-                  {
-                    name: 'offset',
-                    options: {
-                      offset: [0, 20],
-                    },
-                  },
-                ]}
-                placement='bottom-start'
-                title={tooltip}
-                open={true}
-                sx={{
-                  // backgroundColor: isDarkMode ? '#F8F7FF' : 'black',
-                  borderRadius: 5,
-                  '& > span:first-of-type::before': {
-                    // borderColor: isDarkMode ? '#F8F7FF' : 'black',
-                  },
-                }}
+              <div
+                className='fixed inset-0 flex items-start justify-center pointer-events-none'
+                style={{ paddingTop: '28vh' }}
               >
-                <div
-                  onClick={() => {
-                    // setHasDismissedTooltip(true)
-                  }}
+                <Tooltip
+                  className='pointer-events-auto'
+                  arrow
+                  modifiers={[
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 20],
+                      },
+                    },
+                  ]}
+                  color='neutral'
+                  variant='outlined'
+                  placement='left'
+                  title={tooltip}
+                  open={true}
                 >
-                  children
-                </div>
-              </Tooltip>
+                  <div>node or edge</div>
+                </Tooltip>
+              </div>
             )}
           </div>
         )}
