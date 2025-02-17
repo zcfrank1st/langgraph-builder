@@ -408,14 +408,16 @@ export default function App() {
             }}
           >
             {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
-              <GenericModal
-                isOpen={true}
-                onClose={handleOnboardingNext}
-                title={onboardingSteps[currentOnboardingStep].title || ''}
-                content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
-                buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
-                imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
-              />
+              <div className='pointer-events-auto' style={{ cursor: 'default' }}>
+                <GenericModal
+                  isOpen={true}
+                  onClose={handleOnboardingNext}
+                  title={onboardingSteps[currentOnboardingStep].title || ''}
+                  content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
+                  buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
+                  imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
+                />
+              </div>
             ) : (
               <div
                 className={
