@@ -92,7 +92,11 @@ export default function App() {
       type: 'modal',
       placement: 'top' as TooltipPlacement,
       title: 'Graph Builder',
-      content: <span>Use this tool to quickly prototype the architecture of your agentic application</span>,
+      content: (
+        <span>
+          Use this tool to quickly prototype the architecture of your agent. Let's get started with a quick onboarding
+        </span>
+      ),
       buttonText: 'Get Started',
       imageUrl: '/langgraph-logo.png',
     },
@@ -174,6 +178,15 @@ export default function App() {
         className: 'fixed flex items-end justify-end pointer-events-none',
         style: { right: '170px', bottom: '100px', left: 'auto', top: 'auto' },
       },
+    },
+    {
+      key: 'tooltip6',
+      type: 'modal',
+      placement: 'top' as TooltipPlacement,
+      title: "You're ready!",
+      content: <span>Onboarding complete. Happy building!</span>,
+      buttonText: 'Start',
+      imageUrl: '/langgraph-logo.png',
     },
   ]
 
@@ -382,7 +395,18 @@ export default function App() {
         </ReactFlow>
 
         {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
-          <div className='onboarding-overlay'>
+          <div
+            className='onboarding-overlay'
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              zIndex: 10,
+              cursor: 'not-allowed',
+            }}
+          >
             {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
               <GenericModal
                 isOpen={true}
@@ -396,7 +420,7 @@ export default function App() {
               <div
                 className={
                   onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.className ||
-                  'fixed inset-0 flex items-start justify-center pointer-events-none'
+                  'flex items-start justify-center'
                 }
                 style={onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.style || { paddingTop: '30vh' }}
               >
@@ -416,6 +440,7 @@ export default function App() {
                   placement={onboardingSteps[currentOnboardingStep].placement || 'top'}
                   title={tooltip}
                   open={true}
+                  sx={{ cursor: 'default' }}
                 >
                   <div></div>
                 </Tooltip>
