@@ -23,7 +23,7 @@ import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
-import { X, Copy } from 'lucide-react'
+import { X, Copy, Info } from 'lucide-react'
 
 import GenericModal from './GenericModal'
 
@@ -76,6 +76,7 @@ export default function App() {
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
   const [codeType, setCodeType] = useState<'python' | 'js'>('python')
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false)
 
   useEffect(() => {
     nodesRef.current = nodes
@@ -395,6 +396,41 @@ export default function App() {
         <Background />
       </ReactFlow>
 
+      {/* Sidebar */}
+      <div
+        className={`
+          fixed top-0 left-0 bg-gray-100 shadow-xl rounded-md z-20 
+          transform transition-transform duration-300
+          ${infoPanelOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <div className='flex flex-col p-6 space-y-5'>
+          <div>
+            <h2 className='text-xl font-medium'>Key Commands</h2>
+          </div>
+          <div>
+            <p className='text-sm text-slate-800'>Create a node</p>
+            <p className='mt-2'>⌘ + click anywhere on the canvas</p>
+          </div>
+          <div>
+            <p className='text-sm text-slate-800'>Create an edge</p>
+            <p className='mt-2'>click + drag from the bottom of one node to the top of another</p>
+          </div>
+          <div>
+            <p className='text-sm text-slate-800'>Create a conditional edge</p>
+            <p className='mt-2'>connect one node to multiple nodes</p>
+          </div>
+          <div>
+            <p className='text-sm text-slate-800'>Create a cycle</p>
+            <p className='mt-2'>click + drag from the bottom of one node to the top</p>
+          </div>
+          <div>
+            <p className='text-sm text-slate-800'>Delete an edge/node</p>
+            <p className='mt-2'>click the edge/node and hit the backspace key</p>
+          </div>
+        </div>
+      </div>
+
       {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
         <div
           className='onboarding-overlay'
@@ -506,7 +542,17 @@ export default function App() {
         </ModalDialog>
       </MuiModal>
 
-      <div className='flex rounded py-2 px-3 flex-col absolute bottom-16 right-5'>
+      <div className='fixed bottom-20 left-5 flex flex-row gap-2'>
+        <button
+          className='text-white p-3 rounded-md shadow-lg bg-[#2F6868] hover:bg-[#245757] focus:outline-none'
+          aria-label='Toggle Information Panel'
+          onClick={() => setInfoPanelOpen(!infoPanelOpen)}
+        >
+          <Info className='h-6 w-6' />
+        </button>
+      </div>
+
+      <div className='flex rounded flex-col absolute bottom-16 right-5'>
         <button
           className='bg-[#2F6868] hover:bg-[#245757] py-2 px-3 rounded-md'
           onClick={() => handleCodeTypeSelection('python')}
