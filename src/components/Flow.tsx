@@ -96,17 +96,17 @@ export default function App() {
       title: 'Graph Builder',
       content: (
         <span>
-          Use this tool to quickly prototype the architecture of your agent. Let's get started with a quick onboarding
+          Use this tool to quickly prototype the architecture of your agent. Let's get started with a quick onboarding!
         </span>
       ),
-      buttonText: 'Get Started',
+      buttonText: 'Start',
       imageUrl: '/langgraph-logo.png',
     },
     {
       key: 'tooltip2',
       type: 'tooltip',
       placement: 'top' as TooltipPlacement,
-      title: '1 of 4: Create a node',
+      title: '1 of 4: How to create a node',
       content: '⌘ + click anywhere on the canvas to create a node',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
@@ -118,8 +118,8 @@ export default function App() {
       key: 'tooltip3',
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
-      title: '2 of 4: Create an edge',
-      content: 'Connect two nodes by dragging from one to another',
+      title: '2 of 4: How to create an edge',
+      content: 'Connect two nodes by dragging from the bottom of one node to the top of another',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -128,7 +128,7 @@ export default function App() {
       edges: [{ id: 'source->custom1', source: 'source', target: 'custom1' }],
       tooltipWrapperStyle: {
         className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
-        style: { paddingRight: '200px', paddingTop: '200px' },
+        style: { paddingRight: '200px', paddingTop: '230px' },
       },
     },
     {
@@ -136,7 +136,7 @@ export default function App() {
       type: 'tooltip',
       placement: 'right' as TooltipPlacement,
       title: '3 of 4: Create a conditional edge',
-      content: 'Connect one node to multiple in order to create a conditional edge',
+      content: 'Connect one node to multiple nodes in order to create a conditional edge',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -161,7 +161,8 @@ export default function App() {
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
       title: '4 of 4: Generate Code',
-      content: 'Generate code using the buttons on the bottom right',
+      content:
+        "Once you're finished designing the architecture of your graph, you can generate boilerplate code for the agent using this button",
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -178,7 +179,7 @@ export default function App() {
       ],
       tooltipWrapperStyle: {
         className: 'fixed flex items-end justify-end pointer-events-none',
-        style: { right: '170px', bottom: '100px', left: 'auto', top: 'auto' },
+        style: { right: '170px', bottom: '90px', left: 'auto', top: 'auto' },
       },
     },
     {
@@ -422,7 +423,7 @@ export default function App() {
           </div>
           <div>
             <p className='text-sm text-slate-800'>Create a cycle</p>
-            <p className='mt-2'>click + drag from the bottom of one node to the top</p>
+            <p className='mt-2'>click + drag from the bottom to the top of a node</p>
           </div>
           <div>
             <p className='text-sm text-slate-800'>Delete an edge/node</p>
@@ -542,7 +543,7 @@ export default function App() {
         </ModalDialog>
       </MuiModal>
 
-      <div className='fixed bottom-20 left-5 flex flex-row gap-2'>
+      <div className='fixed bottom-16 left-5 flex flex-row gap-2'>
         <button
           className='text-white p-3 rounded-md shadow-lg bg-[#2F6868] hover:bg-[#245757] focus:outline-none'
           aria-label='Toggle Information Panel'
