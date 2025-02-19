@@ -24,6 +24,7 @@ import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
 import { X, Copy, Info } from 'lucide-react'
+import { Highlight, themes } from 'prism-react-renderer'
 
 import GenericModal from './GenericModal'
 
@@ -501,44 +502,62 @@ export default function App() {
         }}
         open={generateCodeModalOpen}
       >
-        <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
-          <div className='flex justify-between items-center'>
-            <h2 className='text-lg font-bold'>Generated Code:</h2>
-            <div className='flex flex-row gap-2'>
-              <button
-                className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 py-2 rounded'
-                onClick={copyCodeToClipboard}
-              >
-                <Copy />
-              </button>
-              <button
-                className='bg-[#FF5C5C] hover:bg-[#E25252] text-white font-bold px-2 rounded'
-                onClick={() => {
-                  setGenerateCodeModalOpen(false)
-                }}
-              >
-                <X />
-              </button>
+        <ModalDialog className='bg-slate-150 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+          <div className='w-[800px] max-h-[80vh] flex flex-col'>
+            <div className='flex justify-between items-center'>
+              <h2 className='text-lg font-bold'>Generated Code:</h2>
+              <div className='flex flex-row gap-2'>
+                <button
+                  className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 py-2 rounded'
+                  onClick={copyCodeToClipboard}
+                >
+                  <Copy />
+                </button>
+                <button
+                  className='bg-[#FF5C5C] hover:bg-[#E25252] text-white font-bold px-2 rounded'
+                  onClick={() => {
+                    setGenerateCodeModalOpen(false)
+                  }}
+                >
+                  <X />
+                </button>
+              </div>
             </div>
-          </div>
-          <div className='overflow-y-scroll overflow-x-scroll justify-center'>
-            <pre className='pt-6 pb-3 px-3'>
-              <code>{generatedCode?.code}</code>
-            </pre>
-          </div>
-          <div className='flex justify-center flex-row gap-2'>
-            <button
-              className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#246161]' : 'bg-[#A3CCCC]'}`}
-              onClick={() => handleCodeTypeSelection('python')}
-            >
-              <Image src='/python.png' alt='Python' width={35} height={35} />
-            </button>
-            <button
-              className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#A3CCCC]' : 'bg-[#246161]'}`}
-              onClick={() => handleCodeTypeSelection('js')}
-            >
-              <Image src='/javascript.png' alt='JS' width={35} height={35} />
-            </button>
+            <div className='mt-6 overflow-auto flex-1'>
+              <Highlight
+                theme={themes.nightOwl}
+                code={generatedCode?.code || ''}
+                language={codeType === 'python' ? 'python' : 'javascript'}
+              >
+                {({ className, style, tokens, getLineProps, getTokenProps }) => (
+                  <pre className='p-3 rounded-md' style={style}>
+                    {tokens.map((line, i) => (
+                      <div key={i} {...getLineProps({ line })}>
+                        {line.map((token, key) => (
+                          <span key={key} {...getTokenProps({ token })} />
+                        ))}
+                      </div>
+                    ))}
+                  </pre>
+                )}
+              </Highlight>
+            </div>
+            <div className='flex justify-center mt-3 border-t border-gray-200'>
+              <div className='flex flex-row gap-2 pt-3'>
+                <button
+                  className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#246161]' : 'bg-[#A3CCCC]'}`}
+                  onClick={() => handleCodeTypeSelection('python')}
+                >
+                  <Image src='/python.png' alt='Python' width={35} height={35} />
+                </button>
+                <button
+                  className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#A3CCCC]' : 'bg-[#246161]'}`}
+                  onClick={() => handleCodeTypeSelection('js')}
+                >
+                  <Image src='/javascript.png' alt='JS' width={35} height={35} />
+                </button>
+              </div>
+            </div>
           </div>
         </ModalDialog>
       </MuiModal>
