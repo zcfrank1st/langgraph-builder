@@ -23,7 +23,7 @@ import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
-import { X } from 'lucide-react'
+import { X, Copy } from 'lucide-react'
 
 import GenericModal from './GenericModal'
 
@@ -75,6 +75,7 @@ export default function App() {
   const edgesRef = useRef(edges)
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
+  const [codeType, setCodeType] = useState<'python' | 'js'>('python')
 
   useEffect(() => {
     nodesRef.current = nodes
@@ -317,6 +318,7 @@ export default function App() {
   )
 
   const handleCodeTypeSelection = (type: 'js' | 'python') => {
+    setCodeType(type)
     let generatedCode
     if (type === 'js') {
       generatedCode = generateLanggraphJS(nodes, edges, buttonTexts, edgeLabels)
@@ -366,149 +368,151 @@ export default function App() {
       : edges
 
   return (
-    <div>
-      <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
-        <ReactFlow<CustomNodeType, CustomEdgeType>
-          nodes={flowNodes}
-          nodeTypes={nodeTypes}
-          onEdgeClick={onEdgeClick}
-          onNodesChange={handleNodesChange}
-          edges={flowEdges?.map((edge) => ({
-            ...edge,
-            data: {
-              ...edge.data,
-            },
-          }))}
-          edgeTypes={edgeTypes}
-          onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
-          onInit={setReactFlowInstance}
-          fitView
-          onConnectStart={onConnectStart}
-          className='z-10 bg-[#EAEAEA]'
-          style={{ backgroundColor: '#EAEAEA' }}
-          proOptions={proOptions}
-          zoomOnDoubleClick={false}
-          onPaneClick={handlePaneClick}
-        >
-          <Background />
-        </ReactFlow>
+    <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
+      <ReactFlow<CustomNodeType, CustomEdgeType>
+        nodes={flowNodes}
+        nodeTypes={nodeTypes}
+        onEdgeClick={onEdgeClick}
+        onNodesChange={handleNodesChange}
+        edges={flowEdges?.map((edge) => ({
+          ...edge,
+          data: {
+            ...edge.data,
+          },
+        }))}
+        edgeTypes={edgeTypes}
+        onEdgesChange={handleEdgesChange}
+        onConnect={onConnect}
+        onInit={setReactFlowInstance}
+        fitView
+        onConnectStart={onConnectStart}
+        className='z-10 bg-[#EAEAEA]'
+        style={{ backgroundColor: '#EAEAEA' }}
+        proOptions={proOptions}
+        zoomOnDoubleClick={false}
+        onPaneClick={handlePaneClick}
+      >
+        <Background />
+      </ReactFlow>
 
-        {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
-          <div
-            className='onboarding-overlay'
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              zIndex: 10,
-              cursor: 'not-allowed',
-            }}
-          >
-            {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
-              <div className='pointer-events-auto' style={{ cursor: 'default' }}>
-                <GenericModal
-                  isOpen={true}
-                  onClose={handleOnboardingNext}
-                  title={onboardingSteps[currentOnboardingStep].title || ''}
-                  content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
-                  buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
-                  imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
-                />
-              </div>
-            ) : (
-              <div
-                className={
-                  onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.className ||
-                  'flex items-start justify-center'
-                }
-                style={onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.style || { paddingTop: '30vh' }}
-              >
-                <Tooltip
-                  className='pointer-events-auto'
-                  arrow
-                  modifiers={[
-                    {
-                      name: 'offset',
-                      options: {
-                        offset: [0, 20],
-                      },
+      {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
+        <div
+          className='onboarding-overlay'
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 10,
+            cursor: 'not-allowed',
+          }}
+        >
+          {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
+            <div className='pointer-events-auto' style={{ cursor: 'default' }}>
+              <GenericModal
+                isOpen={true}
+                onClose={handleOnboardingNext}
+                title={onboardingSteps[currentOnboardingStep].title || ''}
+                content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
+                buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
+                imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
+              />
+            </div>
+          ) : (
+            <div
+              className={
+                onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.className ||
+                'flex items-start justify-center'
+              }
+              style={onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.style || { paddingTop: '30vh' }}
+            >
+              <Tooltip
+                className='pointer-events-auto'
+                arrow
+                modifiers={[
+                  {
+                    name: 'offset',
+                    options: {
+                      offset: [0, 20],
                     },
-                  ]}
-                  color='neutral'
-                  variant='outlined'
-                  placement={onboardingSteps[currentOnboardingStep].placement || 'top'}
-                  title={tooltip}
-                  open={true}
-                  sx={{ cursor: 'default' }}
-                >
-                  <div></div>
-                </Tooltip>
-              </div>
-            )}
-          </div>
-        )}
+                  },
+                ]}
+                color='neutral'
+                variant='outlined'
+                placement={onboardingSteps[currentOnboardingStep].placement || 'top'}
+                title={tooltip}
+                open={true}
+                sx={{ cursor: 'default' }}
+              >
+                <div></div>
+              </Tooltip>
+            </div>
+          )}
+        </div>
+      )}
 
-        <MuiModal
-          hideBackdrop={true}
-          onClose={() => {
+      <MuiModal
+        hideBackdrop={true}
+        onClose={() => {
+          setGenerateCodeModalOpen(false)
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
             setGenerateCodeModalOpen(false)
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setGenerateCodeModalOpen(false)
-            }
-          }}
-          open={generateCodeModalOpen}
-        >
-          <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
-            <div className='flex justify-between items-center'>
-              <h2 className='text-lg font-bold'>Generated Code:</h2>
-              <div className='flex flex-row gap-2'>
-                <button
-                  className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 py-2 rounded w-28'
-                  onClick={copyCodeToClipboard}
-                >
-                  Copy Code
-                </button>
-                <button
-                  className='bg-[#FF5C5C] hover:bg-[#E25252] text-white font-bold px-2 rounded'
-                  onClick={() => {
-                    setGenerateCodeModalOpen(false)
-                  }}
-                >
-                  <X />
-                </button>
-              </div>
+          }
+        }}
+        open={generateCodeModalOpen}
+      >
+        <ModalDialog className='bg-slate-150 absolute top-1/2 left-10 transform -translate-y-1/2'>
+          <div className='flex justify-between items-center'>
+            <h2 className='text-lg font-bold'>Generated Code:</h2>
+            <div className='flex flex-row gap-2'>
+              <button
+                className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 py-2 rounded'
+                onClick={copyCodeToClipboard}
+              >
+                <Copy />
+              </button>
+              <button
+                className='bg-[#FF5C5C] hover:bg-[#E25252] text-white font-bold px-2 rounded'
+                onClick={() => {
+                  setGenerateCodeModalOpen(false)
+                }}
+              >
+                <X />
+              </button>
             </div>
-            <div className='overflow-y-scroll overflow-x-scroll justify-center'>
-              <pre className='py-6 px-3'>
-                <code>{generatedCode?.code}</code>
-              </pre>
-            </div>
-            <div className='flex justify-center'></div>
-          </ModalDialog>
-        </MuiModal>
-
-        <div className='flex rounded py-2 px-4 flex-col absolute bottom-16 right-5'>
-          <div className='text-[#333333] font-medium text-center'> {'Generate Code'}</div>
-          <div className='flex flex-row gap-2 pt-3'>
+          </div>
+          <div className='overflow-y-scroll overflow-x-scroll justify-center'>
+            <pre className='pt-6 pb-3 px-3'>
+              <code>{generatedCode?.code}</code>
+            </pre>
+          </div>
+          <div className='flex justify-center flex-row gap-2'>
             <button
-              className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
+              className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#246161]' : 'bg-[#A3CCCC]'}`}
               onClick={() => handleCodeTypeSelection('python')}
             >
               <Image src='/python.png' alt='Python' width={35} height={35} />
             </button>
             <button
-              className='bg-[#2F6868] hover:bg-[#245757] py-2 px-2 rounded-md'
+              className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#A3CCCC]' : 'bg-[#246161]'}`}
               onClick={() => handleCodeTypeSelection('js')}
             >
               <Image src='/javascript.png' alt='JS' width={35} height={35} />
             </button>
           </div>
-        </div>
+        </ModalDialog>
+      </MuiModal>
+
+      <div className='flex rounded py-2 px-3 flex-col absolute bottom-16 right-5'>
+        <button
+          className='bg-[#2F6868] hover:bg-[#245757] py-2 px-3 rounded-md'
+          onClick={() => handleCodeTypeSelection('python')}
+        >
+          <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
+        </button>
       </div>
     </div>
   )
