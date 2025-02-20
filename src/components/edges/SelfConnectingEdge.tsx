@@ -95,7 +95,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             <foreignObject
               x={labelX - 70}
               y={labelY - 10}
-              width={100}
+              width={135}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -120,7 +120,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             <foreignObject
               x={labelX - 70}
               y={labelY - 10}
-              width={100}
+              width={135}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -151,7 +151,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           <foreignObject
             x={sourceX + 30}
             y={sourceY + 5}
-            width={100}
+            width={135}
             height={35}
             onDoubleClick={handleForeignObjectDoubleClick}
           >
@@ -176,7 +176,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           <foreignObject
             x={sourceX + 30}
             y={sourceY + 5}
-            width={100}
+            width={135}
             height={35}
             onDoubleClick={handleForeignObjectDoubleClick}
           >
