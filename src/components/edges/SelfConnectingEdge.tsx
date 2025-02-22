@@ -98,9 +98,9 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           animated &&
           (isHovered && editingEdgeId === id ? (
             <foreignObject
-              x={midX - (isHovered ? 67.5 : 17.5)}
+              x={midX - 67.5}
               y={midY - 17.5}
-              width={isHovered ? 135 : 35}
+              width={135}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -122,8 +122,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 onMouseLeave={() => setIsHovered(false)}
                 className={`
                   bg-[#D4EDF6] outline-none border border-2 border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded-full
-                  transition-all duration-500 ease-in-out
-                  ${isHovered ? 'w-full' : 'w-[35px] overflow-hidden'}
+                  transition-all duration-500 ease-in-out w-full
                 `}
               />
             </foreignObject>
@@ -153,7 +152,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 <div
                   className={`
                   w-full text-center transition-all duration-500 ease-in-out
-                  ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}
+                  
                 `}
                 >
                   {isHovered ? edgeLabels[source] || label : ''}
@@ -228,9 +227,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             >
               <div
                 className={`
-                w-full text-center transition-all duration-500 ease-in-out
-                ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}
-              `}
+                w-full text-center transition-all duration-500 ease-in-out`}
               >
                 {isHovered ? edgeLabels[source] || label : ''}
               </div>
