@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext, useLayoutEffect, useRef } from 'react'
 import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
-import { useButtonText } from '@/contexts/ButtonTextContext'
 import { EditingContext } from '@/contexts/EditingContext'
 
 interface SelfConnectingEdgeProps extends EdgeProps {
@@ -14,11 +13,9 @@ interface SelfConnectingEdgeProps extends EdgeProps {
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, source, label, animated } = props
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const { buttonTexts } = useButtonText()
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
-
-  const [labelWidth, setLabelWidth] = useState(0)
+  const [labelWidth, setLabelWidth] = useState(97)
   const labelRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -56,9 +53,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       setEditingEdgeId(null)
     }
     if (e.key === 'Escape') {
-      setCurrentLabel(
-        edgeLabels[source] || `conditional_${buttonTexts[source]?.replaceAll(' ', '_')}` || (label as string),
-      )
+      setCurrentLabel(edgeLabels[source] || (label as string))
       setEditingEdgeId(null)
     }
   }
@@ -75,6 +70,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       targetX,
       targetY,
     })
+    console.log(currentLabel, 'CURRENT LABEL')
 
     // Calculate the true midpoint of the edge
     const midX = (sourceX + targetX) / 2
