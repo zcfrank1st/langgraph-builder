@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState, useContext, useLayoutEffect, useRef } from 'react'
 import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { useButtonText } from '@/contexts/ButtonTextContext'
@@ -16,8 +16,17 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const { buttonTexts } = useButtonText()
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
-  const [isHovered, setIsHovered] = useState(false)
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
+
+  const [labelWidth, setLabelWidth] = useState(0)
+  const labelRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    if (labelRef.current) {
+      setLabelWidth(labelRef.current.offsetWidth)
+      console.log(labelRef.current.offsetWidth)
+    }
+  }, [edgeLabels[source], label])
 
   useEffect(() => {
     setCurrentLabel(edgeLabels[source])
@@ -96,11 +105,14 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         />
         {label &&
           animated &&
-          (isHovered && editingEdgeId === id ? (
+          (editingEdgeId === id ? (
             <foreignObject
-              x={midX - 67.5}
+              style={{
+                overflow: 'visible',
+              }}
+              x={midX - (labelWidth + 20) / 2}
               y={midY - 17.5}
-              width={135}
+              width={labelWidth + 20}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -118,45 +130,39 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   e.stopPropagation()
                 }}
                 onDoubleClick={handleForeignObjectDoubleClick}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
                 className={`
-                  bg-[#D4EDF6] outline-none border border-2 border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded-full
+                  bg-[#D4EDF6] outline-none border border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded-full
                   transition-all duration-500 ease-in-out w-full
                 `}
               />
             </foreignObject>
           ) : (
             <foreignObject
-              x={midX - (isHovered ? 67.5 : 17.5)}
+              style={{
+                overflow: 'visible',
+              }}
+              x={midX - (labelWidth + 20) / 2}
               y={midY - 17.5}
-              width={isHovered ? 135 : 35}
+              width={labelWidth + 20}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
               <div
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleLabelClick(e)
                 }}
                 onDoubleClick={handleForeignObjectDoubleClick}
                 className={`
-                  bg-[#D4EDF6] border border-2 border-[#207fa5] 
+                  bg-[#D4EDF6] border border-[#207fa5] 
                   flex items-center justify-center text-center 
                   text-[#333333] h-full text-xs rounded-full
                   w-full transition-all duration-500 ease-in-out
                 `}
               >
-                <div
-                  className={`
-                  w-full text-center transition-all duration-500 ease-in-out
-                  
-                `}
-                >
-                  {isHovered ? edgeLabels[source] || label : ''}
-                </div>
+                <span ref={labelRef} className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'>
+                  {edgeLabels[source] || label}
+                </span>
               </div>
             </foreignObject>
           ))}
@@ -171,11 +177,14 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       <BaseEdge path={edgePath} markerEnd={markerEnd} />
       {label &&
         animated &&
-        (isHovered && editingEdgeId === id ? (
+        (editingEdgeId === id ? (
           <foreignObject
+            style={{
+              overflow: 'visible',
+            }}
             x={sourceX}
             y={sourceY}
-            width={isHovered ? 135 : 35}
+            width={labelWidth + 20}
             height={35}
             onDoubleClick={handleForeignObjectDoubleClick}
           >
@@ -193,44 +202,40 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               }}
               onDoubleClick={handleForeignObjectDoubleClick}
               autoFocus
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
               className={`
-                bg-[#D4EDF6] outline-none border border-2 border-[#207fa5] text-center w-full h-full text-xs text-[#333333] rounded-full
+                bg-[#D4EDF6] outline-none border border-[#207fa5] text-center w-full h-full text-xs text-[#333333] rounded-full
                 transition-all duration-500 ease-in-out
-                ${isHovered ? 'w-full' : 'w-[35px] overflow-hidden'}
+                w-full
               `}
             />
           </foreignObject>
         ) : (
           <foreignObject
+            style={{
+              overflow: 'visible',
+            }}
             x={sourceX}
             y={sourceY}
-            width={isHovered ? 135 : 35}
+            width={labelWidth + 20}
             height={35}
             onDoubleClick={handleForeignObjectDoubleClick}
           >
             <div
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
               onClick={(e) => {
                 e.stopPropagation()
                 handleLabelClick(e)
               }}
               onDoubleClick={handleForeignObjectDoubleClick}
               className={`
-                bg-[#D4EDF6] border border-2 border-[#207fa5] 
+                bg-[#D4EDF6] border border-[#207fa5] 
                 flex items-center justify-center text-center 
                 text-[#333333] h-full text-xs rounded-full
                 w-full transition-all duration-500 ease-in-out
               `}
             >
-              <div
-                className={`
-                w-full text-center transition-all duration-500 ease-in-out`}
-              >
-                {isHovered ? edgeLabels[source] || label : ''}
-              </div>
+              <span ref={labelRef} className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'>
+                {edgeLabels[source] || label}
+              </span>
             </div>
           </foreignObject>
         ))}
