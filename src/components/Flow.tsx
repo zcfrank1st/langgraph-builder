@@ -71,6 +71,8 @@ export default function App() {
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
+  const [apiResponse, setApiResponse] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -370,6 +372,31 @@ export default function App() {
       ? onboardingSteps[currentOnboardingStep].edges
       : edges
 
+  const handleGenerateCode = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/generate-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+      // Format the response for better readability
+      const formattedResponse = {
+        stub: data.stub?.substring(0, 500) + '...', // Show first 500 chars
+        implementation: data.implementation?.substring(0, 500) + '...', // Show first 500 chars
+      }
+      setApiResponse(JSON.stringify(formattedResponse, null, 2))
+    } catch (error) {
+      console.error('Failed to generate code:', error)
+      setApiResponse('Error generating code')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
       <ReactFlow<CustomNodeType, CustomEdgeType>
@@ -557,6 +584,24 @@ export default function App() {
                   <Image src='/javascript.png' alt='JS' width={35} height={35} />
                 </button>
               </div>
+            </div>
+            <div className='flex flex-col gap-4 p-4'>
+              <button
+                className='bg-[#2F6868] hover:bg-[#245757] py-2 px-3 rounded-md'
+                onClick={handleGenerateCode}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Generating...' : 'Generate Code'}
+              </button>
+
+              {apiResponse && (
+                <div className='mt-4'>
+                  <h3 className='text-lg font-semibold mb-2'>API Response:</h3>
+                  <pre className='bg-gray-100 p-4 rounded-md overflow-auto max-h-[400px] whitespace-pre-wrap'>
+                    {apiResponse}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         </ModalDialog>
