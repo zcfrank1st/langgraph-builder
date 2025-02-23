@@ -21,7 +21,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   useLayoutEffect(() => {
     if (labelRef.current) {
       setLabelWidth(labelRef.current.offsetWidth)
-      console.log(labelRef.current.offsetWidth)
     }
   }, [edgeLabels[source], label])
 
@@ -70,7 +69,6 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       targetX,
       targetY,
     })
-    console.log(currentLabel, 'CURRENT LABEL')
 
     // Calculate the true midpoint of the edge
     const midX = (sourceX + targetX) / 2
