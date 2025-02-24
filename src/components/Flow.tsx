@@ -73,6 +73,8 @@ export default function App() {
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [apiResponse, setApiResponse] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [activeFile, setActiveFile] = useState<'stub' | 'implementation'>('stub')
+  const [generatedFiles, setGeneratedFiles] = useState<{ stub?: string; implementation?: string }>({})
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -372,30 +374,109 @@ export default function App() {
       ? onboardingSteps[currentOnboardingStep].edges
       : edges
 
+  function generateSpec(edges: any): string {
+    // Step 1: Separate normal edges and animated edges, ensure animated is treated as false when undefined
+    const normalEdges: any[] = edges.filter((edge: any) => !edge.animated && edge.animated !== undefined)
+    const animatedEdges: any[] = edges.filter((edge: any) => edge.animated === true)
+
+    // Step 2: Group animated edges by source
+    const animatedEdgesBySource: Record<string, Edge[]> = {}
+    animatedEdges.forEach((edge) => {
+      if (!animatedEdgesBySource[edge.source]) {
+        animatedEdgesBySource[edge.source] = []
+      }
+      animatedEdgesBySource[edge.source].push(edge)
+    })
+
+    // Step 3: Build nodes list (unique nodes from all edges)
+    const nodeNames: Set<string> = new Set()
+    edges.forEach((edge: any) => {
+      nodeNames.add(edge.source)
+      nodeNames.add(edge.target)
+    })
+
+    // Step 4: Build YAML structure
+    const yaml = {
+      name: 'CustomAgent',
+      entrypoint: 'source',
+      nodes: Array.from(nodeNames).map((name) => ({ name })),
+      edges: [
+        ...normalEdges.map((edge) => ({
+          from: edge.source,
+          to: edge.target,
+        })),
+        ...Object.entries(animatedEdgesBySource).map(([source, edges]) => ({
+          from: source,
+          condition: String(edges[0].label || ''),
+          paths: edges.reduce(
+            (acc, edge) => ({
+              ...acc,
+              [edge.id]: edge.target,
+            }),
+            {},
+          ),
+        })),
+      ],
+    }
+
+    // Convert to YAML string
+    return Object.entries(yaml)
+      .map(([key, value]) => {
+        if (key === 'nodes') {
+          // @ts-ignore
+          return `${key}:\n${value.map((node: any) => `  - name: ${node.name}`).join('\n')}`
+        }
+        if (key === 'edges') {
+          return `${key}:\n${value
+            // @ts-ignore
+            .map((edge: any) => {
+              if ('condition' in edge) {
+                return `  - from: ${edge.from}\n    condition: ${edge.condition}\n    paths:\n${Object.entries(
+                  edge.paths,
+                )
+                  .map(([key, value]) => `      ${key}: ${value}`)
+                  .join('\n')}`
+              }
+              return `  - from: ${edge.from}\n    to: ${edge.to}`
+            })
+            .join('\n')}`
+        }
+        return `${key}: ${value}`
+      })
+      .join('\n')
+  }
+
   const handleGenerateCode = async () => {
     try {
       setIsLoading(true)
+      const spec = generateSpec(edges)
+      const payload = {
+        spec: spec,
+        language: 'python',
+        format: 'yaml',
+      }
       const response = await fetch('/api/generate-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(payload),
       })
-
       const data = await response.json()
-      // Format the response for better readability
-      const formattedResponse = {
-        stub: data.stub?.substring(0, 500) + '...', // Show first 500 chars
-        implementation: data.implementation?.substring(0, 500) + '...', // Show first 500 chars
-      }
-      setApiResponse(JSON.stringify(formattedResponse, null, 2))
+      setGeneratedFiles({
+        stub: data.stub,
+        implementation: data.implementation,
+      })
+      setActiveFile('stub')
     } catch (error) {
       console.error('Failed to generate code:', error)
-      setApiResponse('Error generating code')
+      setGeneratedFiles({})
     } finally {
       setIsLoading(false)
     }
   }
+
+  const activeCode = generatedFiles[activeFile] || ''
 
   return (
     <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
@@ -530,7 +611,7 @@ export default function App() {
         open={generateCodeModalOpen}
       >
         <ModalDialog className='bg-slate-150 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-          <div className='w-[800px] max-h-[80vh] flex flex-col'>
+          <div className='w-[800px] flex flex-col'>
             <div className='flex justify-between items-center'>
               <h2 className='text-lg font-bold'>Generated Code:</h2>
               <div className='flex flex-row gap-2'>
@@ -550,25 +631,6 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <div className='mt-6 overflow-auto flex-1'>
-              <Highlight
-                theme={themes.nightOwl}
-                code={generatedCode?.code || ''}
-                language={codeType === 'python' ? 'python' : 'javascript'}
-              >
-                {({ className, style, tokens, getLineProps, getTokenProps }) => (
-                  <pre className='p-3 rounded-md' style={style}>
-                    {tokens.map((line, i) => (
-                      <div key={i} {...getLineProps({ line })}>
-                        {line.map((token, key) => (
-                          <span key={key} {...getTokenProps({ token })} />
-                        ))}
-                      </div>
-                    ))}
-                  </pre>
-                )}
-              </Highlight>
-            </div>
             <div className='flex justify-center mt-3 border-t border-gray-200'>
               <div className='flex flex-row gap-2 pt-3'>
                 <button
@@ -585,23 +647,47 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <div className='flex flex-col gap-4 p-4'>
+            <div className='flex flex-col gap-3 p-3'>
+              {(generatedFiles.stub || generatedFiles.implementation) && (
+                <div className='mt-3'>
+                  <div className='flex gap-2 mb-2'>
+                    <button
+                      className={`px-3 py-1 rounded ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                      onClick={() => setActiveFile('stub')}
+                    >
+                      stub.py
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                      onClick={() => setActiveFile('implementation')}
+                    >
+                      implementation.py
+                    </button>
+                  </div>
+                  <div className='bg-gray-100 rounded-md overflow-hidden'>
+                    <Highlight theme={themes.nightOwl} code={activeCode || ''} language='python'>
+                      {({ style, tokens, getLineProps, getTokenProps }) => (
+                        <pre className='p-4 overflow-auto max-h-[900px]' style={style}>
+                          {tokens.map((line, i) => (
+                            <div key={i} {...getLineProps({ line })}>
+                              {line.map((token, key) => (
+                                <span key={key} {...getTokenProps({ token })} />
+                              ))}
+                            </div>
+                          ))}
+                        </pre>
+                      )}
+                    </Highlight>
+                  </div>
+                </div>
+              )}
               <button
-                className='bg-[#2F6868] hover:bg-[#245757] py-2 px-3 rounded-md'
+                className='bg-[#2F6868] text-white hover:bg-[#245757] py-2 px-3 rounded-md'
                 onClick={handleGenerateCode}
                 disabled={isLoading}
               >
                 {isLoading ? 'Generating...' : 'Generate Code'}
               </button>
-
-              {apiResponse && (
-                <div className='mt-4'>
-                  <h3 className='text-lg font-semibold mb-2'>API Response:</h3>
-                  <pre className='bg-gray-100 p-4 rounded-md overflow-auto max-h-[400px] whitespace-pre-wrap'>
-                    {apiResponse}
-                  </pre>
-                </div>
-              )}
             </div>
           </div>
         </ModalDialog>

@@ -14,34 +14,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    // Example/dummy data matching the required schema
-    const dummyPayload = {
-      spec: `name: CustomAgent
-entrypoint: start
-nodes:
-    - name: start
-    - name: process
-    - name: decide
-edges:
-    - from: start
-      to: process
-    - from: process
-      to: decide
-    - from: decide
-      condition: check_decision
-      paths:
-          continue: process
-          end: end`,
-      language: 'typescript',
-      format: 'yaml',
-    }
-
+    const { spec, language, format } = req.body
     const response = await fetch(LANGGRAPH_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(dummyPayload),
+      body: JSON.stringify({
+        spec,
+        language,
+        format,
+      }),
     })
 
     if (!response.ok) {
@@ -49,7 +32,6 @@ edges:
     }
 
     const data = await response.json()
-    console.log(data, 'DATA FROM API')
     return res.status(200).json({
       stub: data.stub,
       implementation: data.implementation,

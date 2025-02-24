@@ -63,7 +63,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   }
 
   if (props.source !== props.target) {
-    const [edgePath, labelX, labelY] = getBezierPath({
+    const [edgePath] = getBezierPath({
       sourceX,
       sourceY,
       targetX,
