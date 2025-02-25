@@ -25,6 +25,7 @@ import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
 import { X, Copy, Info } from 'lucide-react'
 import { Highlight, themes } from 'prism-react-renderer'
+import MultiButton from './ui/multibutton'
 
 import GenericModal from './GenericModal'
 
@@ -116,7 +117,7 @@ export default function App() {
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
-        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
       ],
     },
     {
@@ -128,7 +129,7 @@ export default function App() {
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
-        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
       ],
       edges: [{ id: 'source->custom1', source: 'source', target: 'custom1' }],
       tooltipWrapperStyle: {
@@ -145,9 +146,9 @@ export default function App() {
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
-        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
-        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'Destination 1' } },
-        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Destination 2' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
+        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1' },
@@ -171,9 +172,9 @@ export default function App() {
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
-        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'First node' } },
-        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'Destination 1' } },
-        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Destination 2' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
+        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1' },
@@ -449,6 +450,7 @@ export default function App() {
   const handleGenerateCode = async () => {
     try {
       setIsLoading(true)
+      handleCodeTypeSelection('python')
       const spec = generateSpec(edges)
       const payload = {
         spec: spec,
@@ -462,6 +464,7 @@ export default function App() {
         },
         body: JSON.stringify(payload),
       })
+
       const data = await response.json()
       setGeneratedFiles({
         stub: data.stub,
@@ -479,7 +482,7 @@ export default function App() {
   const activeCode = generatedFiles[activeFile] || ''
 
   return (
-    <div ref={reactFlowWrapper} className='z-10 no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
+    <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
       <ReactFlow<CustomNodeType, CustomEdgeType>
         nodes={flowNodes}
         nodeTypes={nodeTypes}
@@ -611,63 +614,47 @@ export default function App() {
         open={generateCodeModalOpen}
       >
         <ModalDialog className='bg-slate-150 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-          <div className='w-[800px] flex flex-col'>
+          <div className='flex flex-col'>
             <div className='flex justify-between items-center'>
-              <h2 className='text-lg font-bold'>Generated Code:</h2>
+              <h2 className='text-lg font-medium'>Generated Code:</h2>
               <div className='flex flex-row gap-2'>
-                <button
-                  className='bg-[#246161] hover:bg-[#195656] text-white font-bold px-2 py-2 rounded'
-                  onClick={copyCodeToClipboard}
-                >
+                <div className='max-w-xs pr-3'>
+                  <MultiButton />
+                </div>
+                {/* <button className='font-bold px-2 py-2 rounded' onClick={copyCodeToClipboard}>
                   <Copy />
-                </button>
+                </button> */}
                 <button
-                  className='bg-[#FF5C5C] hover:bg-[#E25252] text-white font-bold px-2 rounded'
+                  className='font-bold pr-3 text-gray-300 hover:text-gray-600 transition-colors duration-300 ease-in-out'
                   onClick={() => {
                     setGenerateCodeModalOpen(false)
                   }}
                 >
-                  <X />
+                  <X size={30} />
                 </button>
               </div>
             </div>
-            <div className='flex justify-center mt-3 border-t border-gray-200'>
-              <div className='flex flex-row gap-2 pt-3'>
-                <button
-                  className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#246161]' : 'bg-[#A3CCCC]'}`}
-                  onClick={() => handleCodeTypeSelection('python')}
-                >
-                  <Image src='/python.png' alt='Python' width={35} height={35} />
-                </button>
-                <button
-                  className={`py-2 px-2 rounded-md ${codeType === 'python' ? 'bg-[#A3CCCC]' : 'bg-[#246161]'}`}
-                  onClick={() => handleCodeTypeSelection('js')}
-                >
-                  <Image src='/javascript.png' alt='JS' width={35} height={35} />
-                </button>
-              </div>
-            </div>
-            <div className='flex flex-col gap-3 p-3'>
-              {(generatedFiles.stub || generatedFiles.implementation) && (
-                <div className='mt-3'>
-                  <div className='flex gap-2 mb-2'>
+            <div className='flex flex-col gap-3'>
+              {generatedFiles.stub || generatedFiles.implementation ? (
+                <div className='mt-3 w-[50vw] h-[60vh]'>
+                  <div className='flex'>
                     <button
-                      className={`px-3 py-1 rounded ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                      className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
                       onClick={() => setActiveFile('stub')}
                     >
                       stub.py
                     </button>
                     <button
-                      className={`px-3 py-1 rounded ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                      className={`px-3 rounded-t-md ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
                       onClick={() => setActiveFile('implementation')}
                     >
                       implementation.py
                     </button>
                   </div>
-                  <div className='bg-gray-100 rounded-md overflow-hidden'>
+                  <div className='bg-gray-100 overflow-hidden h-[calc(60vh-30px)]'>
                     <Highlight theme={themes.nightOwl} code={activeCode || ''} language='python'>
                       {({ style, tokens, getLineProps, getTokenProps }) => (
-                        <pre className='p-4 overflow-auto max-h-[900px]' style={style}>
+                        <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
                           {tokens.map((line, i) => (
                             <div key={i} {...getLineProps({ line })}>
                               {line.map((token, key) => (
@@ -680,36 +667,34 @@ export default function App() {
                     </Highlight>
                   </div>
                 </div>
+              ) : (
+                <div className='mt-3 w-[50vw] h-[60vh] flex items-center justify-center'>
+                  <p className='text-gray-500'>Generating code...</p>
+                </div>
               )}
-              <button
-                className='bg-[#2F6868] text-white hover:bg-[#245757] py-2 px-3 rounded-md'
-                onClick={handleGenerateCode}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Generating...' : 'Generate Code'}
-              </button>
             </div>
           </div>
         </ModalDialog>
       </MuiModal>
-
-      <div className='fixed bottom-16 left-5 flex flex-row gap-2'>
-        <button
-          className='text-white p-3 rounded-md shadow-lg bg-[#2F6868] hover:bg-[#245757] focus:outline-none'
-          aria-label='Toggle Information Panel'
-          onClick={() => setInfoPanelOpen(!infoPanelOpen)}
-        >
-          <Info className='h-6 w-6' />
-        </button>
-      </div>
-
-      <div className='flex rounded flex-col absolute bottom-16 right-5'>
-        <button
-          className='bg-[#2F6868] hover:bg-[#245757] py-2 px-3 rounded-md'
-          onClick={() => handleCodeTypeSelection('python')}
-        >
-          <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
-        </button>
+      <div className='fixed top-[24px] right-[24px] flex flex-row gap-2'>
+        <div className='flex flex-row gap-2'>
+          <button
+            className={`py-2 px-3 rounded-md transition-colors duration-200 ${
+              edges.length > 0 ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]' : 'bg-gray-500 opacity-70'
+            }`}
+            onClick={edges.length > 0 ? handleGenerateCode : undefined}
+            disabled={edges.length === 0}
+          >
+            <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
+          </button>
+          <button
+            className='text-white p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
+            aria-label='Toggle Information Panel'
+            onClick={() => setInfoPanelOpen(!infoPanelOpen)}
+          >
+            <Info className='h-6 w-6' />
+          </button>
+        </div>
       </div>
     </div>
   )
