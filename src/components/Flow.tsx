@@ -1,5 +1,4 @@
 'use client'
-import Image from 'next/image'
 import type { Node } from '@xyflow/react'
 import { useCallback, useState, useRef, useEffect } from 'react'
 import {
@@ -17,8 +16,6 @@ import { MarkerType } from 'reactflow'
 import '@xyflow/react/dist/style.css'
 import { initialNodes, nodeTypes, type CustomNodeType } from './nodes'
 import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
-import { generateLanggraphCode } from '../codeGeneration/generateLanggraph'
-import { generateLanggraphJS } from '../codeGeneration/generateLanggraphJS'
 import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
@@ -28,6 +25,13 @@ import { Highlight, themes } from 'prism-react-renderer'
 import MultiButton from './ui/multibutton'
 
 import GenericModal from './GenericModal'
+
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className='flex items-center justify-center'>
+    <div className='w-12 h-12 border-4 border-[#2F6868] border-t-transparent rounded-full animate-spin'></div>
+  </div>
+)
 
 type OnboardingStep = {
   key: string
@@ -72,16 +76,15 @@ export default function App() {
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const [apiResponse, setApiResponse] = useState<string>('')
-  const [isLoading, setIsLoading] = useState(false)
   const [activeFile, setActiveFile] = useState<'stub' | 'implementation'>('stub')
   const [generatedFiles, setGeneratedFiles] = useState<{ stub?: string; implementation?: string }>({})
+  const [language, setLanguage] = useState<'python' | 'typescript'>('python')
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
-  const [codeType, setCodeType] = useState<'python' | 'js'>('python')
+  const [isLoading, setIsLoading] = useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
 
   useEffect(() => {
@@ -325,19 +328,6 @@ export default function App() {
     [addNode],
   )
 
-  const handleCodeTypeSelection = (type: 'js' | 'python') => {
-    setCodeType(type)
-    let generatedCode
-    if (type === 'js') {
-      generatedCode = generateLanggraphJS(nodes, edges, buttonTexts, edgeLabels)
-    } else {
-      generatedCode = generateLanggraphCode(nodes, edges, buttonTexts, edgeLabels)
-    }
-
-    setGeneratedCode({ code: generatedCode, nodes, edges })
-    setGenerateCodeModalOpen(true)
-  }
-
   const copyCodeToClipboard = () => {
     if (generatedCode) {
       navigator.clipboard
@@ -447,14 +437,22 @@ export default function App() {
       .join('\n')
   }
 
-  const handleGenerateCode = async () => {
+  const handleLanguageChange = async (option: string) => {
+    const newLanguage = option.toLowerCase() as 'python' | 'typescript'
+    setLanguage(newLanguage)
+    if (generatedFiles.stub || generatedFiles.implementation) {
+      await generateCodeWithLanguage(newLanguage)
+    }
+  }
+
+  const generateCodeWithLanguage = async (lang: 'python' | 'typescript' = language) => {
     try {
       setIsLoading(true)
-      handleCodeTypeSelection('python')
+      setGenerateCodeModalOpen(true)
       const spec = generateSpec(edges)
       const payload = {
         spec: spec,
-        language: 'python',
+        language: lang,
         format: 'yaml',
       }
       const response = await fetch('/api/generate-code', {
@@ -479,7 +477,12 @@ export default function App() {
     }
   }
 
+  const handleGenerateCode = () => {
+    generateCodeWithLanguage('python')
+  }
+
   const activeCode = generatedFiles[activeFile] || ''
+  const fileExtension = language === 'python' ? '.py' : '.ts'
 
   return (
     <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
@@ -619,7 +622,7 @@ export default function App() {
               <h2 className='text-lg font-medium'>Generated Code:</h2>
               <div className='flex flex-row gap-2'>
                 <div className='max-w-xs pr-3'>
-                  <MultiButton />
+                  <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
                 </div>
                 {/* <button className='font-bold px-2 py-2 rounded' onClick={copyCodeToClipboard}>
                   <Copy />
@@ -635,24 +638,28 @@ export default function App() {
               </div>
             </div>
             <div className='flex flex-col gap-3'>
-              {generatedFiles.stub || generatedFiles.implementation ? (
+              {!isLoading && (generatedFiles.stub || generatedFiles.implementation) ? (
                 <div className='mt-3 w-[50vw] h-[60vh]'>
                   <div className='flex'>
                     <button
                       className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
                       onClick={() => setActiveFile('stub')}
                     >
-                      stub.py
+                      {`stub${fileExtension}`}
                     </button>
                     <button
                       className={`px-3 rounded-t-md ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
                       onClick={() => setActiveFile('implementation')}
                     >
-                      implementation.py
+                      {`implementation${fileExtension}`}
                     </button>
                   </div>
                   <div className='bg-gray-100 overflow-hidden h-[calc(60vh-30px)]'>
-                    <Highlight theme={themes.nightOwl} code={activeCode || ''} language='python'>
+                    <Highlight
+                      theme={themes.nightOwl}
+                      code={activeCode || ''}
+                      language={language === 'python' ? 'python' : 'typescript'}
+                    >
                       {({ style, tokens, getLineProps, getTokenProps }) => (
                         <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
                           {tokens.map((line, i) => (
@@ -669,7 +676,9 @@ export default function App() {
                 </div>
               ) : (
                 <div className='mt-3 w-[50vw] h-[60vh] flex items-center justify-center'>
-                  <p className='text-gray-500'>Generating code...</p>
+                  <div className='flex flex-col items-center gap-4'>
+                    <LoadingSpinner />
+                  </div>
                 </div>
               )}
             </div>
@@ -678,15 +687,17 @@ export default function App() {
       </MuiModal>
       <div className='fixed top-[24px] right-[24px] flex flex-row gap-2'>
         <div className='flex flex-row gap-2'>
-          <button
-            className={`py-2 px-3 rounded-md transition-colors duration-200 ${
-              edges.length > 0 ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]' : 'bg-gray-500 opacity-70'
-            }`}
-            onClick={edges.length > 0 ? handleGenerateCode : undefined}
-            disabled={edges.length === 0}
-          >
-            <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
-          </button>
+          <Tooltip title={edges.length === 0 ? 'Create an edge to generate code' : ''} placement='bottom' arrow>
+            <button
+              className={`py-2 px-3 rounded-md transition-colors duration-200 ${
+                edges.length > 0 ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]' : 'bg-gray-500 opacity-70'
+              }`}
+              onClick={edges.length > 0 ? handleGenerateCode : undefined}
+              disabled={edges.length === 0}
+            >
+              <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
+            </button>
+          </Tooltip>
           <button
             className='text-white p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
             aria-label='Toggle Information Panel'
