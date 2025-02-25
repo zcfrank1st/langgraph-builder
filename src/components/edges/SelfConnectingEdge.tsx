@@ -16,6 +16,8 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
   const [labelWidth, setLabelWidth] = useState(97)
+  const [isSelected, setIsSelected] = useState(false)
+  const [edgeColor, setEdgeColor] = useState('#000000')
   const labelRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -27,6 +29,11 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   useEffect(() => {
     setCurrentLabel(edgeLabels[source])
   }, [edgeLabels, source])
+
+  const handleSvgClick = () => {
+    setIsSelected(!isSelected)
+    console.log('svg clicked')
+  }
 
   const handleLabelClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -62,6 +69,10 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
     e.preventDefault()
   }
 
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEdgeColor(e.target.value)
+  }
+
   if (props.source !== props.target) {
     const [edgePath] = getBezierPath({
       sourceX,
@@ -75,92 +86,116 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
     const midY = (sourceY + targetY) / 2
     // if normal conditional edge
     return (
-      <>
-        <defs>
-          <marker
-            id='triangle'
-            markerWidth='5'
-            markerHeight='18'
-            viewBox='-15 -15 30 30'
-            markerUnits='strokeWidth'
-            orient='auto-start-reverse'
-            refX='0'
-            refY='0'
-          >
-            <path d='M -22.5 -18 L 0 0 L -22.5 18 Z' style={{ fill: 'black' }} />
-          </marker>
-        </defs>
-        <BaseEdge
-          {...props}
-          id={id}
-          path={edgePath}
-          markerEnd={'url(#triangle)'}
-          style={{ backgroundColor: 'black', color: 'black' }}
-        />
-        {label &&
-          animated &&
-          (editingEdgeId === id ? (
-            <foreignObject
-              style={{
-                overflow: 'visible',
-              }}
-              x={midX - (labelWidth + 20) / 2}
-              y={midY - 17.5}
-              width={labelWidth + 20}
-              height={35}
-              onDoubleClick={handleForeignObjectDoubleClick}
+      <svg
+        className='cursor-pointer'
+        onClick={() => handleSvgClick()}
+        width='100%'
+        height='100%'
+        style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'all' }}
+        // other svg attributes
+      >
+        <>
+          <defs>
+            <marker
+              id='triangle'
+              markerWidth='5'
+              markerHeight='18'
+              viewBox='-15 -15 30 30'
+              markerUnits='strokeWidth'
+              orient='auto-start-reverse'
+              refX='0'
+              refY='0'
             >
+              <path d='M -22.5 -18 L 0 0 L -22.5 18 Z' style={{ fill: edgeColor }} />
+            </marker>
+          </defs>
+          <BaseEdge
+            {...props}
+            id={id}
+            path={edgePath}
+            markerEnd={'url(#triangle)'}
+            style={{ stroke: edgeColor, strokeWidth: 2 }}
+          />
+          {isSelected && (
+            <foreignObject x={10} y={window.innerHeight - 60} width={30} height={30} style={{ overflow: 'visible' }}>
               <input
-                type='text'
-                value={currentLabel}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                autoFocus
-                onKeyDown={(e) => {
-                  e.stopPropagation()
-                  handleInputKeyDown(e)
+                type='color'
+                value={edgeColor}
+                onChange={handleColorChange}
+                className='w-full h-full cursor-pointer rounded border-none'
+                style={{ padding: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </foreignObject>
+          )}
+          {label &&
+            animated &&
+            (editingEdgeId === id ? (
+              <foreignObject
+                style={{
+                  overflow: 'visible',
                 }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                }}
+                x={midX - (labelWidth + 20) / 2}
+                y={midY - 17.5}
+                width={labelWidth + 20}
+                height={35}
                 onDoubleClick={handleForeignObjectDoubleClick}
-                className={`
+              >
+                <input
+                  type='text'
+                  value={currentLabel}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    e.stopPropagation()
+                    handleInputKeyDown(e)
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                  onDoubleClick={handleForeignObjectDoubleClick}
+                  className={`
                   bg-[#D4EDF6] outline-none border border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded-full
                   transition-all duration-500 ease-in-out w-full
                 `}
-              />
-            </foreignObject>
-          ) : (
-            <foreignObject
-              style={{
-                overflow: 'visible',
-              }}
-              x={midX - (labelWidth + 20) / 2}
-              y={midY - 17.5}
-              width={labelWidth + 20}
-              height={35}
-              onDoubleClick={handleForeignObjectDoubleClick}
-            >
-              <div
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleLabelClick(e)
+                />
+              </foreignObject>
+            ) : (
+              <foreignObject
+                style={{
+                  overflow: 'visible',
                 }}
+                x={midX - (labelWidth + 20) / 2}
+                y={midY - 17.5}
+                width={labelWidth + 20}
+                height={35}
                 onDoubleClick={handleForeignObjectDoubleClick}
-                className={`
+              >
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleLabelClick(e)
+                  }}
+                  onDoubleClick={handleForeignObjectDoubleClick}
+                  className={`
                   bg-[#D4EDF6] border border-[#207fa5] 
                   flex items-center justify-center text-center 
                   text-[#333333] h-full text-xs rounded-full
                   w-full transition-all duration-500 ease-in-out
                 `}
-              >
-                <span ref={labelRef} className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'>
-                  {edgeLabels[source] || label}
-                </span>
-              </div>
-            </foreignObject>
-          ))}
-      </>
+                >
+                  <span
+                    ref={labelRef}
+                    className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'
+                  >
+                    {edgeLabels[source] || label}
+                  </span>
+                </div>
+              </foreignObject>
+            ))}
+        </>
+      </svg>
     )
   }
 
@@ -168,7 +203,19 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   // if cycle
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} />
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ stroke: edgeColor, strokeWidth: 2 }} />
+      {isSelected && (
+        <foreignObject x={10} y={window.innerHeight - 60} width={30} height={30} style={{ overflow: 'visible' }}>
+          <input
+            type='color'
+            value={edgeColor}
+            onChange={handleColorChange}
+            className='w-full h-full cursor-pointer rounded border-none'
+            style={{ padding: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </foreignObject>
+      )}
       {label &&
         animated &&
         (editingEdgeId === id ? (
