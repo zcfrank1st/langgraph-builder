@@ -20,7 +20,7 @@ import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
-import { X, Copy, Info } from 'lucide-react'
+import { X, Copy, Info, Check } from 'lucide-react'
 import { Highlight, themes } from 'prism-react-renderer'
 import MultiButton from './ui/multibutton'
 
@@ -86,6 +86,7 @@ export default function App() {
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
+  const [justCopied, setJustCopied] = useState(false)
 
   useEffect(() => {
     nodesRef.current = nodes
@@ -484,6 +485,19 @@ export default function App() {
   const activeCode = generatedFiles[activeFile] || ''
   const fileExtension = language === 'python' ? '.py' : '.ts'
 
+  // New helper to copy active code to the clipboard
+  const copyActiveCode = () => {
+    if (activeCode) {
+      navigator.clipboard
+        .writeText(activeCode)
+        .then(() => {
+          setJustCopied(true)
+          setTimeout(() => setJustCopied(false), 1500)
+        })
+        .catch((err) => console.error('Failed to copy code: ', err))
+    }
+  }
+
   return (
     <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
       <ReactFlow<CustomNodeType, CustomEdgeType>
@@ -624,9 +638,6 @@ export default function App() {
                 <div className='max-w-xs pr-3'>
                   <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
                 </div>
-                {/* <button className='font-bold px-2 py-2 rounded' onClick={copyCodeToClipboard}>
-                  <Copy />
-                </button> */}
                 <button
                   className='font-bold pr-3 text-gray-300 hover:text-gray-600 transition-colors duration-300 ease-in-out'
                   onClick={() => {
@@ -639,7 +650,7 @@ export default function App() {
             </div>
             <div className='flex flex-col gap-3'>
               {!isLoading && (generatedFiles.stub || generatedFiles.implementation) ? (
-                <div className='mt-3 w-[50vw] h-[60vh]'>
+                <div className='mt-3 w-[50vw] h-[80vh]'>
                   <div className='flex'>
                     <button
                       className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
@@ -654,7 +665,14 @@ export default function App() {
                       {`implementation${fileExtension}`}
                     </button>
                   </div>
-                  <div className='bg-gray-100 overflow-hidden h-[calc(60vh-30px)]'>
+                  <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
+                    <button
+                      onClick={copyActiveCode}
+                      className='absolute top-2 right-6 z-10 p-1 bg-white rounded border border-gray-300 hover:bg-gray-50'
+                      title='Copy code to clipboard'
+                    >
+                      {justCopied ? <Check size={18} /> : <Copy size={18} />}
+                    </button>
                     <Highlight
                       theme={themes.nightOwl}
                       code={activeCode || ''}
@@ -675,7 +693,7 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div className='mt-3 w-[50vw] h-[60vh] flex items-center justify-center'>
+                <div className='mt-3 w-[50vw] h-[80vh] flex items-center justify-center'>
                   <div className='flex flex-col items-center gap-4'>
                     <LoadingSpinner />
                   </div>
