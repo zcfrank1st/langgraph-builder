@@ -2,12 +2,44 @@ import React, { useEffect, useState, useContext, useLayoutEffect, useRef } from 
 import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { EditingContext } from '@/contexts/EditingContext'
+import { createPortal } from 'react-dom'
 
 interface SelfConnectingEdgeProps extends EdgeProps {
   data?: {
     onLabelClick: (id: string) => void
     updateEdgeLabel: (id: string, newLabel: string) => void
   }
+}
+
+const ColorPicker = ({
+  color,
+  onChange,
+  onClose,
+}: {
+  color: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onClose: () => void
+}) => {
+  return createPortal(
+    <div className='fixed bottom-5 left-5 z-50' style={{ width: '200px' }}>
+      <div className='flex flex-col gap-2 bg-white p-3 rounded-lg shadow-lg border border-gray-200'>
+        <div className='flex justify-between items-center'>
+          <span className='text-sm font-medium text-gray-700'>Set edge color</span>
+          <button onClick={onClose} className='text-gray-500 hover:text-gray-700 text-sm px-2 py-1 rounded'>
+            Done
+          </button>
+        </div>
+        <input
+          type='color'
+          value={color}
+          onChange={onChange}
+          className='w-full h-[60px] cursor-pointer rounded'
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    </div>,
+    document.body,
+  )
 }
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
@@ -17,7 +49,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
   const [labelWidth, setLabelWidth] = useState(97)
   const [isSelected, setIsSelected] = useState(false)
-  const [edgeColor, setEdgeColor] = useState('#000000')
+  const [edgeColor, setEdgeColor] = useState('#BDBDBD')
   const labelRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -114,19 +146,10 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             id={id}
             path={edgePath}
             markerEnd={'url(#triangle)'}
-            style={{ stroke: edgeColor, strokeWidth: 2 }}
+            style={{ stroke: edgeColor, strokeWidth: 3.9 }}
           />
           {isSelected && (
-            <foreignObject x={10} y={window.innerHeight - 60} width={30} height={30} style={{ overflow: 'visible' }}>
-              <input
-                type='color'
-                value={edgeColor}
-                onChange={handleColorChange}
-                className='w-full h-full cursor-pointer rounded border-none'
-                style={{ padding: 0 }}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </foreignObject>
+            <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setIsSelected(false)} />
           )}
           {label &&
             animated &&
@@ -203,18 +226,9 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   // if cycle
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ stroke: edgeColor, strokeWidth: 2 }} />
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ stroke: edgeColor, strokeWidth: 5 }} />
       {isSelected && (
-        <foreignObject x={10} y={window.innerHeight - 60} width={30} height={30} style={{ overflow: 'visible' }}>
-          <input
-            type='color'
-            value={edgeColor}
-            onChange={handleColorChange}
-            className='w-full h-full cursor-pointer rounded border-none'
-            style={{ padding: 0 }}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </foreignObject>
+        <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setIsSelected(false)} />
       )}
       {label &&
         animated &&
