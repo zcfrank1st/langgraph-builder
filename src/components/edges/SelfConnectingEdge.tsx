@@ -22,20 +22,27 @@ const ColorPicker = ({
 }) => {
   return createPortal(
     <div className='fixed bottom-5 left-5 z-50' style={{ width: '200px' }}>
-      <div className='flex flex-col gap-2 bg-white p-3 rounded-lg shadow-lg border border-gray-200'>
+      <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
         <div className='flex justify-between items-center'>
-          <span className='text-sm font-medium text-gray-700'>Set edge color</span>
+          <span className='text-sm font-semibold text-gray-800'>Edge Color</span>
           <button onClick={onClose} className='text-gray-500 hover:text-gray-700 text-sm px-2 py-1 rounded'>
             Done
           </button>
         </div>
-        <input
-          type='color'
-          value={color}
-          onChange={onChange}
-          className='w-full h-[60px] cursor-pointer rounded'
-          onClick={(e) => e.stopPropagation()}
-        />
+        <div className='relative'>
+          <input
+            type='color'
+            value={color}
+            onChange={onChange}
+            className='relative w-full h-[80px] cursor-pointer rounded-lg shadow-md ring-1 ring-gray-200'
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className='mt-2 flex justify-center'>
+            <div className='bg-gray-100 px-3 py-1 rounded-full'>
+              <code className='text-sm font-mono text-gray-700'>{color.toUpperCase()}</code>
+            </div>
+          </div>
+        </div>
       </div>
     </div>,
     document.body,
