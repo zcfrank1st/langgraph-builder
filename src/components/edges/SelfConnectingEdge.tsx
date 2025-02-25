@@ -55,7 +55,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
   const [labelWidth, setLabelWidth] = useState(97)
-  const [isSelected, setIsSelected] = useState(false)
+  const [colorPickerOpen, setColorPickerOpen] = useState(false)
   const [edgeColor, setEdgeColor] = useState('#BDBDBD')
   const labelRef = useRef<HTMLDivElement>(null)
 
@@ -70,8 +70,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   }, [edgeLabels, source])
 
   const handleSvgClick = () => {
-    setIsSelected(!isSelected)
-    console.log('svg clicked')
+    setColorPickerOpen(!colorPickerOpen)
   }
 
   const handleLabelClick = (e: React.MouseEvent) => {
@@ -155,8 +154,8 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             markerEnd={'url(#triangle)'}
             style={{ stroke: edgeColor, strokeWidth: 3.9 }}
           />
-          {isSelected && (
-            <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setIsSelected(false)} />
+          {colorPickerOpen && (
+            <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setColorPickerOpen(false)} />
           )}
           {label &&
             animated &&
@@ -234,8 +233,8 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ stroke: edgeColor, strokeWidth: 5 }} />
-      {isSelected && (
-        <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setIsSelected(false)} />
+      {colorPickerOpen && (
+        <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setColorPickerOpen(false)} />
       )}
       {label &&
         animated &&
