@@ -387,13 +387,7 @@ export default function App() {
         ...Object.entries(animatedEdgesBySource).map(([source, edges]) => ({
           from: source,
           condition: String(edges[0].label || ''),
-          paths: edges.reduce(
-            (acc, edge) => ({
-              ...acc,
-              [edge.id]: edge.target,
-            }),
-            {},
-          ),
+          paths: edges.map((edge) => edge.target),
         })),
       ],
     }
@@ -410,11 +404,7 @@ export default function App() {
             // @ts-ignore
             .map((edge: any) => {
               if ('condition' in edge) {
-                return `  - from: ${edge.from}\n    condition: ${edge.condition}\n    paths:\n${Object.entries(
-                  edge.paths,
-                )
-                  .map(([key, value]) => `      ${key}: ${value}`)
-                  .join('\n')}`
+                return `  - from: ${edge.from}\n    condition: ${edge.condition}\n    paths: [${edge.paths.join(', ')}]`
               }
               return `  - from: ${edge.from}\n    to: ${edge.to}`
             })
@@ -438,6 +428,7 @@ export default function App() {
       setIsLoading(true)
       setGenerateCodeModalOpen(true)
       const spec = generateSpec(edges)
+      console.log(spec, 'spec')
       const payload = {
         spec: spec,
         language: lang,
