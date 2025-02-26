@@ -21,10 +21,10 @@ const ColorPicker = ({
   onClose: () => void
 }) => {
   return createPortal(
-    <div className='fixed bottom-5 left-5 z-50' style={{ width: '200px' }}>
+    <div className='fixed bottom-5 left-5 z-50' style={{ width: '280px' }}>
       <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
         <div className='flex justify-between items-center'>
-          <span className='text-sm font-semibold text-gray-800'>Edge Color</span>
+          <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
           <button
             onClick={onClose}
             className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
@@ -52,15 +52,37 @@ const ColorPicker = ({
   )
 }
 
+// Create a context to track which edge is having its color edited
+const ColorEditingContext = React.createContext<{
+  activeEdgeId: string | null
+  setActiveEdgeId: (id: string | null) => void
+}>({
+  activeEdgeId: null,
+  setActiveEdgeId: () => {},
+})
+
+// Provider component to wrap around ReactFlow
+export const ColorEditingProvider = ({ children }: { children: React.ReactNode }) => {
+  const [activeEdgeId, setActiveEdgeId] = useState<string | null>(null)
+  return (
+    <ColorEditingContext.Provider value={{ activeEdgeId, setActiveEdgeId }}>{children}</ColorEditingContext.Provider>
+  )
+}
+
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, source, label, animated } = props
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
   const [labelWidth, setLabelWidth] = useState(97)
-  const [colorPickerOpen, setColorPickerOpen] = useState(false)
   const [edgeColor, setEdgeColor] = useState('#BDBDBD')
   const labelRef = useRef<HTMLDivElement>(null)
+
+  // Use the shared context
+  const { activeEdgeId, setActiveEdgeId } = useContext(ColorEditingContext)
+
+  // Is this edge's color picker active?
+  const isColorPickerActive = activeEdgeId === id
 
   useLayoutEffect(() => {
     if (labelRef.current) {
@@ -73,7 +95,13 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   }, [edgeLabels, source])
 
   const handleSvgClick = () => {
-    setColorPickerOpen(!colorPickerOpen)
+    if (activeEdgeId === id) {
+      // If this edge is already active, close its color picker
+      setActiveEdgeId(null)
+    } else {
+      // Otherwise, set this edge as the active one
+      setActiveEdgeId(id)
+    }
   }
 
   const handleLabelClick = (e: React.MouseEvent) => {
@@ -157,8 +185,8 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             markerEnd={'url(#triangle)'}
             style={{ stroke: edgeColor, strokeWidth: 3.9 }}
           />
-          {colorPickerOpen && (
-            <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setColorPickerOpen(false)} />
+          {isColorPickerActive && (
+            <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
           )}
           {label &&
             animated &&
@@ -234,75 +262,83 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const edgePath = `M ${sourceX} ${sourceY} A 60 60 0 1 0 ${targetX} ${targetY}`
   // if cycle
   return (
-    <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ stroke: edgeColor, strokeWidth: 5 }} />
-      {colorPickerOpen && (
-        <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setColorPickerOpen(false)} />
-      )}
-      {label &&
-        animated &&
-        (editingEdgeId === id ? (
-          <foreignObject
-            style={{
-              overflow: 'visible',
-            }}
-            x={sourceX}
-            y={sourceY}
-            width={labelWidth + 20}
-            height={35}
-            onDoubleClick={handleForeignObjectDoubleClick}
-          >
-            <input
-              type='text'
-              value={currentLabel}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              onKeyDown={(e) => {
-                e.stopPropagation()
-                handleInputKeyDown(e)
+    <svg
+      className='cursor-pointer'
+      onClick={() => handleSvgClick()}
+      width='100%'
+      height='100%'
+      style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'all' }}
+    >
+      <>
+        <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ stroke: edgeColor, strokeWidth: 5 }} />
+        {isColorPickerActive && (
+          <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
+        )}
+        {label &&
+          animated &&
+          (editingEdgeId === id ? (
+            <foreignObject
+              style={{
+                overflow: 'visible',
               }}
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
+              x={sourceX}
+              y={sourceY}
+              width={labelWidth + 20}
+              height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
-              autoFocus
-              className={`
-                bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center w-full h-full text-xs text-[#333333] rounded-full
-                transition-all duration-500 ease-in-out
-                w-full
-              `}
-            />
-          </foreignObject>
-        ) : (
-          <foreignObject
-            style={{
-              overflow: 'visible',
-            }}
-            x={sourceX}
-            y={sourceY}
-            width={labelWidth + 20}
-            height={35}
-            onDoubleClick={handleForeignObjectDoubleClick}
-          >
-            <div
-              onClick={(e) => {
-                e.stopPropagation()
-                handleLabelClick(e)
-              }}
-              onDoubleClick={handleForeignObjectDoubleClick}
-              className={`
-                bg-[#F5F5F7] border border-[#D1D2D9] 
-                flex items-center justify-center text-center 
-                text-[#333333] h-full text-xs rounded-full
-                w-full transition-all duration-500 ease-in-out
-              `}
             >
-              <span ref={labelRef} className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'>
-                {edgeLabels[source] || label}
-              </span>
-            </div>
-          </foreignObject>
-        ))}
-    </>
+              <input
+                type='text'
+                value={currentLabel}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                onKeyDown={(e) => {
+                  e.stopPropagation()
+                  handleInputKeyDown(e)
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+                onDoubleClick={handleForeignObjectDoubleClick}
+                autoFocus
+                className={`
+                  bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center w-full h-full text-xs text-[#333333] rounded-full
+                  transition-all duration-500 ease-in-out
+                  w-full
+                `}
+              />
+            </foreignObject>
+          ) : (
+            <foreignObject
+              style={{
+                overflow: 'visible',
+              }}
+              x={sourceX}
+              y={sourceY}
+              width={labelWidth + 20}
+              height={35}
+              onDoubleClick={handleForeignObjectDoubleClick}
+            >
+              <div
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleLabelClick(e)
+                }}
+                onDoubleClick={handleForeignObjectDoubleClick}
+                className={`
+                  bg-[#F5F5F7] border border-[#D1D2D9] 
+                  flex items-center justify-center text-center 
+                  text-[#333333] h-full text-xs rounded-full
+                  w-full transition-all duration-500 ease-in-out
+                `}
+              >
+                <span ref={labelRef} className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'>
+                  {edgeLabels[source] || label}
+                </span>
+              </div>
+            </foreignObject>
+          ))}
+      </>
+    </svg>
   )
 }

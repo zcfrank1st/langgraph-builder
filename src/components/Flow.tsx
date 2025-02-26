@@ -23,8 +23,8 @@ import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
 import { X, Copy, Info, Check } from 'lucide-react'
 import { Highlight, themes } from 'prism-react-renderer'
 import MultiButton from './ui/multibutton'
-
 import GenericModal from './GenericModal'
+import { ColorEditingProvider } from './edges/SelfConnectingEdge'
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -329,19 +329,6 @@ export default function App() {
     [addNode],
   )
 
-  const copyCodeToClipboard = () => {
-    if (generatedCode) {
-      navigator.clipboard
-        .writeText(generatedCode.code)
-        .then(() => {
-          alert('Code copied to clipboard!')
-        })
-        .catch((err) => {
-          console.error('Failed to copy code: ', err)
-        })
-    }
-  }
-
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       const isCmdOrCtrlPressed = event.metaKey || event.ctrlKey
@@ -500,31 +487,33 @@ export default function App() {
 
   return (
     <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
-      <ReactFlow<CustomNodeType, CustomEdgeType>
-        nodes={flowNodes}
-        nodeTypes={nodeTypes}
-        onEdgeClick={onEdgeClick}
-        onNodesChange={handleNodesChange}
-        edges={flowEdges?.map((edge) => ({
-          ...edge,
-          data: {
-            ...edge.data,
-          },
-        }))}
-        edgeTypes={edgeTypes}
-        onEdgesChange={handleEdgesChange}
-        onConnect={onConnect}
-        onInit={setReactFlowInstance}
-        fitView
-        onConnectStart={onConnectStart}
-        className='z-10 bg-[#EAEAEA]'
-        style={{ backgroundColor: '#EAEAEA' }}
-        proOptions={proOptions}
-        zoomOnDoubleClick={false}
-        onPaneClick={handlePaneClick}
-      >
-        <Background />
-      </ReactFlow>
+      <ColorEditingProvider>
+        <ReactFlow<CustomNodeType, CustomEdgeType>
+          nodes={flowNodes}
+          nodeTypes={nodeTypes}
+          onEdgeClick={onEdgeClick}
+          onNodesChange={handleNodesChange}
+          edges={flowEdges?.map((edge) => ({
+            ...edge,
+            data: {
+              ...edge.data,
+            },
+          }))}
+          edgeTypes={edgeTypes}
+          onEdgesChange={handleEdgesChange}
+          onConnect={onConnect}
+          onInit={setReactFlowInstance}
+          fitView
+          onConnectStart={onConnectStart}
+          className='z-10 bg-[#EAEAEA]'
+          style={{ backgroundColor: '#EAEAEA' }}
+          proOptions={proOptions}
+          zoomOnDoubleClick={false}
+          onPaneClick={handlePaneClick}
+        >
+          <Background />
+        </ReactFlow>
+      </ColorEditingProvider>
 
       {/* Sidebar */}
       <div
