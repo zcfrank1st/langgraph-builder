@@ -25,7 +25,10 @@ const ColorPicker = ({
       <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
         <div className='flex justify-between items-center'>
           <span className='text-sm font-semibold text-gray-800'>Edge Color</span>
-          <button onClick={onClose} className='text-gray-500 hover:text-gray-700 text-sm px-2 py-1 rounded'>
+          <button
+            onClick={onClose}
+            className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
+          >
             Done
           </button>
         </div>
@@ -185,7 +188,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   }}
                   onDoubleClick={handleForeignObjectDoubleClick}
                   className={`
-                  bg-[#D4EDF6] outline-none border border-[#207fa5] text-center text-[#333333] w-full h-full text-xs rounded-full
+                  bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center text-[#333333] w-full h-full text-xs rounded-full
                   transition-all duration-500 ease-in-out w-full
                 `}
                 />
@@ -207,8 +210,8 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                     handleLabelClick(e)
                   }}
                   onDoubleClick={handleForeignObjectDoubleClick}
-                  className={`
-                  bg-[#D4EDF6] border border-[#207fa5] 
+                  className={` bg-[#F5F5F7]
+                border border-[#D1D2D9] 
                   flex items-center justify-center text-center 
                   text-[#333333] h-full text-xs rounded-full
                   w-full transition-all duration-500 ease-in-out
@@ -264,7 +267,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               onDoubleClick={handleForeignObjectDoubleClick}
               autoFocus
               className={`
-                bg-[#D4EDF6] outline-none border border-[#207fa5] text-center w-full h-full text-xs text-[#333333] rounded-full
+                bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center w-full h-full text-xs text-[#333333] rounded-full
                 transition-all duration-500 ease-in-out
                 w-full
               `}
@@ -288,7 +291,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               }}
               onDoubleClick={handleForeignObjectDoubleClick}
               className={`
-                bg-[#D4EDF6] border border-[#207fa5] 
+                bg-[#F5F5F7] border border-[#D1D2D9] 
                 flex items-center justify-center text-center 
                 text-[#333333] h-full text-xs rounded-full
                 w-full transition-all duration-500 ease-in-out

@@ -169,7 +169,7 @@ export default function App() {
     {
       key: 'tooltip5',
       type: 'tooltip',
-      placement: 'left' as TooltipPlacement,
+      placement: 'bottom' as TooltipPlacement,
       title: '4 of 4: Generate Code',
       content:
         "Once you're finished designing the architecture of your graph, you can generate boilerplate code for the agent using this button",
@@ -189,7 +189,7 @@ export default function App() {
       ],
       tooltipWrapperStyle: {
         className: 'fixed flex items-end justify-end pointer-events-none',
-        style: { right: '170px', bottom: '90px', left: 'auto', top: 'auto' },
+        style: { right: '190px', top: '90px', left: 'auto', bottom: 'auto' },
       },
     },
     {
@@ -717,7 +717,7 @@ export default function App() {
             </button>
           </Tooltip>
           <button
-            className='text-white p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
+            className='p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
             aria-label='Toggle Information Panel'
             onClick={() => setInfoPanelOpen(!infoPanelOpen)}
           >
