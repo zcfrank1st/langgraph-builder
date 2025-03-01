@@ -270,7 +270,25 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
       style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'all' }}
     >
       <>
-        <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ stroke: edgeColor, strokeWidth: 5 }} />
+        <defs>
+          <marker
+            id={`triangle-cycle-${id}`}
+            markerWidth='5'
+            markerHeight='18'
+            viewBox='-15 -15 30 30'
+            markerUnits='strokeWidth'
+            orient='auto-start-reverse'
+            refX='0'
+            refY='0'
+          >
+            <path d='M -22.5 -18 L 0 0 L -22.5 18 Z' style={{ fill: edgeColor }} />
+          </marker>
+        </defs>
+        <BaseEdge
+          path={edgePath}
+          markerEnd={`url(#triangle-cycle-${id})`}
+          style={{ stroke: edgeColor, strokeWidth: 5 }}
+        />
         {isColorPickerActive && (
           <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
         )}
