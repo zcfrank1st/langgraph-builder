@@ -25,6 +25,7 @@ import { Highlight, themes } from 'prism-react-renderer'
 import MultiButton from './ui/multibutton'
 import GenericModal from './GenericModal'
 import { ColorEditingProvider } from './edges/SelfConnectingEdge'
+import Image from 'next/image'
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -505,204 +506,224 @@ export default function App() {
           <Background />
         </ReactFlow>
       </ColorEditingProvider>
-
-      {/* Sidebar */}
-      <div
-        className={`
-          fixed top-0 left-0 bg-gray-100 shadow-xl rounded-md z-20 
-          transform transition-transform duration-300
-          ${infoPanelOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
-      >
-        <div className='flex flex-col p-6 space-y-5'>
-          <div>
-            <h2 className='text-xl font-medium'>Key Commands</h2>
-          </div>
-          <div>
-            <p className='text-sm text-slate-800'>Create a node</p>
-            <p className='mt-2'>⌘ + click anywhere on the canvas</p>
-          </div>
-          <div>
-            <p className='text-sm text-slate-800'>Create an edge</p>
-            <p className='mt-2'>click + drag from the bottom of one node to the top of another</p>
-          </div>
-          <div>
-            <p className='text-sm text-slate-800'>Create a conditional edge</p>
-            <p className='mt-2'>connect one node to multiple nodes</p>
-          </div>
-          <div>
-            <p className='text-sm text-slate-800'>Create a cycle</p>
-            <p className='mt-2'>click + drag from the bottom to the top of a node</p>
-          </div>
-          <div>
-            <p className='text-sm text-slate-800'>Delete an edge/node</p>
-            <p className='mt-2'>click the edge/node and hit the backspace key</p>
+      <div className='md:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
+        <div className='bg-white ring-1 ring-black ring-opacity-5 border-3 border-slate-600 rounded-lg p-6 max-w-md mx-auto'>
+          <div className='flex flex-col justify-center items-center text-center'>
+            <div className='flex justify-center mb-6'>
+              <Image src={'/langgraph-logo.png'} alt='Modal Image' width={150} height={150} />
+            </div>
+            <h2 className='text-2xl font-medium'>Desktop Only</h2>
+            <div className='text-md md:text-lg text-gray-500 pt-2 text-center max-w-md'>
+              LangGraph Builder is not supported on mobile devices
+            </div>
+            <a
+              href='sms:&body=build.langchain.com'
+              className='bg-[#076699] rounded-md text-white px-4 py-2 font-medium hover:bg-[#06578a] mt-3 no-underline'
+            >
+              Text me the link
+            </a>
           </div>
         </div>
       </div>
-
-      {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
+      <div className='hidden md:block'>
+        {/* Sidebar */}
         <div
-          className='onboarding-overlay'
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 10,
-            cursor: 'not-allowed',
-          }}
+          className={`
+          fixed top-0 left-0 bg-gray-100 shadow-xl rounded-md z-20 
+          transform transition-transform duration-300 
+          ${infoPanelOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
         >
-          {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
-            <div className='pointer-events-auto' style={{ cursor: 'default' }}>
-              <GenericModal
-                isOpen={true}
-                onClose={handleOnboardingNext}
-                title={onboardingSteps[currentOnboardingStep].title || ''}
-                content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
-                buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
-                imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
-              />
+          <div className='flex flex-col p-6 space-y-5'>
+            <div>
+              <h2 className='text-xl font-medium'>Key Commands</h2>
             </div>
-          ) : (
-            <div
-              className={
-                onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.className ||
-                'flex items-start justify-center'
-              }
-              style={onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.style || { paddingTop: '30vh' }}
-            >
-              <Tooltip
-                className='pointer-events-auto'
-                arrow
-                modifiers={[
-                  {
-                    name: 'offset',
-                    options: {
-                      offset: [0, 20],
-                    },
-                  },
-                ]}
-                color='neutral'
-                variant='outlined'
-                placement={onboardingSteps[currentOnboardingStep].placement || 'top'}
-                title={tooltip}
-                open={true}
-                sx={{ cursor: 'default' }}
-              >
-                <div></div>
-              </Tooltip>
+            <div>
+              <p className='text-sm text-slate-800'>Create a node</p>
+              <p className='mt-2'>⌘ + click anywhere on the canvas</p>
             </div>
-          )}
-        </div>
-      )}
-
-      <MuiModal
-        hideBackdrop={true}
-        onClose={() => {
-          setGenerateCodeModalOpen(false)
-        }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setGenerateCodeModalOpen(false)
-          }
-        }}
-        open={generateCodeModalOpen}
-      >
-        <ModalDialog className='bg-slate-150 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-          <div className='flex flex-col'>
-            <div className='flex justify-between items-center'>
-              <h2 className='text-lg font-medium'>Generated Code:</h2>
-              <div className='flex flex-row gap-2'>
-                <div className='max-w-xs pr-3'>
-                  <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
-                </div>
-                <button
-                  className='font-bold pr-3 text-gray-300 hover:text-gray-600 transition-colors duration-300 ease-in-out'
-                  onClick={() => {
-                    setGenerateCodeModalOpen(false)
-                  }}
-                >
-                  <X size={30} />
-                </button>
-              </div>
+            <div>
+              <p className='text-sm text-slate-800'>Create an edge</p>
+              <p className='mt-2'>click + drag from the bottom of one node to the top of another</p>
             </div>
-            <div className='flex flex-col gap-3'>
-              {!isLoading && (generatedFiles.stub || generatedFiles.implementation) ? (
-                <div className='mt-3 w-[50vw] h-[80vh]'>
-                  <div className='flex'>
-                    <button
-                      className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
-                      onClick={() => setActiveFile('stub')}
-                    >
-                      {`stub${fileExtension}`}
-                    </button>
-                    <button
-                      className={`px-3 rounded-t-md ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
-                      onClick={() => setActiveFile('implementation')}
-                    >
-                      {`implementation${fileExtension}`}
-                    </button>
-                  </div>
-                  <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
-                    <button
-                      onClick={copyActiveCode}
-                      className='absolute top-2 right-6 z-10 p-1 bg-white rounded border border-gray-300 hover:bg-gray-50'
-                      title='Copy code to clipboard'
-                    >
-                      {justCopied ? <Check size={18} /> : <Copy size={18} />}
-                    </button>
-                    <Highlight
-                      theme={themes.nightOwl}
-                      code={activeCode || ''}
-                      language={language === 'python' ? 'python' : 'typescript'}
-                    >
-                      {({ style, tokens, getLineProps, getTokenProps }) => (
-                        <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
-                          {tokens.map((line, i) => (
-                            <div key={i} {...getLineProps({ line })}>
-                              {line.map((token, key) => (
-                                <span key={key} {...getTokenProps({ token })} />
-                              ))}
-                            </div>
-                          ))}
-                        </pre>
-                      )}
-                    </Highlight>
-                  </div>
-                </div>
-              ) : (
-                <div className='mt-3 w-[50vw] h-[80vh] flex items-center justify-center'>
-                  <div className='flex flex-col items-center gap-4'>
-                    <LoadingSpinner />
-                  </div>
-                </div>
-              )}
+            <div>
+              <p className='text-sm text-slate-800'>Create a conditional edge</p>
+              <p className='mt-2'>connect one node to multiple nodes</p>
+            </div>
+            <div>
+              <p className='text-sm text-slate-800'>Create a cycle</p>
+              <p className='mt-2'>click + drag from the bottom to the top of a node</p>
+            </div>
+            <div>
+              <p className='text-sm text-slate-800'>Delete an edge/node</p>
+              <p className='mt-2'>click the edge/node and hit the backspace key</p>
             </div>
           </div>
-        </ModalDialog>
-      </MuiModal>
-      <div className='fixed top-[24px] right-[24px] flex flex-row gap-2'>
-        <div className='flex flex-row gap-2'>
-          <Tooltip title={edges.length === 0 ? 'Create an edge to generate code' : ''} placement='bottom' arrow>
-            <button
-              className={`py-2 px-3 rounded-md transition-colors duration-200 ${
-                edges.length > 0 ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]' : 'bg-gray-500 opacity-70'
-              }`}
-              onClick={edges.length > 0 ? handleGenerateCode : undefined}
-              disabled={edges.length === 0}
-            >
-              <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
-            </button>
-          </Tooltip>
-          <button
-            className='p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
-            aria-label='Toggle Information Panel'
-            onClick={() => setInfoPanelOpen(!infoPanelOpen)}
+        </div>
+
+        {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
+          <div
+            className='onboarding-overlay'
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              zIndex: 10,
+              cursor: 'not-allowed',
+            }}
           >
-            <Info className='h-6 w-6' />
-          </button>
+            {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
+              <div className='pointer-events-auto' style={{ cursor: 'default' }}>
+                <GenericModal
+                  isOpen={true}
+                  onClose={handleOnboardingNext}
+                  title={onboardingSteps[currentOnboardingStep].title || ''}
+                  content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
+                  buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
+                  imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
+                />
+              </div>
+            ) : (
+              <div
+                className={
+                  onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.className ||
+                  'flex items-start justify-center'
+                }
+                style={onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.style || { paddingTop: '30vh' }}
+              >
+                <Tooltip
+                  className='pointer-events-auto'
+                  arrow
+                  modifiers={[
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 20],
+                      },
+                    },
+                  ]}
+                  color='neutral'
+                  variant='outlined'
+                  placement={onboardingSteps[currentOnboardingStep].placement || 'top'}
+                  title={tooltip}
+                  open={true}
+                  sx={{ cursor: 'default' }}
+                >
+                  <div></div>
+                </Tooltip>
+              </div>
+            )}
+          </div>
+        )}
+
+        <MuiModal
+          hideBackdrop={true}
+          onClose={() => {
+            setGenerateCodeModalOpen(false)
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setGenerateCodeModalOpen(false)
+            }
+          }}
+          open={generateCodeModalOpen}
+        >
+          <ModalDialog className='bg-slate-150 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+            <div className='flex flex-col'>
+              <div className='flex justify-between items-center'>
+                <h2 className='text-lg font-medium'>Generated Code:</h2>
+                <div className='flex flex-row gap-2'>
+                  <div className='max-w-xs pr-3'>
+                    <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
+                  </div>
+                  <button
+                    className='font-bold pr-3 text-gray-300 hover:text-gray-600 transition-colors duration-300 ease-in-out'
+                    onClick={() => {
+                      setGenerateCodeModalOpen(false)
+                    }}
+                  >
+                    <X size={30} />
+                  </button>
+                </div>
+              </div>
+              <div className='flex flex-col gap-3'>
+                {!isLoading && (generatedFiles.stub || generatedFiles.implementation) ? (
+                  <div className='mt-3 w-[50vw] h-[80vh]'>
+                    <div className='flex'>
+                      <button
+                        className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                        onClick={() => setActiveFile('stub')}
+                      >
+                        {`stub${fileExtension}`}
+                      </button>
+                      <button
+                        className={`px-3 rounded-t-md ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                        onClick={() => setActiveFile('implementation')}
+                      >
+                        {`implementation${fileExtension}`}
+                      </button>
+                    </div>
+                    <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
+                      <button
+                        onClick={copyActiveCode}
+                        className='absolute top-2 right-6 z-10 p-1 bg-white rounded border border-gray-300 hover:bg-gray-50'
+                        title='Copy code to clipboard'
+                      >
+                        {justCopied ? <Check size={18} /> : <Copy size={18} />}
+                      </button>
+                      <Highlight
+                        theme={themes.nightOwl}
+                        code={activeCode || ''}
+                        language={language === 'python' ? 'python' : 'typescript'}
+                      >
+                        {({ style, tokens, getLineProps, getTokenProps }) => (
+                          <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
+                            {tokens.map((line, i) => (
+                              <div key={i} {...getLineProps({ line })}>
+                                {line.map((token, key) => (
+                                  <span key={key} {...getTokenProps({ token })} />
+                                ))}
+                              </div>
+                            ))}
+                          </pre>
+                        )}
+                      </Highlight>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='mt-3 w-[50vw] h-[80vh] flex items-center justify-center'>
+                    <div className='flex flex-col items-center gap-4'>
+                      <LoadingSpinner />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </ModalDialog>
+        </MuiModal>
+        <div className='fixed top-[24px] right-[24px] flex flex-row gap-2'>
+          <div className='flex flex-row gap-2'>
+            <Tooltip title={edges.length === 0 ? 'Create an edge to generate code' : ''} placement='bottom' arrow>
+              <button
+                className={`py-2 px-3 rounded-md transition-colors duration-200 ${
+                  edges.length > 0 ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]' : 'bg-gray-500 opacity-70'
+                }`}
+                onClick={edges.length > 0 ? handleGenerateCode : undefined}
+                disabled={edges.length === 0}
+              >
+                <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
+              </button>
+            </Tooltip>
+            <button
+              className='p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
+              aria-label='Toggle Information Panel'
+              onClick={() => setInfoPanelOpen(!infoPanelOpen)}
+            >
+              <Info className='h-6 w-6' />
+            </button>
+          </div>
         </div>
       </div>
     </div>
