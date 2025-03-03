@@ -507,23 +507,17 @@ export default function App() {
         </ReactFlow>
       </ColorEditingProvider>
       <div className='md:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
-        <div className='bg-white ring-1 ring-black ring-opacity-5 border-3 border-slate-600 rounded-lg p-6 max-w-md mx-auto'>
-          <div className='flex flex-col justify-center items-center text-center'>
-            <div className='flex justify-center mb-6'>
-              <Image src={'/langgraph-logo.png'} alt='Modal Image' width={150} height={150} />
-            </div>
-            <h2 className='text-2xl font-medium'>Desktop Only</h2>
-            <div className='text-md md:text-lg text-gray-500 pt-2 text-center max-w-md'>
-              LangGraph Builder is not supported on mobile devices
-            </div>
-            <a
-              href='sms:&body=build.langchain.com'
-              className='bg-[#076699] rounded-md text-white px-4 py-2 font-medium hover:bg-[#06578a] mt-3 no-underline'
-            >
-              Text me the link
-            </a>
-          </div>
-        </div>
+        <GenericModal
+          imageUrl='/langgraph-logo.png'
+          onButtonClick={() => {
+            window.location.href = 'sms:&body=build.langchain.com'
+          }}
+          isOpen={true}
+          onClose={() => {}}
+          title='Desktop Only'
+          content='LangGraph Builder is not supported on mobile devices'
+          buttonText='Text me the link'
+        />
       </div>
       <div className='hidden md:block'>
         {/* Sidebar */}
