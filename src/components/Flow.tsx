@@ -40,12 +40,17 @@ type OnboardingStep = {
   buttonText?: string
   imageUrl?: string
   placement?: TooltipPlacement
-  tooltipWrapperStyle?: {
-    className?: string
-    style?: React.CSSProperties
-  }
+  targetNodeId?: string
+  tooltipOffset?: { x: number; y: number }
   nodes?: Node[]
   edges?: Edge[]
+  position?: {
+    top?: string
+    right?: string
+    bottom?: string
+    left?: string
+  }
+  className?: string
 }
 
 type TooltipPlacement =
@@ -61,6 +66,26 @@ type TooltipPlacement =
   | 'right-start'
   | 'top-end'
   | 'top-start'
+
+// Mock color picker component
+const MockColorPicker = () => (
+  <div className='fixed bottom-5 cursor-disabled left-5 z-50' style={{ width: '280px' }}>
+    <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
+      <div className='flex justify-between items-center'>
+        <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
+        <button className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'>Done</button>
+      </div>
+      <div className='relative'>
+        <div className='relative w-full h-[80px] cursor-pointer rounded-lg shadow-md ring-1 ring-gray-200 bg-gray-100'></div>
+        <div className='mt-2 flex justify-center'>
+          <div className='bg-gray-100 px-3 py-1 rounded-full'>
+            <code className='text-sm font-mono text-gray-700'>#BDBDBD</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)
 
 export default function App() {
   const proOptions = { hideAttribution: true }
@@ -113,9 +138,11 @@ export default function App() {
     {
       key: 'tooltip1',
       type: 'tooltip',
-      placement: 'top' as TooltipPlacement,
+      placement: 'left' as TooltipPlacement,
       title: '1 of 6: How to create a node',
       content: '⌘ + click anywhere on the canvas to create a node',
+      targetNodeId: 'custom1',
+      tooltipOffset: { x: -20, y: 0 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -128,6 +155,8 @@ export default function App() {
       placement: 'left' as TooltipPlacement,
       title: '2 of 6: How to create an edge',
       content: 'Connect two nodes by dragging from the bottom of one node to the top of another',
+      targetNodeId: 'custom1',
+      tooltipOffset: { x: 0, y: -120 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -136,17 +165,16 @@ export default function App() {
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
       ],
-      tooltipWrapperStyle: {
-        className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
-        style: { paddingRight: '200px', paddingTop: '230px' },
-      },
     },
     {
       key: 'tooltip3',
       type: 'tooltip',
       placement: 'right' as TooltipPlacement,
       title: '3 of 6: Create a conditional edge',
-      content: 'Connect one node to multiple nodes to create a conditional edge',
+      content:
+        'Connect one node to multiple nodes to create a conditional edge. Conditional edges can have detailed labels',
+      targetNodeId: 'custom1',
+      tooltipOffset: { x: 350, y: 60 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -177,17 +205,15 @@ export default function App() {
         { id: 'custom2->end', source: 'custom2', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
         { id: 'custom3->end', source: 'custom3', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
       ],
-      tooltipWrapperStyle: {
-        className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
-        style: { paddingTop: '350px', paddingLeft: '480px' },
-      },
     },
     {
       key: 'tooltip4',
       type: 'tooltip',
       placement: 'top' as TooltipPlacement,
       title: '4 of 6: Create a cycle',
-      content: 'Create a loop by dragging from the bottom of a node to the top of itself',
+      content: 'Create a loop by dragging from the bottom of one node to the top of itself',
+      targetNodeId: 'custom3',
+      tooltipOffset: { x: 160, y: 80 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -227,17 +253,15 @@ export default function App() {
           markerEnd: { type: MarkerType.ArrowClosed },
         },
       ],
-      tooltipWrapperStyle: {
-        className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
-        style: { paddingTop: '390px', paddingLeft: '650px' },
-      },
     },
     {
       key: 'tooltip5',
       type: 'tooltip',
-      placement: 'bottom' as TooltipPlacement,
+      placement: 'left' as TooltipPlacement,
       title: '5 of 6: Color Edges',
-      content: 'Edges can get messy. Color them to make it easier to distinguish between different edges',
+      content: 'Click on an edge and give it a color. This helps distinguish between different edges on the graph',
+      targetNodeId: 'custom1',
+      tooltipOffset: { x: -300, y: 180 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -277,18 +301,18 @@ export default function App() {
           markerEnd: { type: MarkerType.ArrowClosed },
         },
       ],
-      tooltipWrapperStyle: {
-        className: 'fixed flex items-end justify-end pointer-events-none',
-        style: { right: '190px', top: '90px', left: 'auto', bottom: 'auto' },
-      },
     },
     {
       key: 'tooltip6',
       type: 'tooltip',
-      placement: 'bottom' as TooltipPlacement,
       title: '6 of 6: Generate Code',
       content:
-        "Once you're finished designing the architecture of your graph, you can generate boilerplate code for the agent using this button",
+        "Once you're finished designing the architecture of your graph, you can generate boilerplate code using this button",
+      position: {
+        top: '90px',
+        right: '180px',
+      },
+      placement: 'bottom',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -328,10 +352,6 @@ export default function App() {
           markerEnd: { type: MarkerType.ArrowClosed },
         },
       ],
-      tooltipWrapperStyle: {
-        className: 'fixed flex items-end justify-end pointer-events-none',
-        style: { right: '190px', top: '90px', left: 'auto', bottom: 'auto' },
-      },
     },
     {
       key: 'tooltip7',
@@ -616,6 +636,59 @@ export default function App() {
     }
   }
 
+  const calculateTooltipPosition = (
+    targetNodeId: string,
+    placement: TooltipPlacement,
+    offset: { x: number; y: number } = { x: 10, y: 10 },
+  ) => {
+    if (!reactFlowInstance || !targetNodeId) {
+      return { top: '50%', left: '50%' }
+    }
+
+    const node = reactFlowInstance.getNode(targetNodeId)
+    if (!node) {
+      return { top: '50%', left: '50%' }
+    }
+
+    const transform = reactFlowInstance.getViewport()
+    const nodePosition = {
+      x: node.position.x * transform.zoom + transform.x,
+      y: node.position.y * transform.zoom + transform.y,
+    }
+
+    const nodeElement = document.querySelector(`[data-id="${targetNodeId}"]`)
+    const nodeRect = nodeElement?.getBoundingClientRect()
+    const nodeHeight = nodeRect?.height || 40
+
+    switch (placement) {
+      case 'top':
+        return {
+          top: `${nodePosition.y - offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      case 'bottom':
+        return {
+          top: `${nodePosition.y + nodeHeight + offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      case 'left':
+        return {
+          top: `${nodePosition.y + nodeHeight / 2 + offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      case 'right':
+        return {
+          top: `${nodePosition.y + nodeHeight / 2 + offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      default:
+        return {
+          top: `${nodePosition.y}px`,
+          left: `${nodePosition.x}px`,
+        }
+    }
+  }
+
   return (
     <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
       <ColorEditingProvider>
@@ -720,11 +793,16 @@ export default function App() {
               </div>
             ) : (
               <div
-                className={
-                  onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.className ||
-                  'flex items-start justify-center'
+                className={`fixed pointer-events-none ${onboardingSteps[currentOnboardingStep].className || ''}`}
+                style={
+                  onboardingSteps[currentOnboardingStep].position
+                    ? onboardingSteps[currentOnboardingStep].position
+                    : calculateTooltipPosition(
+                        onboardingSteps[currentOnboardingStep].targetNodeId || '',
+                        onboardingSteps[currentOnboardingStep].placement || 'top',
+                        onboardingSteps[currentOnboardingStep].tooltipOffset,
+                      )
                 }
-                style={onboardingSteps[currentOnboardingStep].tooltipWrapperStyle?.style || { paddingTop: '30vh' }}
               >
                 <Tooltip
                   className='pointer-events-auto'
@@ -750,6 +828,8 @@ export default function App() {
             )}
           </div>
         )}
+
+        {initialOnboardingComplete === false && currentOnboardingStep === 5 && <MockColorPicker />}
 
         <MuiModal
           hideBackdrop={true}
@@ -841,7 +921,9 @@ export default function App() {
             <Tooltip title={edges.length === 0 ? 'Create a valid graph to generate code' : ''} placement='bottom' arrow>
               <button
                 className={`py-2 px-3 rounded-md transition-colors duration-200 ${
-                  edges.length > 0 ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]' : 'bg-gray-500 opacity-70'
+                  edges.length > 0 || !initialOnboardingComplete
+                    ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]'
+                    : 'bg-gray-500 opacity-70'
                 }`}
                 onClick={edges.length > 0 ? handleGenerateCode : undefined}
                 disabled={edges.length === 0}

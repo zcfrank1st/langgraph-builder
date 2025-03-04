@@ -53,7 +53,7 @@ const ColorPicker = ({
 }
 
 // Create a context to track which edge is having its color edited
-const ColorEditingContext = React.createContext<{
+export const ColorEditingContext = React.createContext<{
   activeEdgeId: string | null
   setActiveEdgeId: (id: string | null) => void
 }>({
