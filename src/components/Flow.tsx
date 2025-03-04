@@ -74,7 +74,9 @@ const MockColorPicker = () => (
     <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
       <div className='flex justify-between items-center'>
         <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
-        <button className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'>Done</button>
+        <button disabled className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'>
+          Done
+        </button>
       </div>
       <div className='relative'>
         <div className='relative w-full h-[80px] cursor-pointer rounded-lg shadow-md ring-1 ring-gray-200 bg-gray-100'></div>
@@ -127,12 +129,8 @@ export default function App() {
       key: 'tooltip0',
       type: 'modal',
       placement: 'top' as TooltipPlacement,
-      title: 'Graph Builder',
-      content: (
-        <span>
-          Use this tool to quickly prototype the architecture of your agent. Let's get started with a quick onboarding!
-        </span>
-      ),
+      title: 'Graph Designer',
+      content: <span>Let's get started with a quick onboarding. During it, canvas interaction will be disabled</span>,
       buttonText: 'Start',
       imageUrl: '/langgraph-logo.png',
     },
@@ -805,7 +803,7 @@ export default function App() {
               width: '100vw',
               height: '100vh',
               zIndex: 10,
-              cursor: 'not-allowed',
+              pointerEvents: 'none',
             }}
           >
             {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
@@ -821,16 +819,17 @@ export default function App() {
               </div>
             ) : (
               <div
-                className={`fixed pointer-events-none ${onboardingSteps[currentOnboardingStep].className || ''}`}
-                style={
-                  onboardingSteps[currentOnboardingStep].position
+                className={`fixed ${onboardingSteps[currentOnboardingStep].className || ''}`}
+                style={{
+                  ...(onboardingSteps[currentOnboardingStep].position
                     ? onboardingSteps[currentOnboardingStep].position
                     : calculateTooltipPosition(
                         onboardingSteps[currentOnboardingStep].targetNodeId || '',
                         onboardingSteps[currentOnboardingStep].placement || 'top',
                         onboardingSteps[currentOnboardingStep].tooltipOffset,
-                      )
-                }
+                      )),
+                  pointerEvents: 'auto',
+                }}
               >
                 <Tooltip
                   className='pointer-events-auto'
