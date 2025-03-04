@@ -19,11 +19,12 @@ import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
-import { X, Copy, Info, Check } from 'lucide-react'
+import { X, Copy, Info, Check, Download } from 'lucide-react'
 import { Highlight, themes } from 'prism-react-renderer'
 import MultiButton from './ui/multibutton'
 import GenericModal from './GenericModal'
 import { ColorEditingProvider } from './edges/SelfConnectingEdge'
+import JSZip from 'jszip'
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -169,12 +170,12 @@ export default function App() {
     {
       key: 'tooltip3',
       type: 'tooltip',
-      placement: 'right' as TooltipPlacement,
+      placement: 'left' as TooltipPlacement,
       title: '3 of 6: Create a conditional edge',
       content:
         'Connect one node to multiple nodes to create a conditional edge. Conditional edges can have detailed labels',
-      targetNodeId: 'custom1',
-      tooltipOffset: { x: 350, y: 60 },
+      targetNodeId: 'custom2',
+      tooltipOffset: { x: 0, y: -120 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -259,7 +260,8 @@ export default function App() {
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
       title: '5 of 6: Color Edges',
-      content: 'Click on an edge and give it a color. This helps distinguish between different edges on the graph',
+      content:
+        'You can click on an edge and give it a color. This helps distinguish between different edges on the graph',
       targetNodeId: 'custom1',
       tooltipOffset: { x: -300, y: 180 },
       nodes: [
@@ -374,7 +376,7 @@ export default function App() {
   }
 
   const tooltip = (
-    <div className='py-3 px-3 flex flex-col min-w-[300px]'>
+    <div className='py-3 px-3 flex flex-col w-[380px]'>
       <div className='flex flex-row items-center justify-between'>
         <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
         <button
@@ -538,7 +540,7 @@ export default function App() {
     // Step 4: Build YAML structure
     const yaml = {
       name: 'CustomAgent',
-      entrypoint: 'source',
+      entrypoint: 'start',
       nodes: Array.from(nodeNames).map((name) => ({ name })),
       edges: [
         ...normalEdges.map((edge) => ({
@@ -687,6 +689,32 @@ export default function App() {
           left: `${nodePosition.x}px`,
         }
     }
+  }
+
+  const downloadAsZip = () => {
+    const zip = new JSZip()
+
+    // Add stub file
+    if (generatedFiles.stub) {
+      zip.file(`stub${fileExtension}`, generatedFiles.stub)
+    }
+
+    // Add implementation file
+    if (generatedFiles.implementation) {
+      zip.file(`implementation${fileExtension}`, generatedFiles.implementation)
+    }
+
+    // Generate and download the zip
+    zip.generateAsync({ type: 'blob' }).then((content) => {
+      const url = window.URL.createObjectURL(content)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `langgraph-agent${fileExtension}.zip`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    })
   }
 
   return (
@@ -848,6 +876,13 @@ export default function App() {
               <div className='flex justify-between items-center'>
                 <h2 className='text-lg font-medium'>Generated Code:</h2>
                 <div className='flex flex-row gap-2'>
+                  <button
+                    onClick={downloadAsZip}
+                    className='px-3 py-1 bg-white rounded-lg border border-gray-300 hover:bg-gray-50'
+                    title='Download as ZIP'
+                  >
+                    <Download size={18} />
+                  </button>
                   <div className='max-w-xs pr-3'>
                     <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
                   </div>
