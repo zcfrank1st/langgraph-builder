@@ -16,7 +16,6 @@ import { MarkerType } from 'reactflow'
 import '@xyflow/react/dist/style.css'
 import { initialNodes, nodeTypes, type CustomNodeType } from './nodes'
 import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
-import { CodeGenerationResult } from '../codeGeneration/types'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
@@ -25,7 +24,6 @@ import { Highlight, themes } from 'prism-react-renderer'
 import MultiButton from './ui/multibutton'
 import GenericModal from './GenericModal'
 import { ColorEditingProvider } from './edges/SelfConnectingEdge'
-import Image from 'next/image'
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -72,7 +70,6 @@ export default function App() {
   const reactFlowWrapper = useRef<any>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
   const [isConnecting, setIsConnecting] = useState(false)
-  const [generatedCode, setGeneratedCode] = useState<CodeGenerationResult | null>(null)
   const { buttonTexts } = useButtonText()
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
@@ -101,7 +98,7 @@ export default function App() {
 
   const onboardingSteps: OnboardingStep[] = [
     {
-      key: 'tooltip1',
+      key: 'tooltip0',
       type: 'modal',
       placement: 'top' as TooltipPlacement,
       title: 'Graph Builder',
@@ -114,10 +111,10 @@ export default function App() {
       imageUrl: '/langgraph-logo.png',
     },
     {
-      key: 'tooltip2',
+      key: 'tooltip1',
       type: 'tooltip',
       placement: 'top' as TooltipPlacement,
-      title: '1 of 4: How to create a node',
+      title: '1 of 6: How to create a node',
       content: '⌘ + click anywhere on the canvas to create a node',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
@@ -126,28 +123,30 @@ export default function App() {
       ],
     },
     {
-      key: 'tooltip3',
+      key: 'tooltip2',
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
-      title: '2 of 4: How to create an edge',
+      title: '2 of 6: How to create an edge',
       content: 'Connect two nodes by dragging from the bottom of one node to the top of another',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
       ],
-      edges: [{ id: 'source->custom1', source: 'source', target: 'custom1' }],
+      edges: [
+        { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
+      ],
       tooltipWrapperStyle: {
         className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
         style: { paddingRight: '200px', paddingTop: '230px' },
       },
     },
     {
-      key: 'tooltip4',
+      key: 'tooltip3',
       type: 'tooltip',
       placement: 'right' as TooltipPlacement,
-      title: '3 of 4: Create a conditional edge',
-      content: 'Connect one node to multiple nodes in order to create a conditional edge',
+      title: '3 of 6: Create a conditional edge',
+      content: 'Connect one node to multiple nodes to create a conditional edge',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -156,22 +155,138 @@ export default function App() {
         { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
-        { id: 'source->custom1', source: 'source', target: 'custom1' },
-        { id: 'custom1->custom2', source: 'custom1', target: 'custom2', animated: true },
-        { id: 'custom1->custom3', source: 'custom1', target: 'custom3', animated: true },
-        { id: 'custom2->end', source: 'custom2', target: 'end' },
-        { id: 'custom3->end', source: 'custom3', target: 'end' },
+        { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
+        {
+          id: 'custom1->custom2',
+          source: 'custom1',
+          target: 'custom2',
+          animated: true,
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+          label: 'conditional_edge',
+        },
+        {
+          id: 'custom1->custom3',
+          source: 'custom1',
+          target: 'custom3',
+          animated: true,
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+          label: 'conditional_edge',
+        },
+        { id: 'custom2->end', source: 'custom2', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+        { id: 'custom3->end', source: 'custom3', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
       ],
       tooltipWrapperStyle: {
         className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
-        style: { paddingTop: '350px', paddingLeft: '300px' },
+        style: { paddingTop: '350px', paddingLeft: '480px' },
+      },
+    },
+    {
+      key: 'tooltip4',
+      type: 'tooltip',
+      placement: 'top' as TooltipPlacement,
+      title: '4 of 6: Create a cycle',
+      content: 'Create a loop by dragging from the bottom of a node to the top of itself',
+      nodes: [
+        { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
+        { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
+        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
+      ],
+      edges: [
+        { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
+        {
+          id: 'custom1->custom2',
+          source: 'custom1',
+          target: 'custom2',
+          animated: true,
+          label: 'conditional_edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+        },
+        {
+          id: 'custom1->custom3',
+          source: 'custom1',
+          target: 'custom3',
+          animated: true,
+          label: 'conditional_edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+        },
+        { id: 'custom2->end', source: 'custom2', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+        { id: 'custom3->end', source: 'custom3', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+        {
+          id: 'custom1->custom1',
+          source: 'custom3',
+          target: 'custom3',
+          animated: true,
+          label: 'cycle',
+          type: 'self-connecting-edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+        },
+      ],
+      tooltipWrapperStyle: {
+        className: 'fixed inset-0 flex items-start justify-center pointer-events-none',
+        style: { paddingTop: '390px', paddingLeft: '650px' },
       },
     },
     {
       key: 'tooltip5',
       type: 'tooltip',
       placement: 'bottom' as TooltipPlacement,
-      title: '4 of 4: Generate Code',
+      title: '5 of 6: Color Edges',
+      content: 'Edges can get messy. Color them to make it easier to distinguish between different edges',
+      nodes: [
+        { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
+        { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
+        { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
+        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
+      ],
+      edges: [
+        { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
+        {
+          id: 'custom1->custom2',
+          source: 'custom1',
+          target: 'custom2',
+          animated: true,
+          label: 'conditional_edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+        },
+        {
+          id: 'custom1->custom3',
+          source: 'custom1',
+          target: 'custom3',
+          animated: true,
+          label: 'conditional_edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+        },
+        { id: 'custom2->end', source: 'custom2', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+        { id: 'custom3->end', source: 'custom3', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+        {
+          id: 'custom1->custom1',
+          source: 'custom3',
+          target: 'custom3',
+          animated: true,
+          label: 'cycle',
+          type: 'self-connecting-edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+        },
+      ],
+      tooltipWrapperStyle: {
+        className: 'fixed flex items-end justify-end pointer-events-none',
+        style: { right: '190px', top: '90px', left: 'auto', bottom: 'auto' },
+      },
+    },
+    {
+      key: 'tooltip6',
+      type: 'tooltip',
+      placement: 'bottom' as TooltipPlacement,
+      title: '6 of 6: Generate Code',
       content:
         "Once you're finished designing the architecture of your graph, you can generate boilerplate code for the agent using this button",
       nodes: [
@@ -182,11 +297,36 @@ export default function App() {
         { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
-        { id: 'source->custom1', source: 'source', target: 'custom1' },
-        { id: 'custom1->custom2', source: 'custom1', target: 'custom2', animated: true },
-        { id: 'custom1->custom3', source: 'custom1', target: 'custom3', animated: true },
-        { id: 'custom2->end', source: 'custom2', target: 'end' },
-        { id: 'custom3->end', source: 'custom3', target: 'end' },
+        { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
+        {
+          id: 'custom1->custom2',
+          source: 'custom1',
+          target: 'custom2',
+          animated: true,
+          label: 'conditional_edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+        },
+        {
+          id: 'custom1->custom3',
+          source: 'custom1',
+          target: 'custom3',
+          animated: true,
+          label: 'conditional_edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+        },
+        { id: 'custom2->end', source: 'custom2', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+        { id: 'custom3->end', source: 'custom3', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+        {
+          id: 'custom1->custom1',
+          source: 'custom3',
+          target: 'custom3',
+          animated: true,
+          label: 'cycle',
+          type: 'self-connecting-edge',
+          markerEnd: { type: MarkerType.ArrowClosed },
+        },
       ],
       tooltipWrapperStyle: {
         className: 'fixed flex items-end justify-end pointer-events-none',
@@ -194,7 +334,7 @@ export default function App() {
       },
     },
     {
-      key: 'tooltip6',
+      key: 'tooltip7',
       type: 'modal',
       placement: 'top' as TooltipPlacement,
       title: "You're ready!",
@@ -429,7 +569,6 @@ export default function App() {
       setIsLoading(true)
       setGenerateCodeModalOpen(true)
       const spec = generateSpec(edges)
-      console.log(spec, 'spec')
       const payload = {
         spec: spec,
         language: lang,
@@ -699,7 +838,7 @@ export default function App() {
         </MuiModal>
         <div className='fixed top-[24px] right-[24px] flex flex-row gap-2'>
           <div className='flex flex-row gap-2'>
-            <Tooltip title={edges.length === 0 ? 'Create an edge to generate code' : ''} placement='bottom' arrow>
+            <Tooltip title={edges.length === 0 ? 'Create a valid graph to generate code' : ''} placement='bottom' arrow>
               <button
                 className={`py-2 px-3 rounded-md transition-colors duration-200 ${
                   edges.length > 0 ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]' : 'bg-gray-500 opacity-70'
