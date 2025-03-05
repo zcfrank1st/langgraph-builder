@@ -173,7 +173,7 @@ export default function App() {
       content:
         'Connect one node to multiple nodes to create a conditional edge. Conditional edges can have detailed labels',
       targetNodeId: 'custom2',
-      tooltipOffset: { x: 0, y: -120 },
+      tooltipOffset: { x: -450, y: 0 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -795,7 +795,7 @@ export default function App() {
 
         {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
           <div
-            className='onboarding-overlay'
+            className='fixed inset-0 z-10 cursor-not-allowed'
             style={{
               position: 'fixed',
               top: 0,
@@ -803,11 +803,10 @@ export default function App() {
               width: '100vw',
               height: '100vh',
               zIndex: 10,
-              pointerEvents: 'none',
             }}
           >
             {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
-              <div className='pointer-events-auto' style={{ cursor: 'default' }}>
+              <div className='pointer-events-auto cursor-default'>
                 <GenericModal
                   isOpen={true}
                   onClose={handleOnboardingNext}
@@ -819,7 +818,7 @@ export default function App() {
               </div>
             ) : (
               <div
-                className={`fixed ${onboardingSteps[currentOnboardingStep].className || ''}`}
+                className={`fixed pointer-events-auto cursor-default ${onboardingSteps[currentOnboardingStep].className || ''}`}
                 style={{
                   ...(onboardingSteps[currentOnboardingStep].position
                     ? onboardingSteps[currentOnboardingStep].position
@@ -828,12 +827,9 @@ export default function App() {
                         onboardingSteps[currentOnboardingStep].placement || 'top',
                         onboardingSteps[currentOnboardingStep].tooltipOffset,
                       )),
-                  pointerEvents: 'auto',
                 }}
               >
                 <Tooltip
-                  className='pointer-events-auto'
-                  arrow
                   modifiers={[
                     {
                       name: 'offset',
