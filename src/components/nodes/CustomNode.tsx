@@ -1,4 +1,4 @@
-import { Handle, Position } from '@xyflow/react'
+import { Handle, Position, useReactFlow } from '@xyflow/react'
 import type { Node as NodeType, NodeProps } from '@xyflow/react'
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react'
 import { useButtonText } from '@/contexts/ButtonTextContext'
@@ -10,6 +10,7 @@ export type CustomNodeData = {
 export type CustomNode = NodeType<CustomNodeData>
 
 export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
+  const { setNodes } = useReactFlow()
   const { buttonTexts, updateButtonText } = useButtonText()
   const [nodeWidth, setNodeWidth] = useState(150)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -28,7 +29,24 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateButtonText(id, e.target.value)
+    const newLabel = e.target.value
+    updateButtonText(id, newLabel)
+    // Update the node label in React Flow
+    setNodes((nds: any[]) =>
+      nds.map((node) => {
+        if (node.id === id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              label: newLabel,
+            },
+          }
+        }
+        return node
+      }),
+    )
+
     adjustNodeSize()
   }
 

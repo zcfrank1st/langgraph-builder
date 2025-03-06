@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useLayoutEffect, useRef } from 'react'
-import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react'
+import { BaseEdge, EdgeProps, getBezierPath, useReactFlow } from '@xyflow/react'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
 import { EditingContext } from '@/contexts/EditingContext'
 import { createPortal } from 'react-dom'
@@ -71,6 +71,7 @@ export const ColorEditingProvider = ({ children }: { children: React.ReactNode }
 
 export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { sourceX, sourceY, targetX, targetY, id, markerEnd, source, label, animated } = props
+  const { setEdges } = useReactFlow()
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
@@ -117,6 +118,20 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.stopPropagation()
     updateEdgeLabel(source, currentLabel)
+
+    // Update all edges with the same source in React Flow
+    setEdges((eds) =>
+      eds.map((edge) => {
+        if (edge.source === source) {
+          return {
+            ...edge,
+            label: currentLabel,
+          }
+        }
+        return edge
+      }),
+    )
+
     setEditingEdgeId(null)
   }
 
@@ -125,6 +140,20 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
 
     if (e.key === 'Enter') {
       updateEdgeLabel(source, currentLabel)
+
+      // Update all edges with the same source in React Flow
+      setEdges((eds) =>
+        eds.map((edge) => {
+          if (edge.source === source) {
+            return {
+              ...edge,
+              label: currentLabel,
+            }
+          }
+          return edge
+        }),
+      )
+
       setEditingEdgeId(null)
     }
     if (e.key === 'Escape') {

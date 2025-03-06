@@ -663,7 +663,6 @@ export default function App() {
         return `${key}: ${value}`
       })
       .join('\n')
-    console.log(yamlString)
     return yamlString
   }
 
@@ -827,7 +826,6 @@ export default function App() {
       window.URL.revokeObjectURL(url)
     })
   }
-  console.log('flow nodes', flowNodes)
 
   return (
     <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
