@@ -18,7 +18,7 @@ import { initialNodes, nodeTypes, type CustomNodeType } from './nodes'
 import { initialEdges, edgeTypes, type CustomEdgeType } from './edges'
 import { useButtonText } from '@/contexts/ButtonTextContext'
 import { useEdgeLabel } from '@/contexts/EdgeLabelContext'
-import { Modal as MuiModal, ModalDialog, Tooltip } from '@mui/joy'
+import { Modal as MuiModal, ModalDialog, Tooltip, Snackbar } from '@mui/joy'
 import { X, Copy, Info, Check, Download } from 'lucide-react'
 import { Highlight, themes } from 'prism-react-renderer'
 import MultiButton from './ui/multibutton'
@@ -95,6 +95,7 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomNodeType>(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdgeType>(initialEdges)
   const [generateCodeModalOpen, setGenerateCodeModalOpen] = useState(false)
+  const [showOnboardingToast, setShowOnboardingToast] = useState(false)
   const reactFlowWrapper = useRef<any>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
   const [isConnecting, setIsConnecting] = useState(false)
@@ -105,14 +106,14 @@ export default function App() {
   const [activeFile, setActiveFile] = useState<'stub' | 'implementation'>('stub')
   const [generatedFiles, setGeneratedFiles] = useState<{ stub?: string; implementation?: string }>({})
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
-
-  const nodesRef = useRef(nodes)
-  const edgesRef = useRef(edges)
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
+
+  const nodesRef = useRef(nodes)
+  const edgesRef = useRef(edges)
 
   useEffect(() => {
     nodesRef.current = nodes
@@ -130,7 +131,9 @@ export default function App() {
       type: 'modal',
       placement: 'top' as TooltipPlacement,
       title: 'Graph Designer',
-      content: <span>Let's get started with a quick onboarding. During it, canvas interaction will be disabled</span>,
+      content: (
+        <span>Let's get started with a quick onboarding. During onboarding, canvas interaction will be disabled</span>
+      ),
       buttonText: 'Start',
       imageUrl: '/langgraph-logo.png',
     },
@@ -369,6 +372,10 @@ export default function App() {
       localStorage.setItem('initialOnboardingComplete', 'true')
       setInitialOnboardingComplete(true)
     } else {
+      if (currentOnboardingStep === onboardingSteps.length - 2) {
+        setNodes(initialNodes)
+        setEdges(initialEdges)
+      }
       setCurrentOnboardingStep((prev) => prev + 1)
     }
   }
@@ -419,6 +426,7 @@ export default function App() {
         animated: connection.source === connection.target,
         label: defaultLabel,
       }
+
       setEdges((prevEdges) => {
         const updatedEdges = addEdge(newEdge, prevEdges)
         const sourceEdges = updatedEdges.filter((edge) => edge.source === connection.source)
@@ -484,6 +492,11 @@ export default function App() {
     (event: React.MouseEvent) => {
       const isCmdOrCtrlPressed = event.metaKey || event.ctrlKey
       if (isCmdOrCtrlPressed) {
+        if (!initialOnboardingComplete) {
+          setShowOnboardingToast(true)
+          setTimeout(() => setShowOnboardingToast(false), 3000)
+          return
+        }
         addNode(event)
       }
     },
@@ -735,7 +748,7 @@ export default function App() {
           onInit={setReactFlowInstance}
           fitView
           onConnectStart={onConnectStart}
-          className='z-10 bg-[#EAEAEA]'
+          className='z-10 bg-[#EAEAEA] cursor-default'
           style={{ backgroundColor: '#EAEAEA' }}
           proOptions={proOptions}
           zoomOnDoubleClick={false}
@@ -744,6 +757,18 @@ export default function App() {
           <Background />
         </ReactFlow>
       </ColorEditingProvider>
+
+      <Snackbar
+        open={showOnboardingToast}
+        onClose={() => setShowOnboardingToast(false)}
+        autoHideDuration={3000}
+        color='primary'
+        variant='outlined'
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        Canvas interaction is temporarily disabled during onboarding
+      </Snackbar>
+
       <div className='md:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
         <GenericModal
           imageUrl='/langgraph-logo.png'
@@ -795,7 +820,7 @@ export default function App() {
 
         {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
           <div
-            className='fixed inset-0 z-10 cursor-not-allowed'
+            className='fixed inset-0 z-10'
             style={{
               position: 'fixed',
               top: 0,
@@ -803,10 +828,11 @@ export default function App() {
               width: '100vw',
               height: '100vh',
               zIndex: 10,
+              pointerEvents: 'none',
             }}
           >
             {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
-              <div className='pointer-events-auto cursor-default'>
+              <div>
                 <GenericModal
                   isOpen={true}
                   onClose={handleOnboardingNext}
@@ -818,7 +844,7 @@ export default function App() {
               </div>
             ) : (
               <div
-                className={`fixed pointer-events-auto cursor-default ${onboardingSteps[currentOnboardingStep].className || ''}`}
+                className={`fixed ${onboardingSteps[currentOnboardingStep].className || ''}`}
                 style={{
                   ...(onboardingSteps[currentOnboardingStep].position
                     ? onboardingSteps[currentOnboardingStep].position
@@ -827,9 +853,11 @@ export default function App() {
                         onboardingSteps[currentOnboardingStep].placement || 'top',
                         onboardingSteps[currentOnboardingStep].tooltipOffset,
                       )),
+                  pointerEvents: 'auto',
                 }}
               >
                 <Tooltip
+                  className='pointer-events-auto'
                   modifiers={[
                     {
                       name: 'offset',
