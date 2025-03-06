@@ -104,7 +104,10 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [activeFile, setActiveFile] = useState<'stub' | 'implementation'>('stub')
-  const [generatedFiles, setGeneratedFiles] = useState<{ stub?: string; implementation?: string }>({})
+  const [generatedFiles, setGeneratedFiles] = useState<{
+    python?: { stub?: string; implementation?: string }
+    typescript?: { stub?: string; implementation?: string }
+  }>({})
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
   const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0)
@@ -114,6 +117,20 @@ export default function App() {
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
+
+  const hasValidSourceToEndPath = useCallback(() => {
+    if (!edges.length) return false
+
+    const sourceNode = nodes.find((node) => node.type === 'source')
+    const endNode = nodes.find((node) => node.type === 'end')
+
+    if (!sourceNode || !endNode) return false
+
+    const hasSourceEdge = edges.some((edge) => edge.source === sourceNode.id)
+    const hasEndEdge = edges.some((edge) => edge.target === endNode.id)
+
+    return hasSourceEdge && hasEndEdge
+  }, [nodes, edges])
 
   useEffect(() => {
     nodesRef.current = nodes
@@ -132,7 +149,7 @@ export default function App() {
       placement: 'top' as TooltipPlacement,
       title: 'Graph Designer',
       content: (
-        <span>Let's get started with a quick onboarding. During onboarding, canvas interaction will be disabled</span>
+        <span>Let's get started with a quick onboarding! During onboarding, canvas interaction will be disabled</span>
       ),
       buttonText: 'Start',
       imageUrl: '/langgraph-logo.png',
@@ -142,7 +159,7 @@ export default function App() {
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
       title: '1 of 6: How to create a node',
-      content: '⌘ + click anywhere on the canvas to create a node',
+      content: '⌘ + click anywhere on the canvas to create a node. Nodes can have custom labels',
       targetNodeId: 'custom1',
       tooltipOffset: { x: -20, y: 0 },
       nodes: [
@@ -172,9 +189,9 @@ export default function App() {
       key: 'tooltip3',
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
-      title: '3 of 6: Create a conditional edge',
+      title: '3 of 6: How to create a conditional edge',
       content:
-        'Connect one node to multiple nodes to create a conditional edge. Conditional edges can have detailed labels',
+        'Connect one node to multiple nodes to create a conditional edge. Conditional edges can have custom labels',
       targetNodeId: 'custom2',
       tooltipOffset: { x: -450, y: 0 },
       nodes: [
@@ -212,10 +229,10 @@ export default function App() {
       key: 'tooltip4',
       type: 'tooltip',
       placement: 'top' as TooltipPlacement,
-      title: '4 of 6: Create a cycle',
+      title: '4 of 6: How to create a cycle',
       content: 'Create a loop by dragging from the bottom of one node to the top of itself',
       targetNodeId: 'custom3',
-      tooltipOffset: { x: 160, y: 80 },
+      tooltipOffset: { x: 200, y: 80 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -260,7 +277,7 @@ export default function App() {
       key: 'tooltip5',
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
-      title: '5 of 6: Color Edges',
+      title: '5 of 6: Edge colors',
       content:
         'You can click on an edge and give it a color. This helps distinguish between different edges on the graph',
       targetNodeId: 'custom1',
@@ -309,8 +326,7 @@ export default function App() {
       key: 'tooltip6',
       type: 'tooltip',
       title: '6 of 6: Generate Code',
-      content:
-        "Once you're finished designing the architecture of your graph, you can generate boilerplate code using this button",
+      content: "Once you're finished designing the graph, you can generate boilerplate code in Python and TypeScript",
       position: {
         top: '90px',
         right: '180px',
@@ -492,7 +508,7 @@ export default function App() {
     (event: React.MouseEvent) => {
       const isCmdOrCtrlPressed = event.metaKey || event.ctrlKey
       if (isCmdOrCtrlPressed) {
-        if (!initialOnboardingComplete) {
+        if (initialOnboardingComplete === false) {
           setShowOnboardingToast(true)
           setTimeout(() => setShowOnboardingToast(false), 3000)
           return
@@ -500,7 +516,7 @@ export default function App() {
         addNode(event)
       }
     },
-    [addNode],
+    [addNode, initialOnboardingComplete],
   )
 
   const onEdgeClick = useCallback(
@@ -592,9 +608,6 @@ export default function App() {
   const handleLanguageChange = async (option: string) => {
     const newLanguage = option.toLowerCase() as 'python' | 'typescript'
     setLanguage(newLanguage)
-    if (generatedFiles.stub || generatedFiles.implementation) {
-      await generateCodeWithLanguage(newLanguage)
-    }
   }
 
   const generateCodeWithLanguage = async (lang: 'python' | 'typescript' = language) => {
@@ -602,23 +615,42 @@ export default function App() {
       setIsLoading(true)
       setGenerateCodeModalOpen(true)
       const spec = generateSpec(edges)
-      const payload = {
-        spec: spec,
-        language: lang,
-        format: 'yaml',
-      }
-      const response = await fetch('/api/generate-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      const [pythonResponse, typescriptResponse] = await Promise.all([
+        fetch('/api/generate-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            spec: spec,
+            language: 'python',
+            format: 'yaml',
+          }),
+        }),
+        fetch('/api/generate-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            spec: spec,
+            language: 'typescript',
+            format: 'yaml',
+          }),
+        }),
+      ])
 
-      const data = await response.json()
+      const [pythonData, typescriptData] = await Promise.all([pythonResponse.json(), typescriptResponse.json()])
+
       setGeneratedFiles({
-        stub: data.stub,
-        implementation: data.implementation,
+        python: {
+          stub: pythonData.stub,
+          implementation: pythonData.implementation,
+        },
+        typescript: {
+          stub: typescriptData.stub,
+          implementation: typescriptData.implementation,
+        },
       })
       setActiveFile('stub')
     } catch (error) {
@@ -633,7 +665,7 @@ export default function App() {
     generateCodeWithLanguage('python')
   }
 
-  const activeCode = generatedFiles[activeFile] || ''
+  const activeCode = generatedFiles[language]?.[activeFile] || ''
   const fileExtension = language === 'python' ? '.py' : '.ts'
 
   // New helper to copy active code to the clipboard
@@ -705,14 +737,20 @@ export default function App() {
   const downloadAsZip = () => {
     const zip = new JSZip()
 
-    // Add stub file
-    if (generatedFiles.stub) {
-      zip.file(`stub${fileExtension}`, generatedFiles.stub)
+    // Add Python files
+    if (generatedFiles.python?.stub) {
+      zip.file('stub.py', generatedFiles.python.stub)
+    }
+    if (generatedFiles.python?.implementation) {
+      zip.file('implementation.py', generatedFiles.python.implementation)
     }
 
-    // Add implementation file
-    if (generatedFiles.implementation) {
-      zip.file(`implementation${fileExtension}`, generatedFiles.implementation)
+    // Add TypeScript files
+    if (generatedFiles.typescript?.stub) {
+      zip.file('stub.ts', generatedFiles.typescript.stub)
+    }
+    if (generatedFiles.typescript?.implementation) {
+      zip.file('implementation.ts', generatedFiles.typescript.implementation)
     }
 
     // Generate and download the zip
@@ -720,7 +758,7 @@ export default function App() {
       const url = window.URL.createObjectURL(content)
       const link = document.createElement('a')
       link.href = url
-      link.download = `langgraph-agent${fileExtension}.zip`
+      link.download = 'langgraph-agent.zip'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -920,7 +958,7 @@ export default function App() {
                 </div>
               </div>
               <div className='flex flex-col gap-3'>
-                {!isLoading && (generatedFiles.stub || generatedFiles.implementation) ? (
+                {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) ? (
                   <div className='mt-3 w-[50vw] h-[80vh]'>
                     <div className='flex'>
                       <button
@@ -976,20 +1014,27 @@ export default function App() {
         </MuiModal>
         <div className='fixed top-[24px] right-[24px] flex flex-row gap-2'>
           <div className='flex flex-row gap-2'>
-            <Tooltip title={edges.length === 0 ? 'Create a valid graph to generate code' : ''} placement='bottom' arrow>
+            <Tooltip
+              title={
+                !hasValidSourceToEndPath() && initialOnboardingComplete ? 'Create a valid graph to generate code' : ''
+              }
+              placement='bottom'
+              arrow
+            >
               <button
                 className={`py-2 px-3 rounded-md transition-colors duration-200 ${
-                  edges.length > 0 || !initialOnboardingComplete
+                  hasValidSourceToEndPath() || (!initialOnboardingComplete && currentOnboardingStep >= 3)
                     ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]'
                     : 'bg-gray-500 opacity-70'
                 }`}
-                onClick={edges.length > 0 ? handleGenerateCode : undefined}
-                disabled={edges.length === 0}
+                onClick={hasValidSourceToEndPath() ? handleGenerateCode : undefined}
+                disabled={!hasValidSourceToEndPath()}
               >
                 <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
               </button>
             </Tooltip>
             <button
+              disabled={!initialOnboardingComplete}
               className='p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
               aria-label='Toggle Information Panel'
               onClick={() => setInfoPanelOpen(!infoPanelOpen)}
