@@ -17,13 +17,13 @@ export const initialNodes = [
     id: 'source',
     type: 'source',
     position: { x: 0, y: 0 },
-    data: { label: 'source' },
+    data: { label: 'start' },
   },
   {
     id: 'end',
     type: 'end',
     position: { x: 0, y: 600 },
-    data: { label: 'end' },
+    data: { label: '__end__' },
   },
 ] satisfies Node[]
 

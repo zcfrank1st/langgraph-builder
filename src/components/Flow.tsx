@@ -608,8 +608,10 @@ export default function App() {
     // Step 3: Build nodes list (unique nodes from all edges)
     const nodeNames: Set<string> = new Set()
     edges.forEach((edge: any) => {
-      nodeNames.add(edge.source)
-      nodeNames.add(edge.target)
+      const sourceNode = nodes.find((n) => n.id === edge.source)
+      const targetNode = nodes.find((n) => n.id === edge.target)
+      nodeNames.add(sourceNode?.data?.label || edge.source)
+      nodeNames.add(targetNode?.data?.label || edge.target)
     })
 
     // Step 4: Build YAML structure
@@ -618,20 +620,30 @@ export default function App() {
       entrypoint: 'start',
       nodes: Array.from(nodeNames).map((name) => ({ name })),
       edges: [
-        ...normalEdges.map((edge) => ({
-          from: edge.source,
-          to: edge.target,
-        })),
-        ...Object.entries(animatedEdgesBySource).map(([source, edges]) => ({
-          from: source,
-          condition: String(edges[0].label || ''),
-          paths: edges.map((edge) => edge.target),
-        })),
+        ...normalEdges.map((edge) => {
+          const sourceNode = nodes.find((n) => n.id === edge.source)
+          const targetNode = nodes.find((n) => n.id === edge.target)
+          return {
+            from: sourceNode?.data?.label || edge.source,
+            to: targetNode?.data?.label || edge.target,
+          }
+        }),
+        ...Object.entries(animatedEdgesBySource).map(([source, edges]) => {
+          const sourceNode = nodes.find((n) => n.id === source)
+          return {
+            from: sourceNode?.data?.label || source,
+            condition: String(edges[0].label || ''),
+            paths: edges.map((edge) => {
+              const targetNode = nodes.find((n) => n.id === edge.target)
+              return targetNode?.data?.label || edge.target
+            }),
+          }
+        }),
       ],
     }
 
     // Convert to YAML string
-    return Object.entries(yaml)
+    const yamlString = Object.entries(yaml)
       .map(([key, value]) => {
         if (key === 'nodes') {
           // @ts-ignore
@@ -651,6 +663,8 @@ export default function App() {
         return `${key}: ${value}`
       })
       .join('\n')
+    console.log(yamlString)
+    return yamlString
   }
 
   const handleLanguageChange = async (option: string) => {
@@ -813,6 +827,7 @@ export default function App() {
       window.URL.revokeObjectURL(url)
     })
   }
+  console.log('flow nodes', flowNodes)
 
   return (
     <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
