@@ -104,12 +104,15 @@ export default function App() {
       <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
         <div className='flex justify-between items-center'>
           <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
-          <button disabled className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'>
+          <button
+            disabled
+            className='text-sm cursor-not-allowed bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
+          >
             Done
           </button>
         </div>
         <div className='relative'>
-          <div className='relative w-full h-[80px] cursor-pointer rounded-lg shadow-md ring-1 ring-gray-200 bg-gray-100'></div>
+          <div className='relative cursor-not-allowed w-full h-[80px] rounded-lg shadow-md ring-1 ring-gray-200 bg-gray-100'></div>
           <div className='mt-2 flex justify-center'>
             <div className='bg-gray-100 px-3 py-1 rounded-full'>
               <code className='text-sm font-mono text-gray-700'>#BDBDBD</code>
