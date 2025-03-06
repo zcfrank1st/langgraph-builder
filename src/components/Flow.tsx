@@ -861,7 +861,7 @@ export default function App() {
         open={showOnboardingToast}
         onClose={() => setShowOnboardingToast(false)}
         autoHideDuration={3000}
-        color='primary'
+        color='neutral'
         variant='outlined'
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
