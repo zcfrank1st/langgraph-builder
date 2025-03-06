@@ -1025,7 +1025,7 @@ export default function App() {
                     <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
                       <button
                         onClick={copyActiveCode}
-                        className='absolute top-2 right-6 z-10 p-1 bg-white rounded border border-gray-300 hover:bg-gray-50'
+                        className='absolute top-5 right-6 z-10 p-1 bg-white rounded border border-gray-300 hover:bg-gray-50'
                         title='Copy code to clipboard'
                       >
                         {justCopied ? <Check size={18} /> : <Copy size={18} />}
