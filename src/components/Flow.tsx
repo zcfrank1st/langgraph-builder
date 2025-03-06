@@ -847,7 +847,7 @@ export default function App() {
           onInit={setReactFlowInstance}
           fitView
           onConnectStart={onConnectStart}
-          className='z-10 bg-[#EAEAEA] cursor-default'
+          className='z-10 bg-[#EAEAEA]'
           style={{ backgroundColor: '#EAEAEA' }}
           proOptions={proOptions}
           zoomOnDoubleClick={false}
