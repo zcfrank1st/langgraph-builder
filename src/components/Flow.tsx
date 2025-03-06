@@ -68,28 +68,6 @@ type TooltipPlacement =
   | 'top-end'
   | 'top-start'
 
-// Mock color picker component
-const MockColorPicker = () => (
-  <div className='fixed bottom-5 cursor-disabled left-5 z-50' style={{ width: '280px' }}>
-    <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
-      <div className='flex justify-between items-center'>
-        <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
-        <button disabled className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'>
-          Done
-        </button>
-      </div>
-      <div className='relative'>
-        <div className='relative w-full h-[80px] cursor-pointer rounded-lg shadow-md ring-1 ring-gray-200 bg-gray-100'></div>
-        <div className='mt-2 flex justify-center'>
-          <div className='bg-gray-100 px-3 py-1 rounded-full'>
-            <code className='text-sm font-mono text-gray-700'>#BDBDBD</code>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-)
-
 export default function App() {
   const proOptions = { hideAttribution: true }
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomNodeType>(initialNodes)
@@ -117,6 +95,30 @@ export default function App() {
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
+
+  const MockColorPicker = () => (
+    <div
+      className={`fixed bottom-5 cursor-disabled left-5 z-50 ${!initialOnboardingComplete ? 'cursor-not-allowed' : ''}`}
+      style={{ width: '280px' }}
+    >
+      <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
+        <div className='flex justify-between items-center'>
+          <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
+          <button disabled className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'>
+            Done
+          </button>
+        </div>
+        <div className='relative'>
+          <div className='relative w-full h-[80px] cursor-pointer rounded-lg shadow-md ring-1 ring-gray-200 bg-gray-100'></div>
+          <div className='mt-2 flex justify-center'>
+            <div className='bg-gray-100 px-3 py-1 rounded-full'>
+              <code className='text-sm font-mono text-gray-700'>#BDBDBD</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   const hasValidSourceToEndPath = useCallback(() => {
     if (!edges.length) return false
@@ -830,6 +832,19 @@ export default function App() {
   return (
     <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
       <ColorEditingProvider>
+        {!initialOnboardingComplete && (
+          <style>
+            {`
+              .react-flow__node,
+              .react-flow__node *,
+              .react-flow__node:hover,
+              .react-flow__node:hover * {
+                cursor: not-allowed !important;
+                pointer-events: none !important;
+              }
+            `}
+          </style>
+        )}
         <ReactFlow<CustomNodeType, CustomEdgeType>
           nodes={flowNodes}
           nodeTypes={nodeTypes}
@@ -1085,9 +1100,9 @@ export default function App() {
               <button
                 className={`py-2 px-3 rounded-md transition-colors duration-200 ${
                   hasValidSourceToEndPath() || (!initialOnboardingComplete && currentOnboardingStep >= 3)
-                    ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]'
+                    ? 'bg-[#2F6868] cursor-pointer'
                     : 'bg-gray-500 opacity-70'
-                }`}
+                } ${!initialOnboardingComplete ? 'cursor-not-allowed' : 'hover:bg-[#245757]'}`}
                 onClick={hasValidSourceToEndPath() ? handleGenerateCode : undefined}
                 disabled={!hasValidSourceToEndPath()}
               >
@@ -1096,7 +1111,9 @@ export default function App() {
             </Tooltip>
             <button
               disabled={!initialOnboardingComplete}
-              className='p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none'
+              className={`p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none ${
+                !initialOnboardingComplete ? 'cursor-not-allowed' : ''
+              }`}
               aria-label='Toggle Information Panel'
               onClick={() => setInfoPanelOpen(!infoPanelOpen)}
             >
