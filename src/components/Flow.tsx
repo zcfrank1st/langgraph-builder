@@ -197,8 +197,8 @@ export default function App() {
       title: '3 of 7: How to create a conditional edge',
       content:
         'Connect one node to multiple nodes to create a conditional edge. Conditional edges can have custom labels',
-      targetNodeId: 'custom2',
-      tooltipOffset: { x: -450, y: 0 },
+      targetNodeId: 'custom3',
+      tooltipOffset: { x: -30, y: 0 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -237,7 +237,7 @@ export default function App() {
       title: '4 of 7: How to create a cycle',
       content: 'Create a loop by dragging from the bottom of one node to the top of itself',
       targetNodeId: 'custom3',
-      tooltipOffset: { x: 200, y: 80 },
+      tooltipOffset: { x: 100, y: -100 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -381,8 +381,8 @@ export default function App() {
       title: '7 of 7: Generate Code',
       content: "Once you're finished designing the graph, you can generate boilerplate code in Python and TypeScript",
       position: {
-        top: '90px',
-        right: '180px',
+        top: '120px',
+        right: '50px',
       },
       placement: 'bottom',
       nodes: [
@@ -448,21 +448,6 @@ export default function App() {
       setCurrentOnboardingStep((prev) => prev + 1)
     }
   }
-
-  const tooltip = (
-    <div className='py-3 hidden sm:flex px-3 flex-col w-[380px]'>
-      <div className='flex flex-row items-center justify-between'>
-        <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
-        <button
-          onClick={handleOnboardingNext}
-          className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
-        >
-          Next
-        </button>
-      </div>
-      <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
-    </div>
-  )
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -750,15 +735,15 @@ export default function App() {
   const calculateTooltipPosition = (
     targetNodeId: string,
     placement: TooltipPlacement,
-    offset: { x: number; y: number } = { x: 10, y: 10 },
-  ) => {
+    offset: { x: number; y: number } = { x: 0, y: 0 },
+  ): React.CSSProperties => {
     if (!reactFlowInstance || !targetNodeId) {
-      return { top: '50%', left: '50%' }
+      return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
     }
 
     const node = reactFlowInstance.getNode(targetNodeId)
     if (!node) {
-      return { top: '50%', left: '50%' }
+      return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
     }
 
     const transform = reactFlowInstance.getViewport()
@@ -770,32 +755,43 @@ export default function App() {
     const nodeElement = document.querySelector(`[data-id="${targetNodeId}"]`)
     const nodeRect = nodeElement?.getBoundingClientRect()
     const nodeHeight = nodeRect?.height || 40
+    const nodeWidth = nodeRect?.width || 150
+    const tooltipGap = 12 // Base gap between node and tooltip
 
-    switch (placement) {
+    // Apply the user-provided offset to the node position
+    nodePosition.x += offset.x
+    nodePosition.y += offset.y
+
+    switch (placement.split('-')[0]) {
       case 'top':
         return {
-          top: `${nodePosition.y - offset.y}px`,
-          left: `${nodePosition.x + offset.x}px`,
+          top: `${nodePosition.y - tooltipGap}px`,
+          left: `${nodePosition.x + nodeWidth / 2}px`,
+          transform: 'translate(-50%, -100%)',
         }
       case 'bottom':
         return {
-          top: `${nodePosition.y + nodeHeight + offset.y}px`,
-          left: `${nodePosition.x + offset.x}px`,
+          top: `${nodePosition.y + nodeHeight + tooltipGap}px`,
+          left: `${nodePosition.x + nodeWidth / 2}px`,
+          transform: 'translate(-50%, 0)',
         }
       case 'left':
         return {
-          top: `${nodePosition.y + nodeHeight / 2 + offset.y}px`,
-          left: `${nodePosition.x + offset.x}px`,
+          top: `${nodePosition.y + nodeHeight / 2}px`,
+          left: `${nodePosition.x - tooltipGap}px`,
+          transform: 'translate(-100%, -50%)',
         }
       case 'right':
         return {
-          top: `${nodePosition.y + nodeHeight / 2 + offset.y}px`,
-          left: `${nodePosition.x + offset.x}px`,
+          top: `${nodePosition.y + nodeHeight / 2}px`,
+          left: `${nodePosition.x + nodeWidth + tooltipGap}px`,
+          transform: 'translate(0, -50%)',
         }
       default:
         return {
-          top: `${nodePosition.y}px`,
-          left: `${nodePosition.x}px`,
+          top: `${nodePosition.y + nodeHeight + tooltipGap}px`,
+          left: `${nodePosition.x + nodeWidth / 2}px`,
+          transform: 'translate(-50%, 0)',
         }
     }
   }
@@ -886,7 +882,7 @@ export default function App() {
         Canvas interaction is temporarily disabled during onboarding
       </Snackbar>
 
-      <div className='md:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
+      <div className='sm:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
         <GenericModal
           imageUrl='/langgraph-logo.png'
           onButtonClick={() => {
@@ -899,7 +895,7 @@ export default function App() {
           buttonText='Text me the link'
         />
       </div>
-      <div className='hidden md:block'>
+      <div className='hidden sm:block'>
         {/* Sidebar */}
         <div
           className={`
@@ -961,7 +957,7 @@ export default function App() {
               </div>
             ) : (
               <div
-                className={`fixed ${onboardingSteps[currentOnboardingStep].className || ''}`}
+                className={`fixed pointer-events-auto ${onboardingSteps[currentOnboardingStep].className || ''}`}
                 style={{
                   ...(onboardingSteps[currentOnboardingStep].position
                     ? onboardingSteps[currentOnboardingStep].position
@@ -973,25 +969,20 @@ export default function App() {
                   pointerEvents: 'auto',
                 }}
               >
-                <Tooltip
-                  className='pointer-events-auto'
-                  modifiers={[
-                    {
-                      name: 'offset',
-                      options: {
-                        offset: [0, 20],
-                      },
-                    },
-                  ]}
-                  color='neutral'
-                  variant='outlined'
-                  placement={onboardingSteps[currentOnboardingStep].placement || 'top'}
-                  title={tooltip}
-                  open={true}
-                  sx={{ cursor: 'default' }}
-                >
-                  <div></div>
-                </Tooltip>
+                <div>
+                  <div className='py-3 px-3 flex bg-white hidden xl:block rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
+                    <div className='flex flex-row items-center justify-between'>
+                      <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
+                      <button
+                        onClick={handleOnboardingNext}
+                        className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
+                      >
+                        Next
+                      </button>
+                    </div>
+                    <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
