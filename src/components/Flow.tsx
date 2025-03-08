@@ -449,108 +449,8 @@ export default function App() {
     }
   }
 
-  const calculateTooltipPosition = (
-    targetNodeId: string,
-    placement: TooltipPlacement,
-    offset: { x: number; y: number } = { x: 10, y: 10 },
-  ) => {
-    if (!reactFlowInstance || !targetNodeId) {
-      return { top: '50%', left: '50%' }
-    }
-
-    const node = reactFlowInstance.getNode(targetNodeId)
-    if (!node) {
-      return { top: '50%', left: '50%' }
-    }
-
-    const transform = reactFlowInstance.getViewport()
-    const nodePosition = {
-      x: node.position.x * transform.zoom + transform.x,
-      y: node.position.y * transform.zoom + transform.y,
-    }
-
-    const nodeElement = document.querySelector(`[data-id="${targetNodeId}"]`)
-    const nodeRect = nodeElement?.getBoundingClientRect()
-    const nodeHeight = nodeRect?.height || 40
-    const nodeWidth = nodeRect?.width || 150
-
-    // Get viewport dimensions
-    const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
-    const isSmallViewport = viewportWidth < 768 // md breakpoint
-
-    // Adjust tooltip width based on viewport
-    const tooltipWidth = isSmallViewport ? 280 : 380
-    const tooltipHeight = 150 // Approximate height of tooltip
-
-    // Calculate safe zones (areas where tooltip won't overlap nodes)
-    const safeZones = {
-      top: nodePosition.y > tooltipHeight + 20,
-      bottom: nodePosition.y + nodeHeight + tooltipHeight < viewportHeight - 20,
-      left: nodePosition.x > tooltipWidth + 20,
-      right: nodePosition.x + nodeWidth + tooltipWidth < viewportWidth - 20,
-    }
-
-    // Default offsets
-    const defaultOffset = isSmallViewport ? 60 : 100
-
-    // Find best placement based on available space
-    let bestPlacement = placement
-    if (placement.startsWith('left') && !safeZones.left) {
-      bestPlacement = safeZones.right ? 'right' : safeZones.bottom ? 'bottom' : 'top'
-    } else if (placement.startsWith('right') && !safeZones.right) {
-      bestPlacement = safeZones.left ? 'left' : safeZones.bottom ? 'bottom' : 'top'
-    } else if (placement.startsWith('top') && !safeZones.top) {
-      bestPlacement = safeZones.bottom ? 'bottom' : safeZones.right ? 'right' : 'left'
-    } else if (placement.startsWith('bottom') && !safeZones.bottom) {
-      bestPlacement = safeZones.top ? 'top' : safeZones.right ? 'right' : 'left'
-    }
-
-    // Calculate position based on best placement
-    let position: { top: string; left: string }
-
-    switch (bestPlacement.split('-')[0]) {
-      case 'top':
-        position = {
-          top: `${Math.max(nodePosition.y - tooltipHeight - defaultOffset, 20)}px`,
-          left: `${Math.max(Math.min(nodePosition.x, viewportWidth - tooltipWidth - 20), 20)}px`,
-        }
-        break
-      case 'bottom':
-        position = {
-          top: `${Math.min(nodePosition.y + nodeHeight + defaultOffset, viewportHeight - tooltipHeight - 20)}px`,
-          left: `${Math.max(Math.min(nodePosition.x, viewportWidth - tooltipWidth - 20), 20)}px`,
-        }
-        break
-      case 'left':
-        position = {
-          top: `${Math.max(Math.min(nodePosition.y, viewportHeight - tooltipHeight - 20), 20)}px`,
-          left: `${Math.max(nodePosition.x - tooltipWidth - defaultOffset, 20)}px`,
-        }
-        break
-      case 'right':
-        position = {
-          top: `${Math.max(Math.min(nodePosition.y, viewportHeight - tooltipHeight - 20), 20)}px`,
-          left: `${Math.min(nodePosition.x + nodeWidth + defaultOffset, viewportWidth - tooltipWidth - 20)}px`,
-        }
-        break
-      default:
-        position = {
-          top: `${Math.max(Math.min(nodePosition.y, viewportHeight - tooltipHeight - 20), 20)}px`,
-          left: `${Math.max(Math.min(nodePosition.x, viewportWidth - tooltipWidth - 20), 20)}px`,
-        }
-    }
-
-    return {
-      ...position,
-      position: 'fixed',
-      maxWidth: isSmallViewport ? '280px' : '380px',
-      zIndex: 1000,
-    }
-  }
-
   const tooltip = (
-    <div className='hidden sm:flex py-3 px-3 flex-col w-[280px] md:w-[380px]'>
+    <div className='py-3 px-3 flex flex-col w-[380px]'>
       <div className='flex flex-row items-center justify-between'>
         <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
         <button
@@ -847,6 +747,59 @@ export default function App() {
     }
   }
 
+  const calculateTooltipPosition = (
+    targetNodeId: string,
+    placement: TooltipPlacement,
+    offset: { x: number; y: number } = { x: 10, y: 10 },
+  ) => {
+    if (!reactFlowInstance || !targetNodeId) {
+      return { top: '50%', left: '50%' }
+    }
+
+    const node = reactFlowInstance.getNode(targetNodeId)
+    if (!node) {
+      return { top: '50%', left: '50%' }
+    }
+
+    const transform = reactFlowInstance.getViewport()
+    const nodePosition = {
+      x: node.position.x * transform.zoom + transform.x,
+      y: node.position.y * transform.zoom + transform.y,
+    }
+
+    const nodeElement = document.querySelector(`[data-id="${targetNodeId}"]`)
+    const nodeRect = nodeElement?.getBoundingClientRect()
+    const nodeHeight = nodeRect?.height || 40
+
+    switch (placement) {
+      case 'top':
+        return {
+          top: `${nodePosition.y - offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      case 'bottom':
+        return {
+          top: `${nodePosition.y + nodeHeight + offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      case 'left':
+        return {
+          top: `${nodePosition.y + nodeHeight / 2 + offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      case 'right':
+        return {
+          top: `${nodePosition.y + nodeHeight / 2 + offset.y}px`,
+          left: `${nodePosition.x + offset.x}px`,
+        }
+      default:
+        return {
+          top: `${nodePosition.y}px`,
+          left: `${nodePosition.x}px`,
+        }
+    }
+  }
+
   const downloadAsZip = () => {
     const zip = new JSZip()
 
@@ -933,7 +886,7 @@ export default function App() {
         Canvas interaction is temporarily disabled during onboarding
       </Snackbar>
 
-      <div className='sm:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
+      <div className='md:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
         <GenericModal
           imageUrl='/langgraph-logo.png'
           onButtonClick={() => {
@@ -946,7 +899,7 @@ export default function App() {
           buttonText='Text me the link'
         />
       </div>
-      <div className='hidden sm:block'>
+      <div className='hidden md:block'>
         {/* Sidebar */}
         <div
           className={`
