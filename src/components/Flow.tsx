@@ -450,7 +450,7 @@ export default function App() {
   }
 
   const tooltip = (
-    <div className='py-3 px-3 flex flex-col w-[380px]'>
+    <div className='py-3 hidden sm:flex px-3 flex-col w-[380px]'>
       <div className='flex flex-row items-center justify-between'>
         <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
         <button
