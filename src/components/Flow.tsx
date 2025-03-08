@@ -166,7 +166,7 @@ export default function App() {
       title: '1 of 7: How to create a node',
       content: '⌘ + click anywhere on the canvas to create a node. Nodes can have custom labels',
       targetNodeId: 'custom1',
-      tooltipOffset: { x: -20, y: 0 },
+      tooltipOffset: { x: -10, y: 0 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
@@ -193,18 +193,18 @@ export default function App() {
     {
       key: 'tooltip3',
       type: 'tooltip',
-      placement: 'left' as TooltipPlacement,
+      placement: 'right' as TooltipPlacement,
       title: '3 of 7: How to create a conditional edge',
       content:
         'Connect one node to multiple nodes to create a conditional edge. Conditional edges can have custom labels',
-      targetNodeId: 'custom3',
-      tooltipOffset: { x: -30, y: 0 },
+      targetNodeId: 'custom1',
+      tooltipOffset: { x: 10, y: 0 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -233,17 +233,17 @@ export default function App() {
     {
       key: 'tooltip4',
       type: 'tooltip',
-      placement: 'top' as TooltipPlacement,
+      placement: 'bottom' as TooltipPlacement,
       title: '4 of 7: How to create a cycle',
       content: 'Create a loop by dragging from the bottom of one node to the top of itself',
       targetNodeId: 'custom3',
-      tooltipOffset: { x: 100, y: -100 },
+      tooltipOffset: { x: 0, y: 60 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -286,13 +286,13 @@ export default function App() {
       content:
         'You can click on an edge and give it a color. This helps distinguish between different edges on the graph',
       targetNodeId: 'custom1',
-      tooltipOffset: { x: -300, y: 180 },
+      tooltipOffset: { x: 0, y: 0 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -331,16 +331,16 @@ export default function App() {
       key: 'tooltip6',
       type: 'tooltip',
       placement: 'left' as TooltipPlacement,
-      title: '6 of 7: How to delete nodes and edges',
+      title: '6 of 7: Delete a node or edge',
       content: 'To delete a node or edge, click on it and press backspace',
       targetNodeId: 'custom1',
-      tooltipOffset: { x: -300, y: 180 },
+      tooltipOffset: { x: 0, y: 0 },
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -381,16 +381,16 @@ export default function App() {
       title: '7 of 7: Generate Code',
       content: "Once you're finished designing the graph, you can generate boilerplate code in Python and TypeScript",
       position: {
-        top: '120px',
-        right: '50px',
+        top: '100px',
+        right: '10px',
       },
       placement: 'bottom',
       nodes: [
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -200, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 200, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -956,21 +956,22 @@ export default function App() {
                 />
               </div>
             ) : (
-              <div
-                className={`fixed pointer-events-auto ${onboardingSteps[currentOnboardingStep].className || ''}`}
-                style={{
-                  ...(onboardingSteps[currentOnboardingStep].position
-                    ? onboardingSteps[currentOnboardingStep].position
-                    : calculateTooltipPosition(
-                        onboardingSteps[currentOnboardingStep].targetNodeId || '',
-                        onboardingSteps[currentOnboardingStep].placement || 'top',
-                        onboardingSteps[currentOnboardingStep].tooltipOffset,
-                      )),
-                  pointerEvents: 'auto',
-                }}
-              >
-                <div>
-                  <div className='py-3 px-3 flex bg-white hidden xl:block rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
+              <>
+                {/* Desktop Tooltip */}
+                <div
+                  className={`fixed pointer-events-auto ${onboardingSteps[currentOnboardingStep].className || ''} hidden lg:block`}
+                  style={{
+                    ...(onboardingSteps[currentOnboardingStep].position
+                      ? onboardingSteps[currentOnboardingStep].position
+                      : calculateTooltipPosition(
+                          onboardingSteps[currentOnboardingStep].targetNodeId || '',
+                          onboardingSteps[currentOnboardingStep].placement || 'top',
+                          onboardingSteps[currentOnboardingStep].tooltipOffset,
+                        )),
+                    pointerEvents: 'auto',
+                  }}
+                >
+                  <div className='py-3 px-3 flex bg-white rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
                     <div className='flex flex-row items-center justify-between'>
                       <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
                       <button
@@ -983,7 +984,23 @@ export default function App() {
                     <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
                   </div>
                 </div>
-              </div>
+
+                {/* Mobile Tooltip */}
+                <div className='fixed bottom-[150px] right-5 z-50 pointer-events-auto lg:hidden'>
+                  <div className='py-3 px-3 flex bg-white rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
+                    <div className='flex flex-row items-center justify-between'>
+                      <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
+                      <button
+                        onClick={handleOnboardingNext}
+                        className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
+                      >
+                        Next
+                      </button>
+                    </div>
+                    <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         )}
