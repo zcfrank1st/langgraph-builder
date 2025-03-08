@@ -92,9 +92,22 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+
+    window.addEventListener('resize', checkMobile)
+
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const MockColorPicker = () => (
     <div
@@ -203,8 +216,8 @@ export default function App() {
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: isMobile ? -100 : -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: isMobile ? 100 : 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -242,8 +255,8 @@ export default function App() {
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: isMobile ? -100 : -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: isMobile ? 100 : 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -291,8 +304,8 @@ export default function App() {
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: isMobile ? -100 : -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: isMobile ? 100 : 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -339,8 +352,8 @@ export default function App() {
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: isMobile ? -100 : -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: isMobile ? 100 : 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -389,8 +402,8 @@ export default function App() {
         { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
         { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
         { id: 'custom1', type: 'custom', position: { x: 0, y: 200 }, data: { label: 'Supervisor' } },
-        { id: 'custom2', type: 'custom', position: { x: -150, y: 350 }, data: { label: 'RAG' } },
-        { id: 'custom3', type: 'custom', position: { x: 150, y: 350 }, data: { label: 'Web Search' } },
+        { id: 'custom2', type: 'custom', position: { x: isMobile ? -100 : -200, y: 350 }, data: { label: 'RAG' } },
+        { id: 'custom3', type: 'custom', position: { x: isMobile ? 100 : 200, y: 350 }, data: { label: 'Web Search' } },
       ],
       edges: [
         { id: 'source->custom1', source: 'source', target: 'custom1', markerEnd: { type: MarkerType.ArrowClosed } },
