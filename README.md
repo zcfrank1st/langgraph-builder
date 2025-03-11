@@ -1,6 +1,6 @@
 # LangGraph Builder 🦜 🎨
 
-LangGraph Builder provides a powerful canvas for designing cognitive architectures of LangGraph applications. After designing the architecture with the canvas, LangGraph Builder enables you to quickly generate boilerplate code for the application in Python and Typescript. Code generation in LangGraph Builder is powered by [langgraph-gen](https://github.com/langchain-ai/langgraph-gen-py). Try LangGraph Builder out [here!](https://build.langchain.com)
+LangGraph Builder provides a powerful canvas for designing cognitive architectures of LangGraph applications. After designing an architecture with the canvas, LangGraph Builder enables you to quickly generate boilerplate code for the application in Python and Typescript. Code generation in LangGraph Builder is powered by [langgraph-gen](https://github.com/langchain-ai/langgraph-gen-py). Try LangGraph Builder out [here!](https://build.langchain.com)
 
 ## 🎬 Video demo
 
