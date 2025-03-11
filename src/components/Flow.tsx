@@ -1106,7 +1106,7 @@ export default function App() {
               </div>
               <div className='flex flex-col gap-3'>
                 {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) ? (
-                  <div className='mt-3 w-[50vw] h-[80vh]'>
+                  <div className='mt-3 md:w-[50vw] md:h-[80vh]'>
                     <div className='flex'>
                       <button
                         className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
