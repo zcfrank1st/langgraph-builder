@@ -165,7 +165,7 @@ export default function App() {
       key: 'tooltip0',
       type: 'modal',
       placement: 'top' as TooltipPlacement,
-      title: 'Graph Designer',
+      title: 'Graph Builder',
       content: (
         <span>Let's get started with a quick onboarding! During onboarding, canvas interaction will be disabled</span>
       ),
