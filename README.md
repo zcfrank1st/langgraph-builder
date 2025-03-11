@@ -29,7 +29,7 @@ http://localhost:3000
 ## 🌐 Limitations
 
 - LangGraph Builder is optimized for desktop. Mobile is currently not supported.
-- [Parallel node execution](https://langchain-ai.github.io/langgraph/how-tos/branching/) is currently not supported.
+- Generating graphs with [parallel node execution](https://langchain-ai.github.io/langgraph/how-tos/branching/) is currently not supported.
 
 ## 🤝 Contributing
 
