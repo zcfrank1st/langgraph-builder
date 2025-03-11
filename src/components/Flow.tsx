@@ -1083,7 +1083,7 @@ export default function App() {
             <div className='flex flex-col'>
               <div className='flex flex-col md:flex-row justify-between md:items-center'>
                 <h2 className='md:text-lg font-medium'>Generated Code:</h2>
-                <div className='flex py-5 md:py-0 flex-row gap-2'>
+                <div className='flex py-3 md:py-0 flex-row gap-2'>
                   <button
                     onClick={downloadAsZip}
                     className='px-3 py-1 bg-white rounded-lg border border-gray-300 hover:bg-gray-50'
