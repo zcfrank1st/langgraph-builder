@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-const LANGGRAPH_API_URL = 'https://langgraph-gen-570601939772.us-central1.run.app/generate'
+const LANGGRAPH_API_URL = 'https://langgraph-gen-server-570601939772.us-central1.run.app/generate'
 
 type GenerateResponse = {
   stub?: string

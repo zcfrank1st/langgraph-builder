@@ -608,37 +608,82 @@ export default function App() {
       animatedEdgesBySource[edge.source].push(edge)
     })
 
-    // Step 3: Build nodes list (unique nodes from all edges)
+    // Step 3: Build nodes list (unique nodes from all edges, excluding source and end nodes)
     const nodeNames: Set<string> = new Set()
     edges.forEach((edge: any) => {
       const sourceNode = nodes.find((n) => n.id === edge.source)
       const targetNode = nodes.find((n) => n.id === edge.target)
-      nodeNames.add(sourceNode?.data?.label || edge.source)
-      nodeNames.add(targetNode?.data?.label || edge.target)
+
+      // Only add nodes that aren't source or end nodes
+      if (sourceNode && sourceNode.type !== 'source' && sourceNode.type !== 'end' && sourceNode.data?.label) {
+        nodeNames.add(sourceNode.data.label as string)
+      }
+      if (targetNode && targetNode.type !== 'source' && targetNode.type !== 'end' && targetNode.data?.label) {
+        nodeNames.add(targetNode.data.label as string)
+      }
     })
 
-    // Step 4: Build YAML structure
+    // Step 4: Build YAML structure with special handling for source/end connections
     const yaml = {
       name: 'CustomAgent',
-      entrypoint: 'start',
       nodes: Array.from(nodeNames).map((name) => ({ name })),
       edges: [
-        ...normalEdges.map((edge) => {
-          const sourceNode = nodes.find((n) => n.id === edge.source)
-          const targetNode = nodes.find((n) => n.id === edge.target)
-          return {
-            from: sourceNode?.data?.label || edge.source,
-            to: targetNode?.data?.label || edge.target,
-          }
-        }),
+        // Handle source node connections (convert to __start__)
+        ...normalEdges
+          .filter((edge) => {
+            const sourceNode = nodes.find((n) => n.id === edge.source)
+            return sourceNode?.type === 'source'
+          })
+          .map((edge) => {
+            const targetNode = nodes.find((n) => n.id === edge.target)
+            return {
+              from: '__start__',
+              to: targetNode?.data?.label || '',
+            }
+          }),
+
+        // Handle end node connections (convert to __end__)
+        ...normalEdges
+          .filter((edge) => {
+            const targetNode = nodes.find((n) => n.id === edge.target)
+            return targetNode?.type === 'end'
+          })
+          .map((edge) => {
+            const sourceNode = nodes.find((n) => n.id === edge.source)
+            return {
+              from: sourceNode?.data?.label || '',
+              to: '__end__',
+            }
+          }),
+
+        // Handle normal edges between custom nodes
+        ...normalEdges
+          .filter((edge) => {
+            const sourceNode = nodes.find((n) => n.id === edge.source)
+            const targetNode = nodes.find((n) => n.id === edge.target)
+            return sourceNode?.type !== 'source' && targetNode?.type !== 'end'
+          })
+          .map((edge) => {
+            const sourceNode = nodes.find((n) => n.id === edge.source)
+            const targetNode = nodes.find((n) => n.id === edge.target)
+            return {
+              from: sourceNode?.data?.label || '',
+              to: targetNode?.data?.label || '',
+            }
+          }),
+
+        // Handle conditional edges
         ...Object.entries(animatedEdgesBySource).map(([source, edges]) => {
           const sourceNode = nodes.find((n) => n.id === source)
+          // If source is the source node, use __start__ instead
+          const fromNode = sourceNode?.type === 'source' ? '__start__' : sourceNode?.data?.label || ''
           return {
-            from: sourceNode?.data?.label || source,
+            from: fromNode,
             condition: String(edges[0].label || ''),
             paths: edges.map((edge) => {
               const targetNode = nodes.find((n) => n.id === edge.target)
-              return targetNode?.data?.label || edge.target
+              // If target is the end node, use __end__ instead
+              return targetNode?.type === 'end' ? '__end__' : targetNode?.data?.label || ''
             }),
           }
         }),
@@ -666,6 +711,7 @@ export default function App() {
         return `${key}: ${value}`
       })
       .join('\n')
+    console.log(yamlString, 'yamlString generated')
     return yamlString
   }
 
