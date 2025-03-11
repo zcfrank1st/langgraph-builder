@@ -14,7 +14,7 @@ LangGraph Builder is a powerful canvas for designing cognitive architectures of 
 yarn install
 ```
 
-2. Start the development server:
+2. Start the development server
 
 ```bash
 yarn dev
@@ -29,7 +29,7 @@ http://localhost:3000
 ## 🌐 Limitations
 
 - LangGraph Builder is optimized for desktop. Mobile is currently not supported.
-- [Parallel node execution](https://langchain-ai.github.io/langgraph/how-tos/branching/) is currently not supported
+- [Parallel node execution](https://langchain-ai.github.io/langgraph/how-tos/branching/) is currently not supported.
 
 ## 🤝 Contributing
 
