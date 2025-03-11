@@ -1081,29 +1081,32 @@ export default function App() {
         >
           <ModalDialog className='bg-slate-150 hidden sm:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
             <div className='flex flex-col'>
-              <div className='flex flex-row justify-between items-center'>
-                <h2 className='md:text-lg font-medium'>Generated Code:</h2>
-                <div className='flex py-3 md:py-0 flex-row gap-2'>
-                  <button
-                    onClick={downloadAsZip}
-                    className='px-3 py-1 bg-white rounded-lg border border-gray-300 hover:bg-gray-50'
-                    title='Download as ZIP'
-                  >
-                    <Download size={18} />
-                  </button>
-                  <div className='max-w-xs pr-3'>
-                    <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
+              {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) && (
+                <div className='flex flex-row justify-between items-center'>
+                  <h2 className='md:text-lg font-medium'>Generated Code:</h2>
+                  <div className='flex py-3 md:py-0 flex-row gap-2'>
+                    <button
+                      onClick={downloadAsZip}
+                      className='px-3 py-1 bg-white rounded-lg border border-gray-300 hover:bg-gray-50'
+                      title='Download as ZIP'
+                    >
+                      <Download size={18} />
+                    </button>
+                    <div className='max-w-xs pr-3'>
+                      <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
+                    </div>
+                    <button
+                      className='font-bold pr-3 text-gray-300 hover:text-gray-600 transition-colors duration-300 ease-in-out'
+                      onClick={() => {
+                        setGenerateCodeModalOpen(false)
+                      }}
+                    >
+                      <X size={30} />
+                    </button>
                   </div>
-                  <button
-                    className='font-bold pr-3 text-gray-300 hover:text-gray-600 transition-colors duration-300 ease-in-out'
-                    onClick={() => {
-                      setGenerateCodeModalOpen(false)
-                    }}
-                  >
-                    <X size={30} />
-                  </button>
                 </div>
-              </div>
+              )}
+
               <div className='flex flex-col gap-3'>
                 {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) ? (
                   <div className='mt-3 md:w-[50vw] md:h-[80vh]'>
