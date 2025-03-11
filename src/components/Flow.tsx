@@ -1081,7 +1081,7 @@ export default function App() {
         >
           <ModalDialog className='bg-slate-150 hidden sm:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
             <div className='flex flex-col'>
-              <div className='flex flex-col md:flex-row justify-between md:items-center'>
+              <div className='flex flex-row justify-between items-center'>
                 <h2 className='md:text-lg font-medium'>Generated Code:</h2>
                 <div className='flex py-3 md:py-0 flex-row gap-2'>
                   <button
@@ -1149,7 +1149,7 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  <div className='mt-3 w-[50vw] h-[80vh] flex items-center justify-center'>
+                  <div className='mt-3 md:w-[50vw] md:h-[80vh] flex items-center justify-center'>
                     <div className='flex flex-col items-center gap-4'>
                       <LoadingSpinner />
                     </div>
