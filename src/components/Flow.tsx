@@ -392,7 +392,8 @@ export default function App() {
       key: 'tooltip7',
       type: 'tooltip',
       title: '7 of 7: Generate Code',
-      content: "Once you're finished designing the graph, you can generate boilerplate code in Python and TypeScript",
+      content:
+        "Once you're finished designing the graph, you can generate boilerplate code for it in Python and TypeScript",
       position: {
         top: '100px',
         right: '10px',
