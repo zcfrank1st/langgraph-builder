@@ -7,7 +7,6 @@ export function generateLanggraphJS(
   buttonTexts: { [key: string]: string },
   edgeLabels: { [key: string]: string },
 ): string {
-  console.log(edgeLabels, 'edgeLabels')
   const sourceEdges = edges.filter(
     (edge) => !edge.animated && edges.filter((e) => e.source === edge.source && !e.animated).length > 1,
   )
@@ -99,7 +98,6 @@ export function generateLanggraphJS(
   const processedConditionalEdges = new Set()
 
   edges.forEach((edge) => {
-    console.log(edge, 'edge inside map')
     const sourceLabel = getNodeLabel(edge.source)
     const targetLabel = getNodeLabel(edge.target)
     if (edge.animated) {

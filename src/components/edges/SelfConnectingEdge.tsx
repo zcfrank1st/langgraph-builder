@@ -217,8 +217,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           {isColorPickerActive && (
             <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
           )}
-          {label &&
-            animated &&
+          {animated &&
             (editingEdgeId === id ? (
               <foreignObject
                 style={{
@@ -226,7 +225,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 }}
                 x={midX - (labelWidth + 20) / 2}
                 y={midY - 17.5}
-                width={labelWidth + 20}
+                width={Math.max(labelWidth + 20, 50)}
                 height={35}
                 onDoubleClick={handleForeignObjectDoubleClick}
               >
@@ -245,9 +244,9 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                   }}
                   onDoubleClick={handleForeignObjectDoubleClick}
                   className={`
-                  bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center text-[#333333] w-full h-full text-xs rounded-full
-                  transition-all duration-500 ease-in-out w-full
-                `}
+                bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center text-[#333333] w-full h-full text-xs rounded-full
+                transition-all duration-500 ease-in-out min-w-[50px]
+              `}
                 />
               </foreignObject>
             ) : (
@@ -257,7 +256,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 }}
                 x={midX - (labelWidth + 20) / 2}
                 y={midY - 17.5}
-                width={labelWidth + 20}
+                width={Math.max(labelWidth + 20, 50)}
                 height={35}
                 onDoubleClick={handleForeignObjectDoubleClick}
               >
@@ -267,18 +266,18 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                     handleLabelClick(e)
                   }}
                   onDoubleClick={handleForeignObjectDoubleClick}
-                  className={` bg-[#F5F5F7]
-                border border-[#D1D2D9] 
-                  flex items-center justify-center text-center 
-                  text-[#333333] h-full text-xs rounded-full
-                  w-full transition-all duration-500 ease-in-out
-                `}
+                  className={`
+                bg-[#F5F5F7] border border-[#D1D2D9] 
+                flex items-center justify-center text-center 
+                text-[#333333] h-full text-xs rounded-full
+                w-full transition-all duration-500 ease-in-out min-w-[50px]
+              `}
                 >
                   <span
                     ref={labelRef}
-                    className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'
+                    className='whitespace-nowrap text-center transition-all duration-500 ease-in-out min-w-[25px]'
                   >
-                    {edgeLabels[source] || label}
+                    {edgeLabels[source] || label || ' '}
                   </span>
                 </div>
               </foreignObject>
@@ -321,8 +320,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         {isColorPickerActive && (
           <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
         )}
-        {label &&
-          animated &&
+        {animated &&
           (editingEdgeId === id ? (
             <foreignObject
               style={{
@@ -330,7 +328,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               }}
               x={sourceX}
               y={sourceY}
-              width={labelWidth + 20}
+              width={Math.max(labelWidth + 20, 50)}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -349,10 +347,9 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 onDoubleClick={handleForeignObjectDoubleClick}
                 autoFocus
                 className={`
-                  bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center w-full h-full text-xs text-[#333333] rounded-full
-                  transition-all duration-500 ease-in-out
-                  w-full
-                `}
+                bg-[#F5F5F7] outline-none border border-[#D1D2D9] text-center w-full h-full text-xs text-[#333333] rounded-full
+                transition-all duration-500 ease-in-out min-w-[50px]
+              `}
               />
             </foreignObject>
           ) : (
@@ -362,7 +359,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               }}
               x={sourceX}
               y={sourceY}
-              width={labelWidth + 20}
+              width={Math.max(labelWidth + 20, 50)}
               height={35}
               onDoubleClick={handleForeignObjectDoubleClick}
             >
@@ -373,14 +370,17 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
                 }}
                 onDoubleClick={handleForeignObjectDoubleClick}
                 className={`
-                  bg-[#F5F5F7] border border-[#D1D2D9] 
-                  flex items-center justify-center text-center 
-                  text-[#333333] h-full text-xs rounded-full
-                  w-full transition-all duration-500 ease-in-out
-                `}
+                bg-[#F5F5F7] border border-[#D1D2D9] 
+                flex items-center justify-center text-center 
+                text-[#333333] h-full text-xs rounded-full
+                w-full transition-all duration-500 ease-in-out min-w-[50px]
+              `}
               >
-                <span ref={labelRef} className='whitespace-nowrap text-center transition-all duration-500 ease-in-out'>
-                  {edgeLabels[source] || label}
+                <span
+                  ref={labelRef}
+                  className='whitespace-nowrap text-center transition-all duration-500 ease-in-out min-w-[25px]'
+                >
+                  {edgeLabels[source] || label || ' '}
                 </span>
               </div>
             </foreignObject>

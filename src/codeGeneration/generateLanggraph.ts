@@ -44,7 +44,6 @@ export function generateLanggraphCode(
     .filter((edge) => edge.animated)
     .forEach((edge) => {
       const edgeLabel = edge.label as string
-      console.log(edgeLabel, 'edgeLabel')
       const sourceLabel = getNodeLabel(edge.source)
       const targetLabel = getNodeLabel(edge.target)
 
@@ -53,8 +52,6 @@ export function generateLanggraphCode(
       }
       conditionalFunctionsMap.get(edgeLabel)!.targets.add(targetLabel)
     })
-
-  console.log(conditionalFunctionsMap, 'conditionalFunctionsMap')
 
   const conditionalFunctionStrings = Array.from(conditionalFunctionsMap.entries()).map(
     ([edgeLabel, { source, targets }]) => {

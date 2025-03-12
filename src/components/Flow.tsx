@@ -80,6 +80,7 @@ export default function App() {
   const { buttonTexts } = useButtonText()
   const [maxNodeLength, setMaxNodeLength] = useState(0)
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
+  const [conditionalGroupCount, setConditionalGroupCount] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [activeFile, setActiveFile] = useState<'stub' | 'implementation'>('stub')
   const [generatedFiles, setGeneratedFiles] = useState<{
@@ -485,7 +486,20 @@ export default function App() {
     (connection) => {
       const edgeId = `edge-${maxEdgeLength + 1}`
       setMaxEdgeLength((prev) => prev + 1)
-      const defaultLabel = `conditional_edge`
+
+      const existingSourceEdges = edges.filter((edge) => edge.source === connection.source)
+      let defaultLabel = 'conditional_edge'
+      let newCount = conditionalGroupCount
+
+      if (existingSourceEdges.length > 0) {
+        const hasAnimatedEdges = existingSourceEdges.some((edge) => edge.animated)
+        if (!hasAnimatedEdges) {
+          newCount = conditionalGroupCount + 1
+          setConditionalGroupCount(newCount)
+        }
+        defaultLabel = `conditional_edge_${newCount}`
+      }
+
       const newEdge: CustomEdgeType = {
         ...connection,
         id: edgeId,
@@ -504,7 +518,7 @@ export default function App() {
               ? {
                   ...edge,
                   animated: true,
-                  label: defaultLabel || edge.label,
+                  label: defaultLabel,
                 }
               : edge,
           )
@@ -513,7 +527,7 @@ export default function App() {
       })
       setIsConnecting(false)
     },
-    [setEdges, edges, buttonTexts, updateEdgeLabel, edgeLabels, maxEdgeLength],
+    [setEdges, edges, conditionalGroupCount, buttonTexts, updateEdgeLabel, edgeLabels, maxEdgeLength],
   )
 
   const addNode = useCallback(
@@ -712,7 +726,7 @@ export default function App() {
         return `${key}: ${value}`
       })
       .join('\n')
-    console.log(yamlString, 'yamlString generated')
+
     return yamlString
   }
 
