@@ -1005,8 +1005,14 @@ export default function App() {
         `}
         >
           <div className='flex flex-col p-6 space-y-5'>
-            <div>
+            <div className='flex flex-row items-center justify-between'>
               <h2 className='text-xl font-medium'>Key Commands</h2>
+              <button
+                className='font-bold text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
+                onClick={() => setInfoPanelOpen(false)}
+              >
+                <X size={30} />
+              </button>
             </div>
             <div>
               <p className='text-sm text-slate-800'>Create a node</p>
@@ -1027,6 +1033,10 @@ export default function App() {
             <div>
               <p className='text-sm text-slate-800'>Delete an edge/node</p>
               <p className='mt-2'>click the edge/node and hit the backspace key</p>
+            </div>
+            <div>
+              <p className='text-sm text-slate-800'>Color an edge</p>
+              <p className='mt-2'>click the edge and select an option from the color picker</p>
             </div>
           </div>
         </div>
@@ -1136,7 +1146,7 @@ export default function App() {
                       <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
                     </div>
                     <button
-                      className='font-bold pr-3 text-gray-300 hover:text-gray-600 transition-colors duration-300 ease-in-out'
+                      className='font-bold pr-3 text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
                       onClick={() => {
                         setGenerateCodeModalOpen(false)
                       }}
