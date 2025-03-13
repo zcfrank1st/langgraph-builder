@@ -731,11 +731,10 @@ export default function App() {
     // Add descriptive comment at the top
     const fileExt = currentLanguage === 'python' ? '.py' : '.ts'
     const comment = `# This YAML was auto-generated based on an architecture 
-# designed in LangGraph Builder (build.langchain.com).
+# designed in LangGraph Builder (https://build.langchain.com).
 #
-# It was used to generate a code stub for a LangGraph application that follows the architecture
-# using langgraph-gen:
-# https://github.com/langchain-ai/langgraph-gen-py
+# The YAML was used by langgraph-gen (https://github.com/langchain-ai/langgraph-gen-py) 
+# to generate a code stub for a LangGraph application that follows the architecture
 #
 # langgraph-gen is an open source CLI tool that converts YAML specifications into LangGraph code stubs.
 #
