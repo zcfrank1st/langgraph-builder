@@ -74,7 +74,7 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNode>
           border: `2px solid ${randomBorderColor}`,
           backgroundColor: randomBackgroundColor,
           width: `${nodeWidth}px`,
-          boxShadow: selected ? '0 0 10px rgba(0, 0, 0, 0.2)' : 'none',
+          boxShadow: selected ? '0 0 12px rgba(0, 0, 0, 0.3)' : 'none',
         }}
       >
         <input
