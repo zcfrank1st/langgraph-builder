@@ -195,7 +195,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         <>
           <defs>
             <marker
-              id='triangle'
+              id={`triangle-${id}`}
               markerWidth='5'
               markerHeight='18'
               viewBox='-15 -15 30 30'
@@ -211,7 +211,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             {...props}
             id={id}
             path={edgePath}
-            markerEnd={'url(#triangle)'}
+            markerEnd={`url(#triangle-${id})`}
             style={{
               stroke: edgeColor,
               strokeWidth: props.selected ? 6 : 3.9,
