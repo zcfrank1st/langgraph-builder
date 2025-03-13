@@ -24,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         spec,
         language,
         format,
+        stub_module: 'stub',
       }),
     })
 

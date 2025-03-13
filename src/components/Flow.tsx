@@ -733,7 +733,7 @@ export default function App() {
     const comment = `# This YAML was auto-generated based on an architecture 
 # designed in LangGraph Builder (build.langchain.com).
 #
-# It was used to generate a code stub for a LangGraph application that follows this architecture
+# It was used to generate a code stub for a LangGraph application that follows the architecture
 # using langgraph-gen:
 # https://github.com/langchain-ai/langgraph-gen-py
 #
