@@ -9,7 +9,7 @@ export type CustomNodeData = {
 
 export type CustomNode = NodeType<CustomNodeData>
 
-export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
+export default function CustomNode({ data, id, selected }: NodeProps<CustomNode>) {
   const { setNodes } = useReactFlow()
   const { buttonTexts, updateButtonText } = useButtonText()
   const [nodeWidth, setNodeWidth] = useState(150)
@@ -74,6 +74,13 @@ export default function CustomNode({ data, id }: NodeProps<CustomNode>) {
           border: `2px solid ${randomBorderColor}`,
           backgroundColor: randomBackgroundColor,
           width: `${nodeWidth}px`,
+          transform: selected ? 'scale(1.08)' : 'scale(1)',
+          transition: 'transform 0.3s ease-in-out',
+          boxShadow: selected ? '0 0 10px rgba(0, 0, 0, 0.2)' : 'none',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          transformStyle: 'preserve-3d',
+          perspective: '1000px',
         }}
       >
         <input

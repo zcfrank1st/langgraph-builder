@@ -212,7 +212,12 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             id={id}
             path={edgePath}
             markerEnd={'url(#triangle)'}
-            style={{ stroke: edgeColor, strokeWidth: 3.9 }}
+            style={{
+              stroke: edgeColor,
+              strokeWidth: props.selected ? 6 : 3.9,
+              transition: 'stroke-width 0.3s ease-in-out',
+              filter: props.selected ? 'drop-shadow(0 0 3px rgba(0, 0, 0, 0.3))' : 'none',
+            }}
           />
           {isColorPickerActive && (
             <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
@@ -315,7 +320,12 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
         <BaseEdge
           path={edgePath}
           markerEnd={`url(#triangle-cycle-${id})`}
-          style={{ stroke: edgeColor, strokeWidth: 5 }}
+          style={{
+            stroke: edgeColor,
+            strokeWidth: props.selected ? 6 : 3.9,
+            transition: 'stroke-width 0.3s ease-in-out',
+            filter: props.selected ? 'drop-shadow(0 0 3px rgba(0, 0, 0, 0.3))' : 'none',
+          }}
         />
         {isColorPickerActive && (
           <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
