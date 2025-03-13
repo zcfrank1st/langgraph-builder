@@ -82,7 +82,7 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const [conditionalGroupCount, setConditionalGroupCount] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const [activeFile, setActiveFile] = useState<'stub' | 'implementation'>('stub')
+  const [activeFile, setActiveFile] = useState<'stub' | 'implementation' | 'spec'>('stub')
   const [generatedFiles, setGeneratedFiles] = useState<{
     python?: { stub?: string; implementation?: string }
     typescript?: { stub?: string; implementation?: string }
@@ -94,6 +94,7 @@ export default function App() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [generatedYamlSpec, setGeneratedYamlSpec] = useState<string>('')
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -609,7 +610,7 @@ export default function App() {
       ? onboardingSteps[currentOnboardingStep].edges
       : edges
 
-  function generateSpec(edges: any): string {
+  function generateSpec(edges: any, currentLanguage: 'python' | 'typescript' = language): string {
     // Step 1: Separate normal edges and animated edges, ensure animated is treated as false when undefined
     const normalEdges: any[] = edges.filter((edge: any) => !edge.animated && edge.animated !== undefined)
     const animatedEdges: any[] = edges.filter((edge: any) => edge.animated === true)
@@ -727,19 +728,40 @@ export default function App() {
       })
       .join('\n')
 
-    return yamlString
+    // Add descriptive comment at the top
+    const fileExt = currentLanguage === 'python' ? '.py' : '.ts'
+    const comment = `# This YAML was auto-generated based on an architecture 
+# designed in LangGraph Builder (build.langchain.com).
+#
+# It was used to generate a code stub for a LangGraph application that follows this architecture
+# using langgraph-gen:
+# https://github.com/langchain-ai/langgraph-gen-py
+#
+# langgraph-gen is an open source CLI tool that converts YAML specifications into LangGraph code stubs.
+#
+# The code stub generated from this YAML can be found in stub${fileExt}.
+#
+# A placeholder implementation for the generated stub can be found in implementation${fileExt}.
+
+`
+
+    return comment + yamlString
   }
 
   const handleLanguageChange = async (option: string) => {
     const newLanguage = option.toLowerCase() as 'python' | 'typescript'
     setLanguage(newLanguage)
+    // Update the YAML spec with new file extensions when language changes
+    setGeneratedYamlSpec(generateSpec(edges, newLanguage))
   }
 
   const generateCodeWithLanguage = async (lang: 'python' | 'typescript' = language) => {
     try {
       setIsLoading(true)
       setGenerateCodeModalOpen(true)
-      const spec = generateSpec(edges)
+      const spec = generateSpec(edges, lang)
+      setGeneratedYamlSpec(spec)
+
       const [pythonResponse, typescriptResponse] = await Promise.all([
         fetch('/api/generate-code', {
           method: 'POST',
@@ -777,7 +799,7 @@ export default function App() {
           implementation: typescriptData.implementation,
         },
       })
-      setActiveFile('stub')
+      setActiveFile('spec')
     } catch (error) {
       console.error('Failed to generate code:', error)
       setGeneratedFiles({})
@@ -790,7 +812,7 @@ export default function App() {
     generateCodeWithLanguage('python')
   }
 
-  const activeCode = generatedFiles[language]?.[activeFile] || ''
+  const activeCode = activeFile === 'spec' ? generatedYamlSpec : generatedFiles[language]?.[activeFile] || ''
   const fileExtension = language === 'python' ? '.py' : '.ts'
 
   // New helper to copy active code to the clipboard
@@ -873,20 +895,24 @@ export default function App() {
   const downloadAsZip = () => {
     const zip = new JSZip()
 
-    // Add Python files
-    if (generatedFiles.python?.stub) {
-      zip.file('stub.py', generatedFiles.python.stub)
-    }
-    if (generatedFiles.python?.implementation) {
-      zip.file('implementation.py', generatedFiles.python.implementation)
-    }
+    // Use the stored YAML specification
+    zip.file('spec.yml', generatedYamlSpec)
 
-    // Add TypeScript files
-    if (generatedFiles.typescript?.stub) {
-      zip.file('stub.ts', generatedFiles.typescript.stub)
-    }
-    if (generatedFiles.typescript?.implementation) {
-      zip.file('implementation.ts', generatedFiles.typescript.implementation)
+    // Only add files for the currently selected language
+    if (language === 'python') {
+      if (generatedFiles.python?.stub) {
+        zip.file('stub.py', generatedFiles.python.stub)
+      }
+      if (generatedFiles.python?.implementation) {
+        zip.file('implementation.py', generatedFiles.python.implementation)
+      }
+    } else {
+      if (generatedFiles.typescript?.stub) {
+        zip.file('stub.ts', generatedFiles.typescript.stub)
+      }
+      if (generatedFiles.typescript?.implementation) {
+        zip.file('implementation.ts', generatedFiles.typescript.implementation)
+      }
     }
 
     // Generate and download the zip
@@ -1126,6 +1152,12 @@ export default function App() {
                   <div className='mt-3 md:w-[50vw] md:h-[80vh]'>
                     <div className='flex'>
                       <button
+                        className={`px-3 rounded-t-md ${activeFile === 'spec' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                        onClick={() => setActiveFile('spec')}
+                      >
+                        spec.yml
+                      </button>
+                      <button
                         className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
                         onClick={() => setActiveFile('stub')}
                       >
@@ -1148,8 +1180,8 @@ export default function App() {
                       </button>
                       <Highlight
                         theme={themes.nightOwl}
-                        code={activeCode || ''}
-                        language={language === 'python' ? 'python' : 'typescript'}
+                        code={activeCode}
+                        language={activeFile === 'spec' ? 'yaml' : language === 'python' ? 'python' : 'typescript'}
                       >
                         {({ style, tokens, getLineProps, getTokenProps }) => (
                           <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
