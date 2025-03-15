@@ -980,7 +980,7 @@ export default function App() {
 
   return (
     <div className='w-screen h-screen'>
-      <div className='absolute top-5 left-5 lg:right-5 z-50 flex gap-2'>
+      <div className='absolute top-5 right-5 z-50 flex gap-2'>
         <button
           onClick={() => initialOnboardingComplete && setIsTemplatesPanelOpen(true)}
           className={`flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-md transition-shadow ${
@@ -1005,8 +1005,6 @@ export default function App() {
           </svg>
           Templates
         </button>
-      </div>
-      <div className='absolute top-5 right-5 z-50 flex gap-2'>
         <div className='flex flex-row gap-2'>
           <Tooltip
             title={
