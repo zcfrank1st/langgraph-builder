@@ -779,7 +779,7 @@ export default function App() {
 # designed in LangGraph Builder (https://build.langchain.com).
 #
 # The YAML was used by langgraph-gen (https://github.com/langchain-ai/langgraph-gen-py) 
-# to generate a code stub for a LangGraph application that follows the architecture
+# to generate a code stub for a LangGraph application that follows the architecture.
 #
 # langgraph-gen is an open source CLI tool that converts YAML specifications into LangGraph code stubs.
 #
