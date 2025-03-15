@@ -656,8 +656,8 @@ export default function App() {
       : edges
 
   function generateSpec(edges: any, currentLanguage: 'python' | 'typescript' = language): string {
-    // Step 1: Separate normal edges and animated edges, ensure animated is treated as false when undefined
-    const normalEdges: any[] = edges.filter((edge: any) => !edge.animated && edge.animated !== undefined)
+    // Step 1: Separate normal edges and animated edges
+    const normalEdges: any[] = edges.filter((edge: any) => !edge.animated)
     const animatedEdges: any[] = edges.filter((edge: any) => edge.animated === true)
 
     // Step 2: Group animated edges by source
@@ -772,6 +772,7 @@ export default function App() {
         return `${key}: ${value}`
       })
       .join('\n')
+    console.log(yamlString, 'yaml string')
 
     // Add descriptive comment at the top
     const fileExt = currentLanguage === 'python' ? '.py' : '.ts'
