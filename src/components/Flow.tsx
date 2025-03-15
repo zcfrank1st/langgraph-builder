@@ -25,6 +25,7 @@ import MultiButton from './ui/multibutton'
 import GenericModal from './GenericModal'
 import { ColorEditingProvider } from './edges/SelfConnectingEdge'
 import JSZip from 'jszip'
+import TemplatesPanel, { type Template } from './ui/TemplatesPanel'
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -95,6 +96,7 @@ export default function App() {
   const [justCopied, setJustCopied] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [generatedYamlSpec, setGeneratedYamlSpec] = useState<string>('')
+  const [isTemplatesPanelOpen, setIsTemplatesPanelOpen] = useState(false)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -112,10 +114,7 @@ export default function App() {
   }, [])
 
   const MockColorPicker = () => (
-    <div
-      className={`fixed bottom-5 cursor-disabled left-5 z-50 ${!initialOnboardingComplete ? 'cursor-not-allowed' : ''}`}
-      style={{ width: '280px' }}
-    >
+    <div className={`fixed bottom-5 cursor-disabled left-5 z-50 ${!initialOnboardingComplete ? 'cursor-not-allowed' : ''}`} style={{ width: '280px' }}>
       <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
         <div className='flex justify-between items-center'>
           <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
@@ -155,6 +154,10 @@ export default function App() {
   useEffect(() => {
     nodesRef.current = nodes
     edgesRef.current = edges
+    
+    // Log changes to nodes and edges
+    console.log('Graph nodes updated:', nodes);
+    console.log('Graph edges updated:', edges);
   }, [nodes, edges])
 
   useEffect(() => {
@@ -493,12 +496,18 @@ export default function App() {
       let newCount = conditionalGroupCount
 
       if (existingSourceEdges.length > 0) {
-        const hasAnimatedEdges = existingSourceEdges.some((edge) => edge.animated)
-        if (!hasAnimatedEdges) {
-          newCount = conditionalGroupCount + 1
-          setConditionalGroupCount(newCount)
+        // Check if there's a template edge label we should preserve
+        const templateLabel = existingSourceEdges[0].label?.toString()
+        if (templateLabel && !templateLabel.startsWith('conditional_edge')) {
+          defaultLabel = templateLabel
+        } else {
+          const hasAnimatedEdges = existingSourceEdges.some((edge) => edge.animated)
+          if (!hasAnimatedEdges) {
+            newCount = conditionalGroupCount + 1
+            setConditionalGroupCount(newCount)
+          }
+          defaultLabel = `conditional_edge_${newCount}`
         }
-        defaultLabel = `conditional_edge_${newCount}`
       }
 
       const newEdge: CustomEdgeType = {
@@ -927,328 +936,362 @@ export default function App() {
     })
   }
 
+  const handleTemplateSelect = (template: Template) => {
+    setNodes(template.nodes)
+    setEdges(template.edges)
+    setIsTemplatesPanelOpen(false)
+  }
+
   return (
-    <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
-      <ColorEditingProvider>
-        {!initialOnboardingComplete && (
-          <style>
-            {`
-              .react-flow__node,
-              .react-flow__node *,
-              .react-flow__node:hover,
-              .react-flow__node:hover * {
-                cursor: not-allowed !important;
-                pointer-events: none !important;
-              }
-            `}
-          </style>
-        )}
-        <ReactFlow<CustomNodeType, CustomEdgeType>
-          nodes={flowNodes}
-          nodeTypes={nodeTypes}
-          onEdgeClick={onEdgeClick}
-          onNodesChange={handleNodesChange}
-          edges={flowEdges?.map((edge) => ({
-            ...edge,
-            data: {
-              ...edge.data,
-            },
-          }))}
-          edgeTypes={edgeTypes}
-          onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
-          onInit={setReactFlowInstance}
-          fitView
-          onConnectStart={onConnectStart}
-          className='z-10 bg-[#EAEAEA]'
-          style={{ backgroundColor: '#EAEAEA' }}
-          proOptions={proOptions}
-          zoomOnDoubleClick={false}
-          onPaneClick={handlePaneClick}
+    <div className='w-screen h-screen'>
+      <div className='absolute top-4 right-4 z-50 flex gap-2'>
+        <button
+          onClick={() => initialOnboardingComplete && setIsTemplatesPanelOpen(true)}
+          className={`flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-md transition-shadow ${
+            !initialOnboardingComplete ? 'cursor-not-allowed opacity-70' : 'hover:shadow-lg'
+          }`}
+          disabled={!initialOnboardingComplete}
         >
-          <Background />
-        </ReactFlow>
-      </ColorEditingProvider>
-
-      <Snackbar
-        open={showOnboardingToast}
-        onClose={() => setShowOnboardingToast(false)}
-        autoHideDuration={3000}
-        color='neutral'
-        variant='outlined'
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        Canvas interaction is temporarily disabled during onboarding
-      </Snackbar>
-
-      <div className='sm:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
-        <GenericModal
-          imageUrl='/langgraph-logo.png'
-          onButtonClick={() => {
-            window.location.href = 'sms:&body=build.langchain.com'
-          }}
-          isOpen={true}
-          onClose={() => {}}
-          title='Desktop Only'
-          content='LangGraph Builder is not supported on mobile devices'
-          buttonText='Text me the link'
-        />
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          Templates
+        </button>
+        <div className='flex flex-row gap-2'>
+          <Tooltip
+            title={
+              !hasValidSourceToEndPath() && initialOnboardingComplete ? 'Create a valid graph to generate code' : ''
+            }
+            placement='bottom'
+            arrow
+          >
+            <button
+              className={`py-2 px-3 rounded-md transition-colors duration-200 ${
+                hasValidSourceToEndPath() || (!initialOnboardingComplete && currentOnboardingStep >= 3)
+                  ? 'bg-[#2F6868] cursor-pointer'
+                  : 'bg-gray-500 opacity-70'
+              } ${!initialOnboardingComplete ? 'cursor-not-allowed' : 'hover:bg-[#245757]'}`}
+              onClick={hasValidSourceToEndPath() ? handleGenerateCode : undefined}
+              disabled={!hasValidSourceToEndPath()}
+            >
+              <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
+            </button>
+          </Tooltip>
+          <button
+            disabled={!initialOnboardingComplete}
+            className={`p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none ${
+              !initialOnboardingComplete ? 'cursor-not-allowed' : ''
+            }`}
+            aria-label='Toggle Information Panel'
+            onClick={() => setInfoPanelOpen(!infoPanelOpen)}
+          >
+            <Info className='h-6 w-6' />
+          </button>
+        </div>
       </div>
-      <div className='hidden sm:block'>
-        {/* Sidebar */}
-        <div
-          className={`
-          fixed top-0 left-0 bg-gray-100 shadow-xl rounded-md z-20 
-          transform transition-transform duration-300 
-          ${infoPanelOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+      
+      {isTemplatesPanelOpen && (
+        <TemplatesPanel
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setIsTemplatesPanelOpen(false)}
+        />
+      )}
+      
+      <div ref={reactFlowWrapper} className='no-scrollbar no-select' style={{ width: '100vw', height: '100vh' }}>
+        <ColorEditingProvider>
+          {!initialOnboardingComplete && (
+            <style>
+              {`
+                .react-flow__node,
+                .react-flow__node *,
+                .react-flow__node:hover,
+                .react-flow__node:hover * {
+                  cursor: not-allowed !important;
+                  pointer-events: none !important;
+                }
+              `}
+            </style>
+          )}
+          <ReactFlow<CustomNodeType, CustomEdgeType>
+            nodes={flowNodes}
+            nodeTypes={nodeTypes}
+            onEdgeClick={onEdgeClick}
+            onNodesChange={handleNodesChange}
+            edges={flowEdges?.map((edge) => ({
+              ...edge,
+              data: {
+                ...edge.data,
+              },
+            }))}
+            edgeTypes={edgeTypes}
+            onEdgesChange={handleEdgesChange}
+            onConnect={onConnect}
+            onInit={setReactFlowInstance}
+            fitView
+            onConnectStart={onConnectStart}
+            className='z-10 bg-[#EAEAEA]'
+            style={{ backgroundColor: '#EAEAEA' }}
+            proOptions={proOptions}
+            zoomOnDoubleClick={false}
+            onPaneClick={handlePaneClick}
+          >
+            <Background />
+          </ReactFlow>
+        </ColorEditingProvider>
+
+        <Snackbar
+          open={showOnboardingToast}
+          onClose={() => setShowOnboardingToast(false)}
+          autoHideDuration={3000}
+          color='neutral'
+          variant='outlined'
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-          <div className='flex flex-col p-6 space-y-5'>
-            <div className='flex flex-row items-center justify-between'>
-              <h2 className='text-xl font-medium'>Key Commands</h2>
-              <button
-                className='font-bold text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
-                onClick={() => setInfoPanelOpen(false)}
-              >
-                <X size={30} />
-              </button>
-            </div>
-            <div>
-              <p className='text-sm text-slate-800'>Create a node</p>
-              <p className='mt-2'>⌘ + click anywhere on the canvas</p>
-            </div>
-            <div>
-              <p className='text-sm text-slate-800'>Create an edge</p>
-              <p className='mt-2'>click + drag from the bottom of one node to the top of another</p>
-            </div>
-            <div>
-              <p className='text-sm text-slate-800'>Create a conditional edge</p>
-              <p className='mt-2'>connect one node to multiple nodes</p>
-            </div>
-            <div>
-              <p className='text-sm text-slate-800'>Create a cycle</p>
-              <p className='mt-2'>click + drag from the bottom to the top of a node</p>
-            </div>
-            <div>
-              <p className='text-sm text-slate-800'>Delete an edge/node</p>
-              <p className='mt-2'>click the edge/node and hit the backspace key</p>
-            </div>
-            <div>
-              <p className='text-sm text-slate-800'>Color an edge</p>
-              <p className='mt-2'>click the edge and select an option from the color picker</p>
+          Canvas interaction is temporarily disabled during onboarding
+        </Snackbar>
+
+        <div className='sm:hidden z-20 absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50'>
+          <GenericModal
+            imageUrl='/langgraph-logo.png'
+            onButtonClick={() => {
+              window.location.href = 'sms:&body=build.langchain.com'
+            }}
+            isOpen={true}
+            onClose={() => {}}
+            title='Desktop Only'
+            content='LangGraph Builder is not supported on mobile devices'
+            buttonText='Text me the link'
+          />
+        </div>
+        <div className='hidden sm:block'>
+          {/* Sidebar */}
+          <div
+            className={`
+            fixed top-0 left-0 bg-gray-100 shadow-xl rounded-md z-20 
+            transform transition-transform duration-300 
+            ${infoPanelOpen ? 'translate-x-0' : '-translate-x-full'}
+          `}
+          >
+            <div className='flex flex-col p-6 space-y-5'>
+              <div className='flex flex-row items-center justify-between'>
+                <h2 className='text-xl font-medium'>Key Commands</h2>
+                <button
+                  className='font-bold text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
+                  onClick={() => setInfoPanelOpen(false)}
+                >
+                  <X size={30} />
+                </button>
+              </div>
+              <div>
+                <p className='text-sm text-slate-800'>Create a node</p>
+                <p className='mt-2'>⌘ + click anywhere on the canvas</p>
+              </div>
+              <div>
+                <p className='text-sm text-slate-800'>Create an edge</p>
+                <p className='mt-2'>click + drag from the bottom of one node to the top of another</p>
+              </div>
+              <div>
+                <p className='text-sm text-slate-800'>Create a conditional edge</p>
+                <p className='mt-2'>connect one node to multiple nodes</p>
+              </div>
+              <div>
+                <p className='text-sm text-slate-800'>Create a cycle</p>
+                <p className='mt-2'>click + drag from the bottom to the top of a node</p>
+              </div>
+              <div>
+                <p className='text-sm text-slate-800'>Delete an edge/node</p>
+                <p className='mt-2'>click the edge/node and hit the backspace key</p>
+              </div>
+              <div>
+                <p className='text-sm text-slate-800'>Color an edge</p>
+                <p className='mt-2'>click the edge and select an option from the color picker</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
-          <div
-            className='fixed inset-0 z-10'
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              zIndex: 10,
-              pointerEvents: 'none',
-            }}
-          >
-            {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
-              <div>
-                <GenericModal
-                  isOpen={true}
-                  onClose={handleOnboardingNext}
-                  title={onboardingSteps[currentOnboardingStep].title || ''}
-                  content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
-                  buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
-                  imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
-                />
-              </div>
-            ) : (
-              <>
-                {/* Desktop Tooltip */}
-                <div
-                  className={`fixed pointer-events-auto ${onboardingSteps[currentOnboardingStep].className || ''} hidden lg:block`}
-                  style={{
-                    ...(onboardingSteps[currentOnboardingStep].position
-                      ? onboardingSteps[currentOnboardingStep].position
-                      : calculateTooltipPosition(
-                          onboardingSteps[currentOnboardingStep].targetNodeId || '',
-                          onboardingSteps[currentOnboardingStep].placement || 'top',
-                          onboardingSteps[currentOnboardingStep].tooltipOffset,
-                        )),
-                    pointerEvents: 'auto',
-                  }}
-                >
-                  <div className='py-3 px-3 flex bg-white rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
-                    <div className='flex flex-row items-center justify-between'>
-                      <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
-                      <button
-                        onClick={handleOnboardingNext}
-                        className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
-                      >
-                        Next
-                      </button>
-                    </div>
-                    <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
-                  </div>
+          {initialOnboardingComplete === false && currentOnboardingStep < onboardingSteps.length && (
+            <div
+              className='fixed inset-0 z-10'
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 10,
+                pointerEvents: 'none',
+              }}
+            >
+              {onboardingSteps[currentOnboardingStep].type === 'modal' ? (
+                <div>
+                  <GenericModal
+                    isOpen={true}
+                    onClose={handleOnboardingNext}
+                    title={onboardingSteps[currentOnboardingStep].title || ''}
+                    content={<div>{onboardingSteps[currentOnboardingStep].content}</div>}
+                    buttonText={onboardingSteps[currentOnboardingStep].buttonText || ''}
+                    imageUrl={onboardingSteps[currentOnboardingStep].imageUrl}
+                  />
                 </div>
-
-                {/* Mobile Tooltip */}
-                <div className='fixed bottom-[150px] right-5 z-50 pointer-events-auto lg:hidden'>
-                  <div className='py-3 px-3 flex bg-white rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
-                    <div className='flex flex-row items-center justify-between'>
-                      <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
-                      <button
-                        onClick={handleOnboardingNext}
-                        className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
-                      >
-                        Next
-                      </button>
+              ) : (
+                <>
+                  {/* Desktop Tooltip */}
+                  <div
+                    className={`fixed pointer-events-auto ${onboardingSteps[currentOnboardingStep].className || ''} hidden lg:block`}
+                    style={{
+                      ...(onboardingSteps[currentOnboardingStep].position
+                        ? onboardingSteps[currentOnboardingStep].position
+                        : calculateTooltipPosition(
+                            onboardingSteps[currentOnboardingStep].targetNodeId || '',
+                            onboardingSteps[currentOnboardingStep].placement || 'top',
+                            onboardingSteps[currentOnboardingStep].tooltipOffset,
+                          )),
+                      pointerEvents: 'auto',
+                    }}
+                  >
+                    <div className='py-3 px-3 flex bg-white rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
+                      <div className='flex flex-row items-center justify-between'>
+                        <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
+                        <button
+                          onClick={handleOnboardingNext}
+                          className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
+                        >
+                          Next
+                        </button>
+                      </div>
+                      <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
                     </div>
-                    <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
+                  </div>
+
+                  {/* Mobile Tooltip */}
+                  <div className='fixed bottom-[150px] right-5 z-50 pointer-events-auto lg:hidden'>
+                    <div className='py-3 px-3 flex bg-white rounded-lg shadow-lg flex-col w-[280px] md:w-[380px]'>
+                      <div className='flex flex-row items-center justify-between'>
+                        <div className='text-sm font-medium'>{onboardingSteps[currentOnboardingStep].title}</div>
+                        <button
+                          onClick={handleOnboardingNext}
+                          className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
+                        >
+                          Next
+                        </button>
+                      </div>
+                      <div className='text-sm pt-3'>{onboardingSteps[currentOnboardingStep].content}</div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {initialOnboardingComplete === false && currentOnboardingStep === 5 && <MockColorPicker />}
+
+          <MuiModal
+            hideBackdrop={true}
+            onClose={() => {
+              setGenerateCodeModalOpen(false)
+            }}
+            onClick={(e: React.MouseEvent) => {
+              if (e.target === e.currentTarget) {
+                setGenerateCodeModalOpen(false)
+              }
+            }}
+            open={generateCodeModalOpen}
+          >
+            <ModalDialog className='bg-slate-150 hidden sm:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+              <>
+                <div className='flex flex-col'>
+                  {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) && (
+                    <div className='flex flex-row justify-between items-center'>
+                      <h2 className='md:text-lg font-medium'>Generated Code:</h2>
+                      <div className='flex py-3 md:py-0 flex-row gap-2'>
+                        <button
+                          onClick={downloadAsZip}
+                          className='px-3 py-1 bg-white rounded-lg border border-gray-300 hover:bg-gray-50'
+                          title='Download as ZIP'
+                        >
+                          <Download size={18} />
+                        </button>
+                        <div className='max-w-xs pr-3'>
+                          <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
+                        </div>
+                        <button
+                          className='font-bold pr-3 text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
+                          onClick={() => {
+                            setGenerateCodeModalOpen(false)
+                          }}
+                        >
+                          <X size={30} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className='flex flex-col gap-3'>
+                    {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) ? (
+                      <div className='mt-3 md:w-[50vw] md:h-[80vh]'>
+                        <div className='flex'>
+                          <button
+                            className={`px-3 rounded-t-md ${activeFile === 'spec' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                            onClick={() => setActiveFile('spec')}
+                          >
+                            spec.yml
+                          </button>
+                          <button
+                            className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                            onClick={() => setActiveFile('stub')}
+                          >
+                            {`stub${fileExtension}`}
+                          </button>
+                          <button
+                            className={`px-3 rounded-t-md ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                            onClick={() => setActiveFile('implementation')}
+                          >
+                            {`implementation${fileExtension}`}
+                          </button>
+                        </div>
+                        <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
+                          <button
+                            onClick={copyActiveCode}
+                            className='absolute top-5 right-6 z-10 p-1 bg-white rounded border border-gray-300 hover:bg-gray-50'
+                            title='Copy code to clipboard'
+                          >
+                            {justCopied ? <Check size={18} /> : <Copy size={18} />}
+                          </button>
+                          <Highlight
+                            theme={themes.nightOwl}
+                            code={activeCode}
+                            language={activeFile === 'spec' ? 'yaml' : language === 'python' ? 'python' : 'typescript'}
+                          >
+                            {({ style, tokens, getLineProps, getTokenProps }) => (
+                              <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
+                                {tokens.map((line, i) => (
+                                  <div key={i} {...getLineProps({ line })}>
+                                    {line.map((token, key) => (
+                                      <span key={key} {...getTokenProps({ token })} />
+                                    ))}
+                                  </div>
+                                ))}
+                              </pre>
+                            )}
+                          </Highlight>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className='mt-3 md:w-[50vw] md:h-[80vh] flex items-center justify-center'>
+                        <div className='flex flex-col items-center gap-4'>
+                          <div className='flex'>
+                            <LoadingSpinner />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
-            )}
-          </div>
-        )}
-
-        {initialOnboardingComplete === false && currentOnboardingStep === 5 && <MockColorPicker />}
-
-        <MuiModal
-          hideBackdrop={true}
-          onClose={() => {
-            setGenerateCodeModalOpen(false)
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setGenerateCodeModalOpen(false)
-            }
-          }}
-          open={generateCodeModalOpen}
-        >
-          <ModalDialog className='bg-slate-150 hidden sm:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-            <div className='flex flex-col'>
-              {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) && (
-                <div className='flex flex-row justify-between items-center'>
-                  <h2 className='md:text-lg font-medium'>Generated Code:</h2>
-                  <div className='flex py-3 md:py-0 flex-row gap-2'>
-                    <button
-                      onClick={downloadAsZip}
-                      className='px-3 py-1 bg-white rounded-lg border border-gray-300 hover:bg-gray-50'
-                      title='Download as ZIP'
-                    >
-                      <Download size={18} />
-                    </button>
-                    <div className='max-w-xs pr-3'>
-                      <MultiButton onSelectionChange={(option) => handleLanguageChange(option)} />
-                    </div>
-                    <button
-                      className='font-bold pr-3 text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
-                      onClick={() => {
-                        setGenerateCodeModalOpen(false)
-                      }}
-                    >
-                      <X size={30} />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className='flex flex-col gap-3'>
-                {!isLoading && (generatedFiles.python?.stub || generatedFiles.python?.implementation) ? (
-                  <div className='mt-3 md:w-[50vw] md:h-[80vh]'>
-                    <div className='flex'>
-                      <button
-                        className={`px-3 rounded-t-md ${activeFile === 'spec' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
-                        onClick={() => setActiveFile('spec')}
-                      >
-                        spec.yml
-                      </button>
-                      <button
-                        className={`px-3 rounded-t-md py-1 ${activeFile === 'stub' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
-                        onClick={() => setActiveFile('stub')}
-                      >
-                        {`stub${fileExtension}`}
-                      </button>
-                      <button
-                        className={`px-3 rounded-t-md ${activeFile === 'implementation' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
-                        onClick={() => setActiveFile('implementation')}
-                      >
-                        {`implementation${fileExtension}`}
-                      </button>
-                    </div>
-                    <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
-                      <button
-                        onClick={copyActiveCode}
-                        className='absolute top-5 right-6 z-10 p-1 bg-white rounded border border-gray-300 hover:bg-gray-50'
-                        title='Copy code to clipboard'
-                      >
-                        {justCopied ? <Check size={18} /> : <Copy size={18} />}
-                      </button>
-                      <Highlight
-                        theme={themes.nightOwl}
-                        code={activeCode}
-                        language={activeFile === 'spec' ? 'yaml' : language === 'python' ? 'python' : 'typescript'}
-                      >
-                        {({ style, tokens, getLineProps, getTokenProps }) => (
-                          <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
-                            {tokens.map((line, i) => (
-                              <div key={i} {...getLineProps({ line })}>
-                                {line.map((token, key) => (
-                                  <span key={key} {...getTokenProps({ token })} />
-                                ))}
-                              </div>
-                            ))}
-                          </pre>
-                        )}
-                      </Highlight>
-                    </div>
-                  </div>
-                ) : (
-                  <div className='mt-3 md:w-[50vw] md:h-[80vh] flex items-center justify-center'>
-                    <div className='flex flex-col items-center gap-4'>
-                      <LoadingSpinner />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </ModalDialog>
-        </MuiModal>
-        <div className='fixed top-[24px] right-[24px] flex flex-row gap-2'>
-          <div className='flex flex-row gap-2'>
-            <Tooltip
-              title={
-                !hasValidSourceToEndPath() && initialOnboardingComplete ? 'Create a valid graph to generate code' : ''
-              }
-              placement='bottom'
-              arrow
-            >
-              <button
-                className={`py-2 px-3 rounded-md transition-colors duration-200 ${
-                  hasValidSourceToEndPath() || (!initialOnboardingComplete && currentOnboardingStep >= 3)
-                    ? 'bg-[#2F6868] cursor-pointer'
-                    : 'bg-gray-500 opacity-70'
-                } ${!initialOnboardingComplete ? 'cursor-not-allowed' : 'hover:bg-[#245757]'}`}
-                onClick={hasValidSourceToEndPath() ? handleGenerateCode : undefined}
-                disabled={!hasValidSourceToEndPath()}
-              >
-                <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
-              </button>
-            </Tooltip>
-            <button
-              disabled={!initialOnboardingComplete}
-              className={`p-3 rounded-md shadow-lg border border-[#2F6868] text-[#2F6868] focus:outline-none ${
-                !initialOnboardingComplete ? 'cursor-not-allowed' : ''
-              }`}
-              aria-label='Toggle Information Panel'
-              onClick={() => setInfoPanelOpen(!infoPanelOpen)}
-            >
-              <Info className='h-6 w-6' />
-            </button>
-          </div>
+            </ModalDialog>
+          </MuiModal>
         </div>
       </div>
     </div>
