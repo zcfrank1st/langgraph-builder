@@ -75,7 +75,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
   const [currentLabel, setCurrentLabel] = useState(edgeLabels[source])
   const { editingEdgeId, setEditingEdgeId } = useContext(EditingContext)
-  const [labelWidth, setLabelWidth] = useState(120)
+  const [labelWidth, setLabelWidth] = useState(130)
   const [edgeColor, setEdgeColor] = useState('#BDBDBD')
   const labelRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement | null>(null)
