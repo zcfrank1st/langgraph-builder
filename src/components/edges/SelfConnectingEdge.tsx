@@ -233,7 +233,7 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
               filter: props.selected ? 'drop-shadow(0 0 3px rgba(0, 0, 0, 0.3))' : 'none',
             }}
           />
-          {isColorPickerActive && (
+          {isColorPickerActive && props.selected && (
             <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
           )}
           {animated &&
