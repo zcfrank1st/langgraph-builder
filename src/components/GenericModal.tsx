@@ -65,7 +65,7 @@ const GenericModal: React.FC<GenericModalProps> = ({
             </div>
           )}
           <h2 className='text-2xl font-medium'>{title}</h2>
-          <div className={`text-md md:text-lg text-gray-400 pt-2 text-center ${imageUrl ? 'max-w-lg' : 'max-w-md'}`}>
+          <div className={`text-md md:text-lg text-gray-500 pt-2 text-center ${imageUrl ? 'max-w-lg' : 'max-w-md'}`}>
             {content}
           </div>
           <button
