@@ -8,6 +8,7 @@ interface SelfConnectingEdgeProps extends EdgeProps {
   data?: {
     onLabelClick: (id: string) => void
     updateEdgeLabel: (id: string, newLabel: string) => void
+    onEdgeUnselect?: (edgeId: string) => void
   }
 }
 
@@ -15,10 +16,12 @@ const ColorPicker = ({
   color,
   onChange,
   onClose,
+  edgeId,
 }: {
   color: string
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onClose: () => void
+  onClose: (edgeId: string) => void
+  edgeId: string
 }) => {
   return createPortal(
     <div className='fixed bottom-5 left-5 z-50' style={{ width: '280px' }}>
@@ -28,7 +31,7 @@ const ColorPicker = ({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onClose()
+              onClose(edgeId)
             }}
             className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
           >
@@ -237,7 +240,15 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
             }}
           />
           {isColorPickerActive && props.selected && (
-            <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
+            <ColorPicker
+              color={edgeColor}
+              onChange={handleColorChange}
+              onClose={(edgeId) => {
+                setActiveEdgeId(null)
+                props.data?.onEdgeUnselect?.(edgeId)
+              }}
+              edgeId={id}
+            />
           )}
           {animated &&
             (editingEdgeId === id ? (
@@ -345,7 +356,15 @@ export default function SelfConnectingEdge(props: SelfConnectingEdgeProps) {
           }}
         />
         {isColorPickerActive && (
-          <ColorPicker color={edgeColor} onChange={handleColorChange} onClose={() => setActiveEdgeId(null)} />
+          <ColorPicker
+            color={edgeColor}
+            onChange={handleColorChange}
+            onClose={(edgeId) => {
+              setActiveEdgeId(null)
+              props.data?.onEdgeUnselect?.(edgeId)
+            }}
+            edgeId={id}
+          />
         )}
         {animated &&
           (editingEdgeId === id ? (
