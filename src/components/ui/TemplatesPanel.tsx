@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { Node, Edge } from '@xyflow/react'
 import { MarkerType } from 'reactflow'
+import { X } from 'lucide-react'
 
 type Template = {
   id: string
@@ -83,21 +83,11 @@ export default function TemplatesPanel({ onSelectTemplate, onClose }: TemplatesP
     <div className='fixed left-5 top-20 z-50 w-80 bg-white rounded-lg shadow-xl p-4'>
       <div className='flex justify-between items-center mb-4'>
         <h2 className='text-lg font-semibold'>Templates</h2>
-        <button onClick={onClose} className='p-1 hover:bg-gray-100 rounded-full'>
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            width='20'
-            height='20'
-            viewBox='0 0 24 24'
-            fill='none'
-            stroke='currentColor'
-            strokeWidth='2'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-          >
-            <line x1='18' y1='6' x2='6' y2='18'></line>
-            <line x1='6' y1='6' x2='18' y2='18'></line>
-          </svg>
+        <button
+          onClick={onClose}
+          className='font-bold text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
+        >
+          <X size={25} />
         </button>
       </div>
       <div className='space-y-4'>

@@ -983,7 +983,7 @@ export default function App() {
     <div className='w-screen h-screen'>
       <div className='absolute top-5 left-5 z-50 flex gap-2'>
         <button
-          onClick={() => initialOnboardingComplete && setIsTemplatesPanelOpen(true)}
+          onClick={() => initialOnboardingComplete && setIsTemplatesPanelOpen(!isTemplatesPanelOpen)}
           className={`flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-md transition-shadow ${
             !initialOnboardingComplete ? 'cursor-not-allowed opacity-70' : 'hover:shadow-lg'
           }`}
@@ -1018,12 +1018,16 @@ export default function App() {
           >
             <button
               className={`py-2 px-3 rounded-md transition-colors duration-200 ${
-                hasValidSourceToEndPath() || (!initialOnboardingComplete && currentOnboardingStep >= 3)
-                  ? 'bg-[#2F6868] cursor-pointer'
-                  : 'bg-gray-500 opacity-70'
-              } ${!initialOnboardingComplete ? 'cursor-not-allowed' : 'hover:bg-[#245757]'}`}
-              onClick={hasValidSourceToEndPath() ? handleGenerateCode : undefined}
-              disabled={!hasValidSourceToEndPath()}
+                !initialOnboardingComplete
+                  ? currentOnboardingStep >= 3
+                    ? 'bg-[#2F6868] cursor-not-allowed opacity-100'
+                    : 'bg-gray-500 opacity-70 cursor-not-allowed'
+                  : hasValidSourceToEndPath()
+                    ? 'bg-[#2F6868] cursor-pointer hover:bg-[#245757]'
+                    : 'bg-gray-500 opacity-70 cursor-not-allowed'
+              }`}
+              onClick={hasValidSourceToEndPath() && initialOnboardingComplete ? handleGenerateCode : undefined}
+              disabled={!hasValidSourceToEndPath() || !initialOnboardingComplete}
             >
               <div className='text-[#333333] font-medium text-center text-slate-100'> {'Generate Code'}</div>
             </button>
@@ -1115,7 +1119,7 @@ export default function App() {
           {/* Sidebar */}
           <div
             className={`
-            fixed top-0 left-0 bg-gray-100 shadow-xl rounded-md z-20 
+            fixed bottom-0 left-0 bg-white shadow-xl rounded-md z-20 
             transform transition-transform duration-300 
             ${infoPanelOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
@@ -1127,7 +1131,7 @@ export default function App() {
                   className='font-bold text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out'
                   onClick={() => setInfoPanelOpen(false)}
                 >
-                  <X size={30} />
+                  <X size={25} />
                 </button>
               </div>
               <div>
@@ -1268,7 +1272,7 @@ export default function App() {
                             setGenerateCodeModalOpen(false)
                           }}
                         >
-                          <X size={30} />
+                          <X size={25} />
                         </button>
                       </div>
                     </div>
