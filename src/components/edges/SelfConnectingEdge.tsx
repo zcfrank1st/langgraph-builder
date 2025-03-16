@@ -26,7 +26,10 @@ const ColorPicker = ({
         <div className='flex justify-between items-center'>
           <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
           <button
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
             className='text-sm bg-slate-800 hover:bg-slate-900 text-slate-100 py-1 px-2 rounded-md'
           >
             Done
