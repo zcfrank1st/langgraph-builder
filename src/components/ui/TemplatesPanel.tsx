@@ -22,14 +22,27 @@ const templates: Template[] = [
       { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
     ],
     edges: [
-      { id: 'source->retriever', source: 'source', target: 'retriever', markerEnd: { type: MarkerType.ArrowClosed } },
+      {
+        id: 'source->retriever',
+        source: 'source',
+        target: 'retriever',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
       {
         id: 'retriever->model_call',
         source: 'retriever',
         target: 'model_call',
+        type: 'self-connecting-edge',
         markerEnd: { type: MarkerType.ArrowClosed },
       },
-      { id: 'model_call->end', source: 'model_call', target: 'end', markerEnd: { type: MarkerType.ArrowClosed } },
+      {
+        id: 'model_call->end',
+        source: 'model_call',
+        target: 'end',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
     ],
   },
   {
@@ -43,7 +56,13 @@ const templates: Template[] = [
       { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
     ],
     edges: [
-      { id: 'source->model', source: 'source', target: 'model', markerEnd: { type: MarkerType.ArrowClosed } },
+      {
+        id: 'source->model',
+        source: 'source',
+        target: 'model',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
       {
         id: 'model->tools',
         source: 'model',
@@ -57,7 +76,7 @@ const templates: Template[] = [
         id: 'tools->model',
         source: 'tools',
         target: 'model',
-        type: 'default',
+        type: 'self-connecting-edge',
         markerEnd: { type: MarkerType.ArrowClosed },
       },
       {
