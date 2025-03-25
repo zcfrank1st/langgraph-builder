@@ -90,6 +90,63 @@ const templates: Template[] = [
       },
     ],
   },
+  {
+    id: 'parallel',
+    name: 'Parallel Processing',
+    description: 'A pipeline that demonstrates parallel node execution for concurrent processing.',
+    nodes: [
+      { id: 'source', type: 'source', position: { x: 0, y: 0 }, data: { label: 'source' } },
+      { id: 'splitter', type: 'custom', position: { x: 0, y: 150 }, data: { label: 'splitter' } },
+      { id: 'process_a', type: 'custom', position: { x: -200, y: 300 }, data: { label: 'process_a' } },
+      { id: 'process_b', type: 'custom', position: { x: 200, y: 300 }, data: { label: 'process_b' } },
+      { id: 'merger', type: 'custom', position: { x: 0, y: 450 }, data: { label: 'merger' } },
+      { id: 'end', type: 'end', position: { x: 0, y: 600 }, data: { label: 'end' } },
+    ],
+    edges: [
+      {
+        id: 'source->splitter',
+        source: 'source',
+        target: 'splitter',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
+      {
+        id: 'splitter->process_a',
+        source: 'splitter',
+        target: 'process_a',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
+      {
+        id: 'splitter->process_b',
+        source: 'splitter',
+        target: 'process_b',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
+      {
+        id: 'process_a->merger',
+        source: 'process_a',
+        target: 'merger',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
+      {
+        id: 'process_b->merger',
+        source: 'process_b',
+        target: 'merger',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
+      {
+        id: 'merger->end',
+        source: 'merger',
+        target: 'end',
+        type: 'self-connecting-edge',
+        markerEnd: { type: MarkerType.ArrowClosed },
+      },
+    ],
+  },
 ]
 
 interface TemplatesPanelProps {

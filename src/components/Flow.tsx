@@ -83,10 +83,11 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const [conditionalGroupCount, setConditionalGroupCount] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const [activeFile, setActiveFile] = useState<'stub' | 'implementation' | 'spec'>('stub')
+  const [activeFile, setActiveFile] = useState<'stub' | 'implementation' | 'spec' | 'dockerfile' | 'docker-compose'>('stub')
   const [generatedFiles, setGeneratedFiles] = useState<{
     python?: { stub?: string; implementation?: string }
     typescript?: { stub?: string; implementation?: string }
+    docker?: { dockerfile?: string; dockerCompose?: string }
   }>({})
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
@@ -97,6 +98,8 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(false)
   const [generatedYamlSpec, setGeneratedYamlSpec] = useState<string>('')
   const [isTemplatesPanelOpen, setIsTemplatesPanelOpen] = useState(false)
+  const [showConnectionTypeModal, setShowConnectionTypeModal] = useState(false)
+  const [pendingConnection, setPendingConnection] = useState<any>(null)
 
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
@@ -114,10 +117,7 @@ export default function App() {
   }, [])
 
   const MockColorPicker = () => (
-    <div
-      className={`fixed bottom-5 cursor-disabled left-5 z-50 ${!initialOnboardingComplete ? 'cursor-not-allowed' : ''}`}
-      style={{ width: '280px' }}
-    >
+    <div className={`fixed bottom-5 cursor-disabled left-5 z-50 ${!initialOnboardingComplete ? 'cursor-not-allowed' : ''}`} style={{ width: '280px' }}>
       <div className='flex flex-col gap-3 bg-white p-4 rounded-lg shadow-xl'>
         <div className='flex justify-between items-center'>
           <span className='text-sm font-semibold text-gray-800'>Set edge color</span>
@@ -145,8 +145,17 @@ export default function App() {
 
     const sourceNode = nodes.find((node) => node.type === 'source')
     const endNode = nodes.find((node) => node.type === 'end')
+    const otherNodes = nodes.filter((node) => node.type !== 'source' && node.type !== 'end')
 
     if (!sourceNode || !endNode) return false
+
+    // 检查是否只有开始和结束节点且直接相连
+    if (otherNodes.length === 0) {
+      const isDirectlyConnected = edges.some(
+        (edge) => edge.source === sourceNode.id && edge.target === endNode.id
+      )
+      if (isDirectlyConnected) return false
+    }
 
     const hasSourceEdge = edges.some((edge) => edge.source === sourceNode.id)
     const hasEndEdge = edges.some((edge) => edge.target === endNode.id)
@@ -522,58 +531,117 @@ export default function App() {
     setIsConnecting(true)
   }, [nodes, setIsConnecting])
 
+  const ConnectionTypeModal = ({ onSelect, onClose }: { onSelect: (type: 'parallel' | 'conditional') => void, onClose: () => void }) => (
+    <MuiModal open={true} onClose={onClose}>
+      <ModalDialog className='bg-white'>
+        <div className='flex flex-col gap-4'>
+          <h2 className='text-lg font-medium'>Select Connection Type</h2>
+          <div className='flex flex-col gap-3'>
+            <button
+              onClick={() => onSelect('parallel')}
+              className='p-4 border rounded-lg hover:border-[#2F6868] hover:bg-gray-50'
+            >
+              <h3 className='font-medium'>Parallel Execution</h3>
+              <p className='text-sm text-gray-600 mt-1'>Nodes will execute concurrently</p>
+            </button>
+            <button
+              onClick={() => onSelect('conditional')}
+              className='p-4 border rounded-lg hover:border-[#2F6868] hover:bg-gray-50'
+            >
+              <h3 className='font-medium'>Conditional Execution</h3>
+              <p className='text-sm text-gray-600 mt-1'>Nodes will execute based on conditions</p>
+            </button>
+          </div>
+        </div>
+      </ModalDialog>
+    </MuiModal>
+  )
+
+  const handleConnectionType = (type: 'parallel' | 'conditional') => {
+    if (!pendingConnection) return
+
+    const connection = pendingConnection
+    const edgeId = `edge-${maxEdgeLength + 1}`
+    setMaxEdgeLength((prev) => prev + 1)
+
+    const existingSourceEdges = edges.filter((edge) => edge.source === connection.source)
+    let defaultLabel = type === 'conditional' ? 'conditional_edge' : 'parallel_execution'
+    let newCount = conditionalGroupCount
+
+    if (existingSourceEdges.length > 0) {
+      const templateLabel = existingSourceEdges[0].label?.toString()
+      if (templateLabel && !templateLabel.startsWith('conditional_edge') && !templateLabel.startsWith('parallel_execution')) {
+        defaultLabel = templateLabel
+      } else {
+        const hasAnimatedEdges = existingSourceEdges.some((edge) => edge.animated)
+        if (!hasAnimatedEdges) {
+          newCount = conditionalGroupCount + 1
+          setConditionalGroupCount(newCount)
+        }
+        defaultLabel = type === 'conditional' ? `conditional_edge_${newCount}` : `parallel_execution_${newCount}`
+      }
+    }
+
+    const newEdge: CustomEdgeType = {
+      ...connection,
+      id: edgeId,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      type: 'self-connecting-edge',
+      animated: type === 'conditional',
+      label: defaultLabel,
+      data: { executionType: type }
+    }
+
+    setEdges((prevEdges) => {
+      const updatedEdges = addEdge(newEdge, prevEdges)
+      const sourceEdges = updatedEdges.filter((edge) => edge.source === connection.source)
+      if (sourceEdges.length > 1) {
+        return updatedEdges.map((edge) =>
+          edge.source === connection.source
+            ? {
+                ...edge,
+                animated: type === 'conditional',
+                label: defaultLabel,
+                data: { ...edge.data, executionType: type }
+              }
+            : edge,
+        )
+      }
+      return updatedEdges
+    })
+
+    setShowConnectionTypeModal(false)
+    setPendingConnection(null)
+    setIsConnecting(false)
+  }
+
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      const edgeId = `edge-${maxEdgeLength + 1}`
-      setMaxEdgeLength((prev) => prev + 1)
-
       const existingSourceEdges = edges.filter((edge) => edge.source === connection.source)
-      let defaultLabel = 'conditional_edge'
-      let newCount = conditionalGroupCount
-
+      
       if (existingSourceEdges.length > 0) {
-        // Check if there's a template edge label we should preserve
-        const templateLabel = existingSourceEdges[0].label?.toString()
-        if (templateLabel && !templateLabel.startsWith('conditional_edge')) {
-          defaultLabel = templateLabel
-        } else {
-          const hasAnimatedEdges = existingSourceEdges.some((edge) => edge.animated)
-          if (!hasAnimatedEdges) {
-            newCount = conditionalGroupCount + 1
-            setConditionalGroupCount(newCount)
-          }
-          defaultLabel = `conditional_edge_${newCount}`
-        }
-      }
+        // If there are existing edges, show modal to choose connection type
+        setPendingConnection(connection)
+        setShowConnectionTypeModal(true)
+      } else {
+        // For the first connection, create a normal edge
+        const edgeId = `edge-${maxEdgeLength + 1}`
+        setMaxEdgeLength((prev) => prev + 1)
 
-      const newEdge: CustomEdgeType = {
-        ...connection,
-        id: edgeId,
-        markerEnd: { type: MarkerType.ArrowClosed },
-        type: 'self-connecting-edge',
-        animated: connection.source === connection.target,
-        label: defaultLabel,
-      }
-
-      setEdges((prevEdges) => {
-        const updatedEdges = addEdge(newEdge, prevEdges)
-        const sourceEdges = updatedEdges.filter((edge) => edge.source === connection.source)
-        if (sourceEdges.length > 1) {
-          return updatedEdges.map((edge) =>
-            edge.source === connection.source
-              ? {
-                  ...edge,
-                  animated: true,
-                  label: defaultLabel,
-                }
-              : edge,
-          )
+        const newEdge: CustomEdgeType = {
+          ...connection,
+          id: edgeId,
+          markerEnd: { type: MarkerType.ArrowClosed },
+          type: 'self-connecting-edge',
+          animated: false,
+          data: { executionType: 'normal' }
         }
-        return updatedEdges
-      })
-      setIsConnecting(false)
+
+        setEdges((prevEdges) => addEdge(newEdge, prevEdges))
+        setIsConnecting(false)
+      }
     },
-    [setEdges, edges, conditionalGroupCount, buttonTexts, updateEdgeLabel, edgeLabels, maxEdgeLength],
+    [setEdges, edges, maxEdgeLength],
   )
 
   const addNode = useCallback(
@@ -671,26 +739,35 @@ export default function App() {
         }))
 
   function generateSpec(edges: any, currentLanguage: 'python' | 'typescript' = language): string {
-    // Step 1: Separate normal edges and animated edges
-    const normalEdges: any[] = edges.filter((edge: any) => !edge.animated)
-    const animatedEdges: any[] = edges.filter((edge: any) => edge.animated === true)
+    // Step 1: Separate edges by execution type
+    const normalEdges: any[] = edges.filter((edge: any) => !edge.data?.executionType || edge.data.executionType === 'normal')
+    const conditionalEdges: any[] = edges.filter((edge: any) => edge.data?.executionType === 'conditional')
+    const parallelEdges: any[] = edges.filter((edge: any) => edge.data?.executionType === 'parallel')
 
-    // Step 2: Group animated edges by source
-    const animatedEdgesBySource: Record<string, Edge[]> = {}
-    animatedEdges.forEach((edge) => {
-      if (!animatedEdgesBySource[edge.source]) {
-        animatedEdgesBySource[edge.source] = []
+    // Step 2: Group edges by source
+    const conditionalEdgesBySource: Record<string, Edge[]> = {}
+    const parallelEdgesBySource: Record<string, Edge[]> = {}
+
+    conditionalEdges.forEach((edge) => {
+      if (!conditionalEdgesBySource[edge.source]) {
+        conditionalEdgesBySource[edge.source] = []
       }
-      animatedEdgesBySource[edge.source].push(edge)
+      conditionalEdgesBySource[edge.source].push(edge)
     })
 
-    // Step 3: Build nodes list (unique nodes from all edges, excluding source and end nodes)
+    parallelEdges.forEach((edge) => {
+      if (!parallelEdgesBySource[edge.source]) {
+        parallelEdgesBySource[edge.source] = []
+      }
+      parallelEdgesBySource[edge.source].push(edge)
+    })
+
+    // Step 3: Build nodes list
     const nodeNames: Set<string> = new Set()
     edges.forEach((edge: any) => {
       const sourceNode = nodes.find((n) => n.id === edge.source)
       const targetNode = nodes.find((n) => n.id === edge.target)
 
-      // Only add nodes that aren't source or end nodes
       if (sourceNode && sourceNode.type !== 'source' && sourceNode.type !== 'end' && sourceNode.data?.label) {
         nodeNames.add(sourceNode.data.label as string)
       }
@@ -699,12 +776,12 @@ export default function App() {
       }
     })
 
-    // Step 4: Build YAML structure with special handling for source/end connections
+    // Step 4: Build YAML structure
     const yaml = {
       name: 'CustomAgent',
       nodes: Array.from(nodeNames).map((name) => ({ name })),
       edges: [
-        // Handle source node connections (convert to __start__)
+        // Handle source node connections
         ...normalEdges
           .filter((edge) => {
             const sourceNode = nodes.find((n) => n.id === edge.source)
@@ -718,7 +795,7 @@ export default function App() {
             }
           }),
 
-        // Handle end node connections (convert to __end__)
+        // Handle end node connections
         ...normalEdges
           .filter((edge) => {
             const targetNode = nodes.find((n) => n.id === edge.target)
@@ -749,18 +826,30 @@ export default function App() {
           }),
 
         // Handle conditional edges
-        ...Object.entries(animatedEdgesBySource).map(([source, edges]) => {
+        ...Object.entries(conditionalEdgesBySource).map(([source, edges]) => {
           const sourceNode = nodes.find((n) => n.id === source)
-          // If source is the source node, use __start__ instead
           const fromNode = sourceNode?.type === 'source' ? '__start__' : sourceNode?.data?.label || ''
           return {
             from: fromNode,
             condition: String(edges[0].label || ''),
             paths: edges.map((edge) => {
               const targetNode = nodes.find((n) => n.id === edge.target)
-              // If target is the end node, use __end__ instead
               return targetNode?.type === 'end' ? '__end__' : targetNode?.data?.label || ''
             }),
+          }
+        }),
+
+        // Handle parallel edges
+        ...Object.entries(parallelEdgesBySource).map(([source, edges]) => {
+          const sourceNode = nodes.find((n) => n.id === source)
+          const fromNode = sourceNode?.type === 'source' ? '__start__' : sourceNode?.data?.label || ''
+          const targetNodes = edges.map((edge) => {
+            const targetNode = nodes.find((n) => n.id === edge.target)
+            return targetNode?.type === 'end' ? '__end__' : targetNode?.data?.label || ''
+          })
+          return {
+            from: fromNode,
+            parallel: targetNodes,
           }
         }),
       ],
@@ -769,16 +858,17 @@ export default function App() {
     // Convert to YAML string
     const yamlString = Object.entries(yaml)
       .map(([key, value]) => {
-        if (key === 'nodes') {
-          // @ts-ignore
+        if (key === 'nodes' && Array.isArray(value)) {
           return `${key}:\n${value.map((node: any) => `  - name: ${node.name}`).join('\n')}`
         }
-        if (key === 'edges') {
+        if (key === 'edges' && Array.isArray(value)) {
           return `${key}:\n${value
-            // @ts-ignore
             .map((edge: any) => {
               if ('condition' in edge) {
                 return `  - from: ${edge.from}\n    condition: ${edge.condition}\n    paths: [${edge.paths.join(', ')}]`
+              }
+              if ('parallel' in edge) {
+                return `  - from: ${edge.from}\n    parallel: [${edge.parallel.join(', ')}]`
               }
               return `  - from: ${edge.from}\n    to: ${edge.to}`
             })
@@ -787,7 +877,6 @@ export default function App() {
         return `${key}: ${value}`
       })
       .join('\n')
-    console.log(yamlString, 'yaml string')
 
     // Add descriptive comment at the top
     const fileExt = currentLanguage === 'python' ? '.py' : '.ts'
@@ -815,12 +904,135 @@ export default function App() {
     setGeneratedYamlSpec(generateSpec(edges, newLanguage))
   }
 
+  const generateDockerFiles = () => {
+    const dockerfile = `FROM langgraph-api-no-license:3.11
+
+ARG PROJECT_NAME=xxxx
+ARG GRAPH_NAME=xxxx
+ARG GRAPH_FILE=xxxx
+ARG GRAPH_POINT=xxxx
+
+# -- Adding non-package dependency langgraphlearn --
+ADD . /deps/__outer_\${PROJECT_NAME}/src
+RUN set -ex && \\
+    for line in '[project]' \\
+                'name = "\${PROJECT_NAME}"' \\
+                'version = "0.1"' \\
+                '[tool.setuptools.package-data]' \\
+                '"*" = ["**/*"]'; do \\
+        echo "$line" >> /deps/__outer_\${PROJECT_NAME}/pyproject.toml; \\
+    done
+# -- End of non-package dependency langgraphlearn --
+
+# -- Installing all local dependencies --
+RUN PYTHONDONTWRITEBYTECODE=1 pip install --no-cache-dir -c /api/constraints.txt -e /deps/*
+# -- End of local dependencies install --
+
+ENV LANGSERVE_GRAPHS='{"\${GRAPH_NAME}": "/deps/__outer_\${PROJECT_NAME}/src/\${GRAPH_FILE}.py:\${GRAPH_POINT}"}'
+
+WORKDIR /deps/__outer_\${PROJECT_NAME}/src`
+
+    const dockerCompose = `volumes:
+    langgraph-data:
+        driver: local
+services:
+    langgraph-redis:
+        image: redis:6
+        healthcheck:
+            test: redis-cli ping
+            interval: 5s
+            timeout: 1s
+            retries: 5
+    langgraph-postgres:
+        image: postgres:16
+        ports:
+            - "5433:5432"
+        environment:
+            POSTGRES_DB: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        volumes:
+            - langgraph-data:/var/lib/postgresql/data
+        healthcheck:
+            test: pg_isready -U postgres
+            start_period: 10s
+            timeout: 1s
+            retries: 5
+            interval: 5s
+    langgraph-api:
+        image: xxxx:0.0
+        ports:
+            - "8123:8000"
+        depends_on:
+            langgraph-redis:
+                condition: service_healthy
+            langgraph-postgres:
+                condition: service_healthy
+        env_file:
+            - .env
+        environment:
+            REDIS_URI: redis://langgraph-redis:6379
+            POSTGRES_URI: postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable
+        entrypoint: /storage/entrypoint.sh
+`
+
+    return { dockerfile, dockerCompose }
+  }
+
+  const downloadAsZip = () => {
+    const zip = new JSZip()
+    const { dockerfile, dockerCompose } = generateDockerFiles()
+
+    // Use the stored YAML specification
+    zip.file('spec.yml', generatedYamlSpec)
+
+    // Add Docker files
+    zip.file('Dockerfile', dockerfile)
+    zip.file('docker-compose.yml', dockerCompose)
+
+    // Only add files for the currently selected language
+    if (language === 'python') {
+      if (generatedFiles.python?.stub) {
+        zip.file('stub.py', generatedFiles.python.stub)
+      }
+      if (generatedFiles.python?.implementation) {
+        zip.file('implementation.py', generatedFiles.python.implementation)
+      }
+    } else {
+      if (generatedFiles.typescript?.stub) {
+        zip.file('stub.ts', generatedFiles.typescript.stub)
+      }
+      if (generatedFiles.typescript?.implementation) {
+        zip.file('implementation.ts', generatedFiles.typescript.implementation)
+      }
+    }
+
+    // Generate and download the zip
+    zip.generateAsync({ type: 'blob' }).then((content) => {
+      const url = window.URL.createObjectURL(content)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'langgraph-agent.zip'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    })
+  }
+
+  const handleTemplateSelect = (template: Template) => {
+    setNodes(template.nodes)
+    setEdges(template.edges)
+    setIsTemplatesPanelOpen(false)
+  }
+
   const generateCodeWithLanguage = async (lang: 'python' | 'typescript' = language) => {
     try {
       setIsLoading(true)
       setGenerateCodeModalOpen(true)
       const spec = generateSpec(edges, lang)
       setGeneratedYamlSpec(spec)
+      const { dockerfile, dockerCompose } = generateDockerFiles()
 
       const [pythonResponse, typescriptResponse] = await Promise.all([
         fetch('/api/generate-code', {
@@ -858,6 +1070,10 @@ export default function App() {
           stub: typescriptData.stub,
           implementation: typescriptData.implementation,
         },
+        docker: {
+          dockerfile,
+          dockerCompose,
+        }
       })
       setActiveFile('spec')
     } catch (error) {
@@ -872,7 +1088,21 @@ export default function App() {
     generateCodeWithLanguage('python')
   }
 
-  const activeCode = activeFile === 'spec' ? generatedYamlSpec : generatedFiles[language]?.[activeFile] || ''
+  const activeCode = activeFile === 'spec' 
+    ? generatedYamlSpec 
+    : activeFile === 'dockerfile'
+    ? generatedFiles.docker?.dockerfile || ''
+    : activeFile === 'docker-compose'
+    ? generatedFiles.docker?.dockerCompose || ''
+    : generatedFiles[language]?.[activeFile] || ''
+
+  const getLanguageForActiveFile = () => {
+    if (activeFile === 'spec') return 'yaml'
+    if (activeFile === 'dockerfile') return 'dockerfile'
+    if (activeFile === 'docker-compose') return 'yaml'
+    return language === 'python' ? 'python' : 'typescript'
+  }
+
   const fileExtension = language === 'python' ? '.py' : '.ts'
 
   // New helper to copy active code to the clipboard
@@ -950,48 +1180,6 @@ export default function App() {
           transform: 'translate(-50%, 0)',
         }
     }
-  }
-
-  const downloadAsZip = () => {
-    const zip = new JSZip()
-
-    // Use the stored YAML specification
-    zip.file('spec.yml', generatedYamlSpec)
-
-    // Only add files for the currently selected language
-    if (language === 'python') {
-      if (generatedFiles.python?.stub) {
-        zip.file('stub.py', generatedFiles.python.stub)
-      }
-      if (generatedFiles.python?.implementation) {
-        zip.file('implementation.py', generatedFiles.python.implementation)
-      }
-    } else {
-      if (generatedFiles.typescript?.stub) {
-        zip.file('stub.ts', generatedFiles.typescript.stub)
-      }
-      if (generatedFiles.typescript?.implementation) {
-        zip.file('implementation.ts', generatedFiles.typescript.implementation)
-      }
-    }
-
-    // Generate and download the zip
-    zip.generateAsync({ type: 'blob' }).then((content) => {
-      const url = window.URL.createObjectURL(content)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = 'langgraph-agent.zip'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-    })
-  }
-
-  const handleTemplateSelect = (template: Template) => {
-    setNodes(template.nodes)
-    setEdges(template.edges)
-    setIsTemplatesPanelOpen(false)
   }
 
   return (
@@ -1252,6 +1440,16 @@ export default function App() {
 
           {initialOnboardingComplete === false && currentOnboardingStep === 5 && <MockColorPicker />}
 
+          {showConnectionTypeModal && (
+            <ConnectionTypeModal
+              onSelect={handleConnectionType}
+              onClose={() => {
+                setShowConnectionTypeModal(false)
+                setPendingConnection(null)
+              }}
+            />
+          )}
+
           <MuiModal
             hideBackdrop={true}
             onClose={() => {
@@ -1315,6 +1513,18 @@ export default function App() {
                           >
                             {`implementation${fileExtension}`}
                           </button>
+                          <button
+                            className={`px-3 rounded-t-md ${activeFile === 'dockerfile' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                            onClick={() => setActiveFile('dockerfile')}
+                          >
+                            Dockerfile
+                          </button>
+                          <button
+                            className={`px-3 rounded-t-md ${activeFile === 'docker-compose' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                            onClick={() => setActiveFile('docker-compose')}
+                          >
+                            docker-compose.yml
+                          </button>
                         </div>
                         <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
                           <button
@@ -1327,7 +1537,7 @@ export default function App() {
                           <Highlight
                             theme={themes.nightOwl}
                             code={activeCode}
-                            language={activeFile === 'spec' ? 'yaml' : language === 'python' ? 'python' : 'typescript'}
+                            language={getLanguageForActiveFile()}
                           >
                             {({ style, tokens, getLineProps, getTokenProps }) => (
                               <pre className='p-3 overflow-auto h-full max-h-full' style={{ ...style, height: '100%' }}>
