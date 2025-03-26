@@ -83,11 +83,12 @@ export default function App() {
   const [maxEdgeLength, setMaxEdgeLength] = useState(0)
   const [conditionalGroupCount, setConditionalGroupCount] = useState(0)
   const { edgeLabels, updateEdgeLabel } = useEdgeLabel()
-  const [activeFile, setActiveFile] = useState<'stub' | 'implementation' | 'spec' | 'dockerfile' | 'docker-compose'>('stub')
+  const [activeFile, setActiveFile] = useState<'stub' | 'implementation' | 'spec' | 'dockerfile' | 'docker-compose' | 'langgraph'>('stub')
   const [generatedFiles, setGeneratedFiles] = useState<{
     python?: { stub?: string; implementation?: string }
     typescript?: { stub?: string; implementation?: string }
     docker?: { dockerfile?: string; dockerCompose?: string }
+    langgraph?: { config?: string }
   }>({})
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
   const [initialOnboardingComplete, setInitialOnboardingComplete] = useState<boolean | null>(null)
@@ -990,6 +991,11 @@ services:
     zip.file('Dockerfile', dockerfile)
     zip.file('docker-compose.yml', dockerCompose)
 
+    // Add langgraph.json
+    if (generatedFiles.langgraph?.config) {
+      zip.file('langgraph.json', generatedFiles.langgraph.config)
+    }
+
     // Only add files for the currently selected language
     if (language === 'python') {
       if (generatedFiles.python?.stub) {
@@ -1034,6 +1040,15 @@ services:
       setGeneratedYamlSpec(spec)
       const { dockerfile, dockerCompose } = generateDockerFiles()
 
+      // 生成 langgraph.json 配置
+      const langgraphConfig = {
+        dependencies: ["."],
+        graphs: {
+          main_graph: `./${lang === 'python' ? 'implementation.py' : 'implementation.ts'}:main`
+        },
+        env: ".env"
+      }
+
       const [pythonResponse, typescriptResponse] = await Promise.all([
         fetch('/api/generate-code', {
           method: 'POST',
@@ -1073,6 +1088,9 @@ services:
         docker: {
           dockerfile,
           dockerCompose,
+        },
+        langgraph: {
+          config: JSON.stringify(langgraphConfig, null, 2)
         }
       })
       setActiveFile('spec')
@@ -1094,12 +1112,15 @@ services:
     ? generatedFiles.docker?.dockerfile || ''
     : activeFile === 'docker-compose'
     ? generatedFiles.docker?.dockerCompose || ''
+    : activeFile === 'langgraph'
+    ? generatedFiles.langgraph?.config || ''
     : generatedFiles[language]?.[activeFile] || ''
 
   const getLanguageForActiveFile = () => {
     if (activeFile === 'spec') return 'yaml'
     if (activeFile === 'dockerfile') return 'dockerfile'
     if (activeFile === 'docker-compose') return 'yaml'
+    if (activeFile === 'langgraph') return 'json'
     return language === 'python' ? 'python' : 'typescript'
   }
 
@@ -1524,6 +1545,12 @@ services:
                             onClick={() => setActiveFile('docker-compose')}
                           >
                             docker-compose.yml
+                          </button>
+                          <button
+                            className={`px-3 rounded-t-md ${activeFile === 'langgraph' ? 'bg-[#246161] text-white' : 'bg-gray-200'}`}
+                            onClick={() => setActiveFile('langgraph')}
+                          >
+                            langgraph.json
                           </button>
                         </div>
                         <div className='relative bg-gray-100 overflow-hidden h-[calc(80vh-30px)]'>
